@@ -537,7 +537,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
     residence: en ? 'City of residence' : 'Город проживания',
     sameAsBirth: en ? 'Same as birthplace' : 'Как город рождения',
     otherCity: en ? 'Another city' : 'Другой город',
-    residenceHint: en ? 'Where you actually live now. Used for the solar return — the year's theme depends on it. Your natal chart always stays on your birthplace.' : 'Где ты живёшь сейчас. Используется для соляра — от него зависит тема года. Натальная карта всегда остаётся на городе рождения.',
+    residenceHint: en ? 'Where you actually live now. Used for the solar return — the year\'s theme depends on it. Your natal chart always stays on your birthplace.' : 'Где ты живёшь сейчас. Используется для соляра — от него зависит тема года. Натальная карта всегда остаётся на городе рождения.',
     save:    en ? 'Save' : 'Сохранить',
     pick:    en ? 'Select a city' : 'Выберите город',
     exact:   en ? 'Exact' : 'Точное',
