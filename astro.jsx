@@ -756,13 +756,13 @@ function AstroPhone({ th, lang, onChangeLang }) {
 
         {/* ── Partner-data editor overlay (add new or edit existing) ── */}
         {editPartnerIdx !== null && (
-          <div className="astro-in-f" style={{position:’absolute’,inset:0,zIndex:72,overflow:’hidden’}}>
+          <div className="astro-in-f" style={{position:'absolute',inset:0,zIndex:72,overflow:'hidden'}}>
             <Sky th={th}/>
-            <div style={{position:’relative’,zIndex:1,height:’100%’}}>
+            <div style={{position:'relative',zIndex:1,height:'100%'}}>
               <BirthDataEditor th={th} lang={lang}
                 initial={editPartnerIdx === -1 ? DEFAULT_PARTNER : partners[editPartnerIdx]}
                 onSave={savePartner} onCancel={cancelPartner}
-                showName title={lang===’en’?’Partner\’s data’:’Данные партнёра’}/>
+                showName title={lang==='en'?'Partner\'s data':'Данные партнёра'}/>
             </div>
           </div>
         )}

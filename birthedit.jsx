@@ -527,17 +527,17 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   const T = {
     title:   title || (en ? 'Birth data' : 'Данные рождения'),
     sub:     showName
-               ? (en ? 'Enter your partner’s details to compare charts' : 'Введите данные партнёра, чтобы сравнить карты')
+               ? (en ? 'Enter your partner's details to compare charts' : 'Введите данные партнёра, чтобы сравнить карты')
                : (en ? 'These details power your natal chart' : 'По этим данным строится натальная карта'),
     name:    en ? 'Name' : 'Имя',
-    namePh:  en ? 'Partner’s name' : 'Имя партнёра',
+    namePh:  en ? 'Partner's name' : 'Имя партнёра',
     date:    en ? 'Date of birth' : 'Дата рождения',
     time:    en ? 'Time of birth' : 'Время рождения',
     city:    en ? 'City of birth' : 'Город рождения',
     residence: en ? 'City of residence' : 'Город проживания',
     sameAsBirth: en ? 'Same as birthplace' : 'Как город рождения',
     otherCity: en ? 'Another city' : 'Другой город',
-    residenceHint: en ? 'Where you actually live now. Used for the solar return — the year’s theme depends on it. Your natal chart always stays on your birthplace.' : 'Где ты живёшь сейчас. Используется для соляра — от него зависит тема года. Натальная карта всегда остаётся на городе рождения.',
+    residenceHint: en ? 'Where you actually live now. Used for the solar return — the year's theme depends on it. Your natal chart always stays on your birthplace.' : 'Где ты живёшь сейчас. Используется для соляра — от него зависит тема года. Натальная карта всегда остаётся на городе рождения.',
     save:    en ? 'Save' : 'Сохранить',
     pick:    en ? 'Select a city' : 'Выберите город',
     exact:   en ? 'Exact' : 'Точное',
