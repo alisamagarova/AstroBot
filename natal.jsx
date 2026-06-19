@@ -557,8 +557,8 @@ function NatalChartSVG({ th, planets, asc, mc, houseCusps, size, showHouses = tr
 function NatalChoiceScreen({ th, lang, onChooseMe, onChooseOther }) {
   const l = lang === 'en';
   const card = (title, sub, badge, onClick, dim) => (
-    <button onClick={onClick} style={{
-      width:'100%',textAlign:'left',cursor:'pointer',
+    <button onClick={onClick||undefined} style={{
+      width:'100%',textAlign:'left',cursor:onClick?'pointer':'default',
       background:dim?(th.effDark?'rgba(255,255,255,0.04)':'rgba(255,255,255,0.35)'):th.glassStrong,
       border:`1px solid ${th.glassBorder}`,backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)',
       borderRadius:20,padding:'20px 18px',opacity:dim?0.6:1,boxSizing:'border-box',
@@ -579,7 +579,7 @@ function NatalChoiceScreen({ th, lang, onChooseMe, onChooseOther }) {
         {l?'Choose a chart':'Выберите карту'}
       </div>
       {card(l?'My natal chart':'Моя натальная карта',l?'Based on your birth data — full reading':'Анализ на основе ваших данных рождения',l?'READY':'ДАННЫЕ ЕСТЬ',onChooseMe,false)}
-      {card(l?'For another person':'Для другого человека',l?"Coming soon — we'll design this next":'Раздел в разработке — спроектируем дальше',null,onChooseOther,true)}
+      {card(l?'For another person':'Для другого человека',l?'Coming soon':'Скоро будет доступно',l?'SOON':'СКОРО',null,true)}
     </div>
   );
 }

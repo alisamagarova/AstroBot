@@ -177,7 +177,10 @@ function getTheme(mode, tod, accent) {
   };
 }
 
-const STATUS_PAD = 54;
+// В Telegram своя шапка — фейковый статус-бар iPhone не нужен.
+const IS_TG = typeof window !== 'undefined' && window.IS_TG;
+const STATUS_PAD = IS_TG ? 12 : 54;
+const NAV_PAD_BOTTOM = IS_TG ? 12 : 30;
 
 // ════════════════════════════════════════════════════════════
 // SHARED UI
@@ -269,7 +272,7 @@ function BottomNav({ th, lang, activeTab, onTab }) {
       WebkitBackdropFilter:'blur(24px) saturate(180%)',
       borderTop:`1px solid ${th.glassBorder}`,
       display:'flex',
-      paddingBottom:30,
+      paddingBottom:NAV_PAD_BOTTOM,
     }}>
       {tabs.map(tab => {
         const active = activeTab === tab.id;
