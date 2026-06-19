@@ -38,12 +38,20 @@
 </template>
 
 <script>
-  window.onerror = function(msg, src, line) {
-    document.body.innerHTML = '<div style="color:#ff6b6b;padding:20px;font-family:monospace;font-size:13px;background:#1a0a0a;min-height:100vh">'
-      + '<b>JS ERROR:</b><br>' + msg + '<br><br>'
-      + '<b>File:</b> ' + (src||'').split('/').pop() + ':' + line
-      + '</div>';
-  };
+  function showErr(title, detail) {
+    document.body.innerHTML = '<div style="color:#ff6b6b;padding:20px;font-family:monospace;font-size:12px;background:#1a0a0a;min-height:100vh;white-space:pre-wrap;word-break:break-word">'
+      + '<b>' + title + '</b>\n\n' + detail + '</div>';
+  }
+  window.addEventListener('error', function(e) {
+    var d = '';
+    if (e.error && e.error.stack) d = e.error.stack;
+    else d = (e.message || 'unknown') + '\n' + (e.filename||'').split('/').pop() + ':' + e.lineno + ':' + e.colno;
+    showErr('JS ERROR', d);
+  }, true);
+  window.addEventListener('unhandledrejection', function(e) {
+    var r = e.reason;
+    showErr('PROMISE REJECTED', (r && r.stack) ? r.stack : String(r));
+  });
 </script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.17/astronomy.browser.js"></script>
@@ -51,23 +59,23 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
 
-<script type="text/babel" src="ios-frame.jsx?v=3"></script>
-<script type="text/babel" src="tweaks-panel.jsx?v=3"></script>
-<script type="text/babel" src="birthedit.jsx?v=3"></script>
-<script src="natal-interpretations.js?v=3"></script>
-<script type="text/babel" src="natal.jsx?v=3"></script>
-<script src="synastry-interpretations.js?v=3"></script>
-<script src="synastry-interp-full.js?v=3"></script>
-<script type="text/babel" src="synastry.jsx?v=3"></script>
-<script src="solar-interpretations.js?v=3"></script>
-<script src="solar-natal-interpretations.js?v=3"></script>
-<script src="solar-houses-interpretations.js?v=3"></script>
-<script src="solar-aspects-interpretations.js?v=3"></script>
-<script type="text/babel" src="solar.jsx?v=3"></script>
-<script src="milestones-engine.js?v=3"></script>
-<script type="text/babel" src="milestones.jsx?v=3"></script>
-<script src="aspects-engine.js?v=3"></script>
-<script type="text/babel" src="aspects.jsx?v=3"></script>
-<script type="text/babel" src="astro.jsx?v=3"></script>
+<script type="text/babel" src="ios-frame.jsx?v=4"></script>
+<script type="text/babel" src="tweaks-panel.jsx?v=4"></script>
+<script type="text/babel" src="birthedit.jsx?v=4"></script>
+<script src="natal-interpretations.js?v=4"></script>
+<script type="text/babel" src="natal.jsx?v=4"></script>
+<script src="synastry-interpretations.js?v=4"></script>
+<script src="synastry-interp-full.js?v=4"></script>
+<script type="text/babel" src="synastry.jsx?v=4"></script>
+<script src="solar-interpretations.js?v=4"></script>
+<script src="solar-natal-interpretations.js?v=4"></script>
+<script src="solar-houses-interpretations.js?v=4"></script>
+<script src="solar-aspects-interpretations.js?v=4"></script>
+<script type="text/babel" src="solar.jsx?v=4"></script>
+<script src="milestones-engine.js?v=4"></script>
+<script type="text/babel" src="milestones.jsx?v=4"></script>
+<script src="aspects-engine.js?v=4"></script>
+<script type="text/babel" src="aspects.jsx?v=4"></script>
+<script type="text/babel" src="astro.jsx?v=4"></script>
 </body>
 </html>
