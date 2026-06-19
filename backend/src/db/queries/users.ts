@@ -78,3 +78,52 @@ export async function setLang(tgId: string, lang: LangCode): Promise<void> {
     [tgId, lang],
   );
 }
+
+/** Черновик ответов онбординга (частичные данные до создания профиля). */
+export interface OnboardingDraft {
+  name?:        string;
+  birth_day?:   number;
+  birth_month?: number;
+  birth_year?:  number;
+  time_mode?:   'exact' | 'approx' | 'unknown';
+  birth_hour?:  number;
+  birth_minute?: number;
+  approx_time?: 'morning' | 'day' | 'evening' | 'night';
+  city_ru?:     string;
+  city_en?:     string;
+  city_reg?:    string;
+  lat?:         number;
+  lon?:         number;
+  utc_offset?:  number;
+  timezone?:    string;
+}
+
+/** Возвращает черновик онбординга. */
+export async function getOnboardingDraft(tgId: string): Promise<OnboardingDraft> {
+  const { rows } = await pool.query<{ onboarding_draft: OnboardingDraft }>(
+    'SELECT onboarding_draft FROM users WHERE tg_id = $1',
+    [tgId],
+  );
+  return rows[0]?.onboarding_draft ?? {};
+}
+
+/** Сливает переданные поля в существующий черновик (partial update). */
+export async function mergeOnboardingDraft(
+  tgId: string,
+  patch: OnboardingDraft,
+): Promise<void> {
+  await pool.query(
+    `UPDATE users
+     SET onboarding_draft = onboarding_draft || $2::jsonb, updated_at = now()
+     WHERE tg_id = $1`,
+    [tgId, JSON.stringify(patch)],
+  );
+}
+
+/** Очищает черновик (после успешного создания профиля). */
+export async function clearOnboardingDraft(tgId: string): Promise<void> {
+  await pool.query(
+    `UPDATE users SET onboarding_draft = '{}'::jsonb, updated_at = now() WHERE tg_id = $1`,
+    [tgId],
+  );
+}

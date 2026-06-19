@@ -36,6 +36,9 @@ CREATE TABLE users (
   onboarding_step       TEXT         CHECK (onboarding_step IN
                           ('name','birth_date','birth_time','city','consent','done')),
   onboarding_completed  BOOLEAN      NOT NULL DEFAULT false,
+  -- Черновик ответов онбординга (имя, дата, время, город) до создания профиля.
+  -- Хранится в БД, чтобы диалог переживал перезапуск/остановку бота.
+  onboarding_draft      JSONB        NOT NULL DEFAULT '{}'::jsonb,
   created_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at            TIMESTAMPTZ  NOT NULL DEFAULT now()
 );

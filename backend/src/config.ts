@@ -17,6 +17,8 @@ export const config = {
     botToken: required('BOT_TOKEN'),
     botSecret: required('BOT_SECRET'),
   },
+  // URL веб-приложения (GitHub Pages) — для кнопки «Открыть» в боте.
+  miniAppUrl: process.env.MINI_APP_URL ?? '',
 } as const;
 
 export const isDev = config.nodeEnv === 'development';
