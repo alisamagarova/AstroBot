@@ -1,4 +1,4 @@
-// birthedit.jsx — editable birth data: calendar date · time precision · city search
+﻿// birthedit.jsx — editable birth data: calendar date · time precision · city search
 // Self-contained: depends only on React + props (th, lang). Shares via window.
 
 const { useState, useEffect, useRef, useMemo } = React;
@@ -522,6 +522,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   const en = lang === 'en';
   const [b, setB] = useState(() => JSON.parse(JSON.stringify(initial)));
   const [open, setOpen] = useState(null); // 'date' | 'time' | 'city' | null
+  const [dateWarn, setDateWarn] = useState(false); // предупреждение о смене даты
 
   const T = {
     title:   title || (en ? 'Birth data' : 'Данные рождения'),
@@ -696,7 +697,13 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
 
       {/* ── Save footer ── */}
       <div style={{flexShrink:0, padding:'12px 18px', paddingBottom:30, background: th.effDark ? 'rgba(10,6,22,0.72)' : 'rgba(248,245,255,0.72)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderTop:`1px solid ${th.glassBorder}`}}>
-        <button onClick={() => onSave(b)} style={{
+        <button onClick={() => {
+          // Для своего профиля (не партнёр) — предупреждение, если дата изменилась
+          const dateChanged = !showName && (
+            b.day !== initial.day || b.month !== initial.month || b.year !== initial.year
+          );
+          if (dateChanged) { setDateWarn(true); } else { onSave(b); }
+        }} style={{
           display:'flex', width:'100%', justifyContent:'center', alignItems:'center', gap:8, height:52,
           borderRadius:999, border:'none', cursor:'pointer', background:th.accent, color:'#fff',
           fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:15.5, boxShadow:`0 8px 26px ${th.accentGlow}`,
@@ -704,6 +711,39 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
           <BeIco name="check" size={18} color="#fff" sw={2}/>{T.save}
         </button>
       </div>
+
+      {/* ── Предупреждение: дату можно менять только 1 раз ── */}
+      {dateWarn && (
+        <div style={{position:'absolute',inset:0,zIndex:50,display:'flex',alignItems:'flex-end',background:'rgba(0,0,0,0.55)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)'}}>
+          <div style={{width:'100%',background:th.effDark?'#1a1430':'#fff',borderRadius:'24px 24px 0 0',padding:'28px 22px 36px',boxShadow:'0 -8px 40px rgba(0,0,0,0.3)'}}>
+            <div style={{width:40,height:4,borderRadius:99,background:th.glassBorder,margin:'0 auto 20px'}}/>
+            <div style={{fontSize:28,textAlign:'center',marginBottom:12}}>⚠️</div>
+            <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,color:th.ink,textAlign:'center',marginBottom:10,lineHeight:1.2}}>
+              {en ? 'Date of birth can be changed only once' : 'Дату рождения можно изменить только один раз'}
+            </div>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:13,color:th.inkSoft,textAlign:'center',lineHeight:1.5,marginBottom:24,textWrap:'pretty'}}>
+              {en
+                ? 'This protects your natal chart from being reused for other people. After saving, the date will be locked forever.'
+                : 'Это защита от переиспользования натальной карты для других людей. После сохранения дата будет заблокирована навсегда.'}
+            </div>
+            <button onClick={() => { setDateWarn(false); onSave(b); }} style={{
+              width:'100%',height:52,borderRadius:999,border:'none',cursor:'pointer',
+              background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',
+              fontWeight:700,fontSize:15,marginBottom:10,
+              boxShadow:`0 8px 26px ${th.accentGlow}`,
+            }}>
+              {en ? 'Confirm change' : 'Подтвердить изменение'}
+            </button>
+            <button onClick={() => setDateWarn(false)} style={{
+              width:'100%',height:46,borderRadius:999,border:`1px solid ${th.glassBorder}`,
+              cursor:'pointer',background:'transparent',color:th.inkSoft,
+              fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:14,
+            }}>
+              {en ? 'Cancel' : 'Отмена'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

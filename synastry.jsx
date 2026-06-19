@@ -1,4 +1,4 @@
-// synastry.jsx — Synastry (compatibility) module.
+﻿// synastry.jsx — Synastry (compatibility) module.
 // Compares two natal charts via cross-aspects between Person A's and Person B's
 // planets — the primary tool of synastry — weighted by personal planets and orb
 // tightness. Reuses the natal ephemeris engine (window.computeRealChart) so it
@@ -306,9 +306,10 @@ function PersonCard({ th, lang, color, soft, tag, person, onEdit }) {
 // ═══════════════════════════════════════════════════════
 // INTAKE SCREEN
 // ═══════════════════════════════════════════════════════
-function SynastryIntakeScreen({ th, lang, you, partner, onEditYou, onEditPartner, onBuild }) {
+function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx, onSelectPartner, onAddPartner, onEditPartner, onEditYou, onBuild }) {
   const en = lang === 'en';
   const pc = personColors(th);
+  const partner = selectedPartnerIdx != null && partners[selectedPartnerIdx] ? partners[selectedPartnerIdx] : null;
   const ready = !!(partner && partner.city);
   const nonExact = you.timeMode !== 'exact' || (ready && partner.timeMode !== 'exact');
 
@@ -316,7 +317,7 @@ function SynastryIntakeScreen({ th, lang, you, partner, onEditYou, onEditPartner
     <div style={{padding:'8px 18px 28px',position:'relative',zIndex:1}}>
       <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,marginBottom:4,lineHeight:1.2}}>{en?'Compare two charts':'Сравните две карты'}</div>
       <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12.5,color:th.inkSoft,marginBottom:20,lineHeight:1.45,textWrap:'pretty'}}>
-        {en?'Synastry overlays your chart with another person\u2019s and reads the contacts between you — attraction, warmth, friction and growth.':'Синастрия совмещает вашу карту с картой другого человека и читает контакты между вами — притяжение, тепло, трение и рост.'}
+        {en?'Synastry overlays your chart with another person’s and reads the contacts between you — attraction, warmth, friction and growth.':'Синастрия совмещает вашу карту с картой другого человека и читает контакты между вами — притяжение, тепло, трение и рост.'}
       </div>
 
       {/* You */}
@@ -330,29 +331,69 @@ function SynastryIntakeScreen({ th, lang, you, partner, onEditYou, onEditPartner
         </div>
       </div>
 
-      {/* Partner */}
-      {ready ? (
-        <PersonCard th={th} lang={lang} color={pc.par} soft={pc.parSoft} tag={en?'PARTNER':'ПАРТНЁР'} person={partner} onEdit={onEditPartner}/>
-      ) : (
-        <button onClick={onEditPartner} style={{
-          width:'100%',cursor:'pointer',display:'flex',alignItems:'center',gap:13,
-          background:th.effDark?'rgba(255,255,255,0.04)':'rgba(255,255,255,0.4)',
-          border:`1.5px dashed ${pc.par}80`,borderRadius:20,padding:'18px 16px',color:th.ink,boxSizing:'border-box',
-        }}>
-          <div style={{width:50,height:50,borderRadius:'50%',border:`1.5px dashed ${pc.par}90`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <SynIco name="plus" size={22} color={pc.par} sw={1.8}/>
+      {/* Partners list + Add */}
+      <div>
+        {partners.length > 0 && (
+          <div style={{display:'flex',flexDirection:'column',gap:7,marginBottom:10}}>
+            {partners.map((p, idx) => {
+              const sel = selectedPartnerIdx === idx;
+              const name = en ? (p.nameEn || p.name) : (p.name || p.nameEn);
+              const city = p.city ? (en ? p.city.en : p.city.ru) : '';
+              return (
+                <button key={idx} onClick={() => onSelectPartner(idx)} style={{
+                  display:'flex',alignItems:'center',gap:12,padding:'11px 13px',
+                  background: sel ? `${pc.par}18` : (th.effDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.45)'),
+                  border: `1.5px solid ${sel ? pc.par : th.glassBorder}`,
+                  borderRadius:16,cursor:'pointer',width:'100%',textAlign:'left',boxSizing:'border-box',
+                  backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',
+                }}>
+                  <div style={{width:20,height:20,borderRadius:'50%',flexShrink:0,
+                    border:`2px solid ${sel ? pc.par : th.muted}`,
+                    background: sel ? pc.par : 'transparent',
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                  }}>
+                    {sel && <div style={{width:7,height:7,borderRadius:'50%',background:'#fff'}}/>}
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:15.5,color:th.ink,lineHeight:1.15}}>{name}</div>
+                    {(p.day||p.year||city) && (
+                      <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.inkSoft,marginTop:2}}>
+                        {p.day && p.month && p.year ? `${p.day}.${String(p.month).padStart(2,'0')}.${p.year}` : ''}
+                        {city ? ` · ${city}` : ''}
+                      </div>
+                    )}
+                  </div>
+                  <button onClick={e=>{ e.stopPropagation(); onEditPartner(idx); }} style={{
+                    width:28,height:28,borderRadius:999,border:`1px solid ${th.glassBorder}`,
+                    background:th.chip,cursor:'pointer',display:'flex',alignItems:'center',
+                    justifyContent:'center',flexShrink:0,
+                  }}>
+                    <SynIco name="edit" size={12} color={th.muted} sw={1.6}/>
+                  </button>
+                </button>
+              );
+            })}
           </div>
-          <div style={{flex:1,minWidth:0,textAlign:'left'}}>
-            <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:17,color:th.ink,marginBottom:3}}>{en?'Add partner':'Добавить партнёра'}</div>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,color:th.inkSoft}}>{en?'Name, date and city of birth':'Имя, дата и город рождения'}</div>
+        )}
+
+        <button onClick={onAddPartner} style={{
+          width:'100%',cursor:'pointer',display:'flex',alignItems:'center',gap:12,
+          background:'transparent',border:`1.5px dashed ${pc.par}70`,borderRadius:16,
+          padding:'13px 14px',color:th.ink,boxSizing:'border-box',
+        }}>
+          <div style={{width:36,height:36,borderRadius:'50%',border:`1.5px dashed ${pc.par}90`,
+            display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <SynIco name="plus" size={18} color={pc.par} sw={1.8}/>
+          </div>
+          <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:16,color:th.inkSoft}}>
+            {en ? 'Add new partner' : 'Добавить партнёра'}
           </div>
         </button>
-      )}
+      </div>
 
-      {/* caveat */}
       {nonExact && (
         <div style={{display:'flex',gap:9,alignItems:'flex-start',padding:'12px 14px',borderRadius:14,background:`${th.accent}12`,border:`1px solid ${th.accent}30`,marginTop:18}}>
-          <span style={{flexShrink:0,fontSize:13,color:th.glyphClr,lineHeight:1.4}}>✦</span>
+          <span style={{flexShrink:0,fontSize:13,color:th.glyphClr,lineHeight:1.4}}>✶</span>
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,lineHeight:1.5,color:th.inkSoft,textWrap:'pretty'}}>
             {en?'Without an exact birth time the Moon and rising sign may shift — planet-to-planet contacts stay reliable.':'Без точного времени рождения Луна и асцендент могут смещаться — контакты между планетами остаются надёжными.'}
           </div>

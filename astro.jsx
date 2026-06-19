@@ -369,20 +369,32 @@ function CosmicMain({ th, lang, onOpen, sun }) {
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-        {first4.map(p=>(
-          <GlassCard key={p.id} th={th} onClick={()=>onOpen(p.id)} style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130}}>
-            <div style={{width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`,marginBottom:10,flexShrink:0}}>
-              <AstroGlyph name={p.glyph} size={22} color={th.glyphClr} sw={1.4}/>
-            </div>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9,letterSpacing:1.3,color:th.gold,marginBottom:5}}>{p.kicker[lang]}</div>
-            <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:17,lineHeight:1.1,color:th.ink,marginBottom:5}}>{p.title[lang]}</div>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.35,color:th.inkSoft}}>{p.desc[lang]}</div>
-          </GlassCard>
-        ))}
+        {first4.map(p=>{
+          const soon = p.id === 'pinpoint'; // Хорар — скоро
+          return (
+            <GlassCard key={p.id} th={th} onClick={soon ? undefined : ()=>onOpen(p.id)}
+              style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130,
+                      opacity:soon?0.62:1,cursor:soon?'default':'pointer',position:'relative',overflow:'hidden'}}>
+              {soon && (
+                <div style={{position:'absolute',top:9,right:9,background:th.gold,color:th.effDark?'#1a1230':'#fff',
+                  fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:8.5,letterSpacing:1,
+                  borderRadius:99,padding:'2px 7px'}}>
+                  {lang==='en'?'SOON':'СКОРО'}
+                </div>
+              )}
+              <div style={{width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`,marginBottom:10,flexShrink:0}}>
+                <AstroGlyph name={p.glyph} size={22} color={th.glyphClr} sw={1.4}/>
+              </div>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9,letterSpacing:1.3,color:th.gold,marginBottom:5}}>{p.kicker[lang]}</div>
+              <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:17,lineHeight:1.1,color:th.ink,marginBottom:5}}>{p.title[lang]}</div>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.35,color:th.inkSoft}}>{p.desc[lang]}</div>
+            </GlassCard>
+          );
+        })}
       </div>
 
-      {/* ── MILESTONES ──────────────────────────────── */}
-      <GlassCard th={th} strong onClick={()=>onOpen(milestone.id)} style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden'}}>
+      {/* ── MILESTONES — скоро ───────────────────────── */}
+      <GlassCard th={th} strong style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden',opacity:0.62,cursor:'default'}}>
         <WheelWatermark color={th.effDark?'#fff':th.ink} opacity={th.effDark?0.09:0.06}/>
         <div style={{width:50,height:50,borderRadius:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}25`,border:`1px solid ${th.accent}50`,position:'relative'}}>
           <AstroGlyph name="milestones" size={26} color={th.glyphClr} sw={1.4}/>
@@ -392,7 +404,10 @@ function CosmicMain({ th, lang, onOpen, sun }) {
           <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,lineHeight:1.08,color:th.ink,marginBottom:4}}>{milestone.title[lang]}</div>
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{milestone.desc[lang]}</div>
         </div>
-        <AstroGlyph name="arrow-right" size={18} color={th.ink} sw={1.8} style={{flexShrink:0,position:'relative'}}/>
+        <div style={{background:th.gold,color:th.effDark?'#1a1230':'#fff',fontFamily:'"Manrope",sans-serif',
+          fontWeight:700,fontSize:9,letterSpacing:1,borderRadius:99,padding:'3px 9px',flexShrink:0}}>
+          {lang==='en'?'SOON':'СКОРО'}
+        </div>
       </GlassCard>
     </div>
   );
@@ -474,22 +489,12 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   return (
     <div style={{padding:'8px 18px 24px',position:'relative',zIndex:1}}>
 
-      {/* ── AVATAR + NAME ─────────────────────────── */}
-      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:14,marginBottom:28,paddingTop:6}}>
-        <div style={{position:'relative',width:78,height:78}}>
-          <div style={{
-            width:78,height:78,borderRadius:'50%',
-            background:`radial-gradient(circle at 35% 30%, ${th.accent}90, ${th.accent}38)`,
-            border:`1.5px solid ${th.accent}50`,
-            display:'flex',alignItems:'center',justifyContent:'center',
-            boxShadow:`0 0 36px ${th.accentGlow}`,
-          }}>
-            <span style={{fontFamily:'var(--ds-serif)',fontSize:33,fontWeight:600,color:th.ink,lineHeight:1,userSelect:'none'}}>
-              {(userName||'?')[0]}
-            </span>
-          </div>
-          <div style={{position:'absolute',bottom:1,right:1,width:24,height:24,borderRadius:'50%',background:th.glassStrong,border:`1.5px solid ${th.glassBorder}`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 2px 8px rgba(0,0,0,0.22)'}}>
-            <ZodiacGlyph sign={sunKey} size={12} color={th.gold}/>
+      {/* ── NAME + ZODIAC ─────────────────────────── */}
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginBottom:28,paddingTop:14}}>
+        {/* Zodiac badge */}
+        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
+          <div style={{width:28,height:28,borderRadius:'50%',background:`${th.accent}22`,border:`1.5px solid ${th.accent}44`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <ZodiacGlyph sign={sunKey} size={14} color={th.gold}/>
           </div>
         </div>
 
@@ -591,10 +596,21 @@ function loadBirth() {
   try { const r = localStorage.getItem(BIRTH_KEY); if (r) return { ...DEFAULT_BIRTH, ...JSON.parse(r) }; } catch(e) {}
   return DEFAULT_BIRTH;
 }
-const PARTNER_KEY = 'astro_partner_v1';
-function loadPartner() {
-  try { const r = localStorage.getItem(PARTNER_KEY); if (r) return { ...DEFAULT_PARTNER, ...JSON.parse(r) }; } catch(e) {}
-  return DEFAULT_PARTNER;
+const PARTNERS_KEY = 'astro_partners_v2';
+function loadPartners() {
+  try {
+    const r = localStorage.getItem(PARTNERS_KEY);
+    if (r) {
+      const parsed = JSON.parse(r);
+      if (Array.isArray(parsed)) return parsed;
+      // migrate old single-partner format
+      return [{ ...DEFAULT_PARTNER, ...parsed }];
+    }
+    // migrate from legacy single-partner key
+    const old = localStorage.getItem('astro_partner_v1');
+    if (old) return [{ ...DEFAULT_PARTNER, ...JSON.parse(old) }];
+  } catch(e) {}
+  return [];
 }
 // Where the solar return is cast: city of residence if set, else the birthplace.
 // (Natal chart always uses the birthplace; only the solar return relocates.)
@@ -605,9 +621,10 @@ function AstroPhone({ th, lang, onChangeLang }) {
   const [activeTab, setActiveTab] = useState('home');
   const [userName,  setUserName]  = useState(USER.name);
   const [birth,     setBirth]     = useState(loadBirth);
-  const [partner,   setPartner]   = useState(loadPartner);
+  const [partners,  setPartners]  = useState(loadPartners);
+  const [selPartnerIdx, setSelPartnerIdx] = useState(null); // index of selected partner
+  const [editPartnerIdx, setEditPartnerIdx] = useState(null); // null=closed, -1=add new, >=0=edit existing
   const [editing,   setEditing]   = useState(false);
-  const [editingPartner, setEditingPartner] = useState(false);
   const [bigChart,  setBigChart]  = useState(null);
   const [bigSyn,    setBigSyn]    = useState(null);
   const [bigSolar,  setBigSolar]  = useState(null);
@@ -616,16 +633,31 @@ function AstroPhone({ th, lang, onChangeLang }) {
   const [milestoneTheme, setMilestoneTheme] = useState(null);
 
   useEffect(()=>{ try{ localStorage.setItem(BIRTH_KEY, JSON.stringify(birth)); }catch(e){} }, [birth]);
-  useEffect(()=>{ try{ localStorage.setItem(PARTNER_KEY, JSON.stringify(partner)); }catch(e){} }, [partner]);
+  useEffect(()=>{ try{ localStorage.setItem(PARTNERS_KEY, JSON.stringify(partners)); }catch(e){} }, [partners]);
 
   const sun  = sunSignInfo(birth, lang);
   sun.key    = SIGN_KEYS[sun.idx];
 
+  // derived selected partner object
+  const partner = selPartnerIdx !== null && partners[selPartnerIdx] ? partners[selPartnerIdx] : null;
+
   const openEdit   = () => setEditing(true);
   const saveBirth  = (nb) => { setBirth(nb); setEditing(false); setSolarCity(residenceCity(nb)); };
   const cancelEdit = () => setEditing(false);
-  const savePartner   = (np) => { setPartner(np); setEditingPartner(false); };
-  const cancelPartner = () => setEditingPartner(false);
+
+  const openAddPartner  = () => setEditPartnerIdx(-1);
+  const openEditPartner = (idx) => setEditPartnerIdx(idx);
+  const savePartner = (np) => {
+    if (editPartnerIdx === -1) {
+      const newIdx = partners.length;
+      setPartners(prev => [...prev, np]);
+      setSelPartnerIdx(newIdx);
+    } else {
+      setPartners(prev => prev.map((p, i) => i === editPartnerIdx ? np : p));
+    }
+    setEditPartnerIdx(null);
+  };
+  const cancelPartner = () => setEditPartnerIdx(null);
 
   const screen = history[history.length - 1];
 
@@ -670,7 +702,7 @@ function AstroPhone({ th, lang, onChangeLang }) {
     mainContent = <NatalChartScreen th={th} lang={lang} birth={birth} onExpand={setBigChart}/>;
   } else if (screen === 'synastry') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
-    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partner={partner} onEditYou={openEdit} onEditPartner={()=>setEditingPartner(true)} onBuild={()=>go('synastry_chart')}/>;
+    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partners={partners} selectedPartnerIdx={selPartnerIdx} onSelectPartner={setSelPartnerIdx} onAddPartner={openAddPartner} onEditPartner={openEditPartner} onEditYou={openEdit} onBuild={()=>go('synastry_chart')}/>;
   } else if (screen === 'synastry_chart') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
     mainContent = <SynastryChartScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partner={partner} onExpand={setBigSyn}/>;
@@ -722,12 +754,15 @@ function AstroPhone({ th, lang, onChangeLang }) {
           </div>
         )}
 
-        {/* ── Partner-data editor overlay (name + birth data) ── */}
-        {editingPartner && (
-          <div className="astro-in-f" style={{position:'absolute',inset:0,zIndex:72,overflow:'hidden'}}>
+        {/* ── Partner-data editor overlay (add new or edit existing) ── */}
+        {editPartnerIdx !== null && (
+          <div className="astro-in-f" style={{position:’absolute’,inset:0,zIndex:72,overflow:’hidden’}}>
             <Sky th={th}/>
-            <div style={{position:'relative',zIndex:1,height:'100%'}}>
-              <BirthDataEditor th={th} lang={lang} initial={partner} onSave={savePartner} onCancel={cancelPartner} showName title={lang==='en'?'Partner’s data':'Данные партнёра'}/>
+            <div style={{position:’relative’,zIndex:1,height:’100%’}}>
+              <BirthDataEditor th={th} lang={lang}
+                initial={editPartnerIdx === -1 ? DEFAULT_PARTNER : partners[editPartnerIdx]}
+                onSave={savePartner} onCancel={cancelPartner}
+                showName title={lang===’en’?’Partner\’s data’:’Данные партнёра’}/>
             </div>
           </div>
         )}

@@ -6,6 +6,7 @@ import authPlugin from './plugins/auth.js';
 import usersRoutes from './routes/users.js';
 import peopleRoutes from './routes/people.js';
 import chartsRoutes from './routes/charts.js';
+import adminRoutes from './routes/admin.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -23,6 +24,7 @@ export async function buildApp() {
   await app.register(usersRoutes,  { prefix: '/api' });
   await app.register(peopleRoutes, { prefix: '/api' });
   await app.register(chartsRoutes, { prefix: '/api' });
+  await app.register(adminRoutes);
 
   // ─── Health check (без авторизации) ───────────────────────────────────────
   app.get('/health', { config: { skipAuth: true } }, async () => ({ ok: true }));
