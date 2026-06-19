@@ -164,6 +164,7 @@ function SynIco({ name, size = 20, color = 'currentColor', sw = 1.7 }) {
     case 'spark': return (<svg width={size} height={size} viewBox="0 0 24 24" fill={color}><path d="M12 1.5c.5 4.7 2.3 6.5 7 7-4.7.5-6.5 2.3-7 7-.5-4.7-2.3-6.5-7-7 4.7-.5 6.5-2.3 7-7Z"/></svg>);
     case 'chev':  return (<svg {...c}><path d="M5 8l7 7 7-7"/></svg>);
     case 'link':  return (<svg {...c}><circle cx="8.5" cy="12" r="5.5"/><circle cx="15.5" cy="12" r="5.5"/></svg>);
+    case 'trash': return (<svg {...c}><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></svg>);
     default: return null;
   }
 }
@@ -306,7 +307,7 @@ function PersonCard({ th, lang, color, soft, tag, person, onEdit }) {
 // ═══════════════════════════════════════════════════════
 // INTAKE SCREEN
 // ═══════════════════════════════════════════════════════
-function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx, onSelectPartner, onAddPartner, onEditPartner, onEditYou, onBuild }) {
+function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx, onSelectPartner, onAddPartner, onEditPartner, onDeletePartner, onEditYou, onBuild }) {
   const en = lang === 'en';
   const pc = personColors(th);
   const partner = selectedPartnerIdx != null && partners[selectedPartnerIdx] ? partners[selectedPartnerIdx] : null;
@@ -363,13 +364,24 @@ function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx
                       </div>
                     )}
                   </div>
-                  <button onClick={e=>{ e.stopPropagation(); onEditPartner(idx); }} style={{
+                  <span onClick={e=>{ e.stopPropagation(); onEditPartner(idx); }} role="button" style={{
                     width:28,height:28,borderRadius:999,border:`1px solid ${th.glassBorder}`,
                     background:th.chip,cursor:'pointer',display:'flex',alignItems:'center',
                     justifyContent:'center',flexShrink:0,
                   }}>
                     <SynIco name="edit" size={12} color={th.muted} sw={1.6}/>
-                  </button>
+                  </span>
+                  <span onClick={e=>{
+                    e.stopPropagation();
+                    const nm = en ? (p.nameEn || p.name) : (p.name || p.nameEn);
+                    if (window.confirm(en ? `Delete ${nm}?` : `Удалить партнёра «${nm}»?`)) onDeletePartner(idx);
+                  }} role="button" style={{
+                    width:28,height:28,borderRadius:999,border:`1px solid ${th.glassBorder}`,
+                    background:th.chip,cursor:'pointer',display:'flex',alignItems:'center',
+                    justifyContent:'center',flexShrink:0,
+                  }}>
+                    <SynIco name="trash" size={12} color={pc.par} sw={1.6}/>
+                  </span>
                 </button>
               );
             })}

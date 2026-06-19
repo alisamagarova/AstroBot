@@ -477,6 +477,8 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   const [draft,   setDraft]   = useState(userName);
   const s          = STR[lang];
   const activeLang = lang === 'ru' ? 'RU' : 'EN';
+  const sun        = sunSignInfo(birth, lang);
+  const signLine   = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
 
   const saveName = () => {
     if (draft.trim()) onUpdateName(draft.trim());
@@ -490,14 +492,7 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
     <div style={{padding:'8px 18px 24px',position:'relative',zIndex:1}}>
 
       {/* ── NAME + ZODIAC ─────────────────────────── */}
-      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginBottom:28,paddingTop:14}}>
-        {/* Zodiac badge */}
-        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:2}}>
-          <div style={{width:28,height:28,borderRadius:'50%',background:`${th.accent}22`,border:`1.5px solid ${th.accent}44`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <ZodiacGlyph sign={sunKey} size={14} color={th.gold}/>
-          </div>
-        </div>
-
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:11,marginBottom:28,paddingTop:18}}>
         {editing ? (
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <input
@@ -511,20 +506,30 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
                 border:`1.5px solid ${th.accent}80`,
                 borderRadius:10,padding:'7px 14px',
                 color:th.ink,fontFamily:'var(--ds-serif)',
-                fontSize:22,fontWeight:600,
-                outline:'none',textAlign:'center',width:164,
+                fontSize:26,fontWeight:600,
+                outline:'none',textAlign:'center',width:200,
               }}
             />
-            <button onClick={saveName} style={{width:34,height:34,borderRadius:999,border:`1px solid ${th.accent}50`,background:`${th.accent}20`,color:th.accent,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,flexShrink:0}}>✓</button>
+            <button onClick={saveName} style={{width:36,height:36,borderRadius:999,border:`1px solid ${th.accent}50`,background:`${th.accent}20`,color:th.accent,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,flexShrink:0}}>✓</button>
           </div>
         ) : (
-          <div style={{display:'flex',alignItems:'center',gap:9}}>
-            <span style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:28,color:th.ink,lineHeight:1}}>{userName}</span>
-            <button onClick={()=>{setDraft(userName);setEditing(true);}} style={{width:29,height:29,borderRadius:999,border:`1px solid ${th.glassBorder}`,background:th.chip,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:34,color:th.ink,lineHeight:1}}>{userName}</span>
+            <button onClick={()=>{setDraft(userName);setEditing(true);}} style={{width:30,height:30,borderRadius:999,border:`1px solid ${th.glassBorder}`,background:th.chip,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
               <AstroGlyph name="edit" size={13} color={th.muted} sw={1.6}/>
             </button>
           </div>
         )}
+
+        {/* Zodiac pill */}
+        <div style={{
+          display:'inline-flex',alignItems:'center',gap:7,padding:'5px 12px 5px 10px',
+          borderRadius:999,background:th.chip,border:`1px solid ${th.glassBorder}`,
+          backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',
+        }}>
+          <ZodiacGlyph sign={sunKey} size={15} color={th.gold}/>
+          <span style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,color:th.inkSoft}}>{signLine}</span>
+        </div>
       </div>
 
       {/* ── BIRTH DATA — tap to edit ───────────────── */}
@@ -615,7 +620,7 @@ function loadPartners() {
 // Where the solar return is cast: city of residence if set, else the birthplace.
 // (Natal chart always uses the birthplace; only the solar return relocates.)
 const residenceCity = (b) => (b && b.residence) || (b && b.city);
-function AstroPhone({ th, lang, onChangeLang }) {
+function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [history,   setHistory]   = useState(['home']);
   const [anim,      setAnim]      = useState('');
   const [activeTab, setActiveTab] = useState('home');
@@ -658,6 +663,15 @@ function AstroPhone({ th, lang, onChangeLang }) {
     setEditPartnerIdx(null);
   };
   const cancelPartner = () => setEditPartnerIdx(null);
+  const deletePartner = (idx) => {
+    setPartners(prev => prev.filter((_, i) => i !== idx));
+    setSelPartnerIdx(prev => {
+      if (prev === null) return null;
+      if (prev === idx) return null;          // удалили выбранного — сбрасываем выбор
+      if (prev > idx)   return prev - 1;      // индекс сместился
+      return prev;
+    });
+  };
 
   const screen = history[history.length - 1];
 
@@ -702,7 +716,7 @@ function AstroPhone({ th, lang, onChangeLang }) {
     mainContent = <NatalChartScreen th={th} lang={lang} birth={birth} onExpand={setBigChart}/>;
   } else if (screen === 'synastry') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
-    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partners={partners} selectedPartnerIdx={selPartnerIdx} onSelectPartner={setSelPartnerIdx} onAddPartner={openAddPartner} onEditPartner={openEditPartner} onEditYou={openEdit} onBuild={()=>go('synastry_chart')}/>;
+    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partners={partners} selectedPartnerIdx={selPartnerIdx} onSelectPartner={setSelPartnerIdx} onAddPartner={openAddPartner} onEditPartner={openEditPartner} onDeletePartner={deletePartner} onEditYou={openEdit} onBuild={()=>go('synastry_chart')}/>;
   } else if (screen === 'synastry_chart') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
     mainContent = <SynastryChartScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partner={partner} onExpand={setBigSyn}/>;
@@ -731,7 +745,7 @@ function AstroPhone({ th, lang, onChangeLang }) {
   const animKey = activeTab === 'profile' ? 'prof_' + lang : screen + lang;
 
   return (
-    <IOSDevice dark={th.effDark}>
+    <IOSDevice dark={th.effDark} embedded={embedded}>
       <div style={{position:'relative',height:'100%',color:th.ink,display:'flex',flexDirection:'column'}}>
         <Sky th={th}/>
         {/* ── Scrollable content ── */}
@@ -811,6 +825,17 @@ function App() {
   const th     = getTheme(mode,tod,t.accent);
 
   const handleChangeLang = (code) => setTweak('lang', code); // 'RU' | 'EN'
+
+  const isTg = typeof window !== 'undefined' && window.IS_TG;
+
+  // В Telegram — на весь экран, без рамки телефона и dev-панели.
+  if (isTg) {
+    return (
+      <div style={{position:'fixed',inset:0,background:'#0a0812'}}>
+        <AstroPhone th={th} lang={lang} onChangeLang={handleChangeLang} embedded/>
+      </div>
+    );
+  }
 
   return (
     <React.Fragment>

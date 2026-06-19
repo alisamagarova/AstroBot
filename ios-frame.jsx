@@ -200,8 +200,26 @@ function IOSList({ header, children, dark = false }) {
 // ─────────────────────────────────────────────────────────────
 function IOSDevice({
   children, width = 402, height = 874, dark = false,
-  title, keyboard = false,
+  title, keyboard = false, embedded = false,
 }) {
+  // Embedded mode (внутри Telegram): на весь экран, без рамки, чёлки и фейкового статус-бара.
+  if (embedded) {
+    return (
+      <div style={{
+        width: '100%', height: '100%', overflow: 'hidden',
+        position: 'relative', background: dark ? '#000' : '#F2F2F7',
+        fontFamily: '-apple-system, system-ui, sans-serif',
+        WebkitFontSmoothing: 'antialiased',
+      }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {title !== undefined && <IOSNavBar title={title} dark={dark} />}
+          <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+          {keyboard && <IOSKeyboard dark={dark} />}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       width, height, borderRadius: 48, overflow: 'hidden',
