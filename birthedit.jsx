@@ -527,10 +527,10 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   const T = {
     title:   title || (en ? 'Birth data' : 'Данные рождения'),
     sub:     showName
-               ? (en ? 'Enter your partner's details to compare charts' : 'Введите данные партнёра, чтобы сравнить карты')
+               ? (en ? 'Enter your partner\'s details to compare charts' : 'Введите данные партнёра, чтобы сравнить карты')
                : (en ? 'These details power your natal chart' : 'По этим данным строится натальная карта'),
     name:    en ? 'Name' : 'Имя',
-    namePh:  en ? 'Partner's name' : 'Имя партнёра',
+    namePh:  en ? 'Partner\'s name' : 'Имя партнёра',
     date:    en ? 'Date of birth' : 'Дата рождения',
     time:    en ? 'Time of birth' : 'Время рождения',
     city:    en ? 'City of birth' : 'Город рождения',

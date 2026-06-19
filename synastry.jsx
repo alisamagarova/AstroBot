@@ -317,7 +317,7 @@ function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx
     <div style={{padding:'8px 18px 28px',position:'relative',zIndex:1}}>
       <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,marginBottom:4,lineHeight:1.2}}>{en?'Compare two charts':'Сравните две карты'}</div>
       <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12.5,color:th.inkSoft,marginBottom:20,lineHeight:1.45,textWrap:'pretty'}}>
-        {en?'Synastry overlays your chart with another person's and reads the contacts between you — attraction, warmth, friction and growth.':'Синастрия совмещает вашу карту с картой другого человека и читает контакты между вами — притяжение, тепло, трение и рост.'}
+        {en?'Synastry overlays your chart with another person\'s and reads the contacts between you — attraction, warmth, friction and growth.':'Синастрия совмещает вашу карту с картой другого человека и читает контакты между вами — притяжение, тепло, трение и рост.'}
       </div>
 
       {/* You */}
