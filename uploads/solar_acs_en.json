@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "version": "1.0",
+    "language": "en",
+    "type": "solar_return_angles",
+    "description": "Interpretations of solar-return key activations: planets on the angles of the solar-return chart (conjunction to the angle). They color the whole year.",
+    "note": "Source 'solar' is a solar-return planet on its own angle (the energy of that specific year). Source 'natal' is a natal planet falling on a solar-return angle (a lifelong natal theme comes to the foreground this year). On the angle = conjunction; opposition to the ASC = conjunction to the DC, opposition to the MC = conjunction to the IC, so the four angles cover everything.",
+    "keys": {
+      "planets": [
+        "sun",
+        "moon",
+        "mercury",
+        "venus",
+        "mars",
+        "jupiter",
+        "saturn",
+        "uranus",
+        "neptune",
+        "pluto"
+      ],
+      "angles": [
+        "asc",
+        "dc",
+        "mc",
+        "ic"
+      ],
+      "sources": [
+        "solar",
+        "natal"
+      ]
+    },
+    "planet_names": {
+      "sun": "Sun",
+      "moon": "Moon",
+      "mercury": "Mercury",
+      "venus": "Venus",
+      "mars": "Mars",
+      "jupiter": "Jupiter",
+      "saturn": "Saturn",
+      "uranus": "Uranus",
+      "neptune": "Neptune",
+      "pluto": "Pluto"
+    },
+    "angle_names": {
+      "asc": "Ascendant (ASC)",
+      "dc": "Descendant (DC)",
+      "mc": "Midheaven (MC)",
+      "ic": "Imum Coeli (IC)"
+    },
+    "source_names": {
+      "solar": "solar-return planet",
+      "natal": "natal planet"
+    }
+  },
+  "activations": {
+    "solar": {
+      "sun": {
+        "asc": "Solar-return Sun on the Ascendant: a year that's about you. Identity, appearance, and self-image come to the foreground — time to assert yourself, start fresh, and invest in you. Energy and visibility run high. Strength: vitality, initiative, confidence; the risk, self-centeredness and making everything about you.",
+        "dc": "Solar-return Sun on the Descendant: a year that revolves around relationships and partnership. A key person, union, or marriage takes center stage; you come into focus largely through another. Strength: meaningful encounters and collaboration; the risk, dependence on a partner and losing yourself in the pair.",
+        "mc": "Solar-return Sun on the Midheaven: a year of career, status, and recognition. Professional goals, reputation, and public role take center stage — a good time to step up and rise. Strength: success, visibility, advancement; the risk, overrating ambition and working at the expense of private life.",
+        "ic": "Solar-return Sun on the Imum Coeli: a year about home, family, and roots. Focus shifts to private life, housing, relatives, and your inner base — time to tend the home front and sort out foundations. Strength: strengthening home and emotional ground; the risk, retreating into the private and a dip in outer activity."
+      },
+      "moon": {
+        "asc": "Solar-return Moon on the Ascendant: an emotionally rich, changeable year in which you're especially sensitive and open. Feelings, intuition, and the need for care come to the foreground. Strength: responsiveness, self-attunement, warm charisma; the risk, mood swings and being ruled by emotion.",
+        "dc": "Solar-return Moon on the Descendant: a year centered on relationships and caring for someone close. You're drawn to emotional closeness, a shared home, and nurturing a partner. Strength: warmth and attachment in the union; the risk, emotional dependence and moodiness in the pair.",
+        "mc": "Solar-return Moon on the Midheaven: a year where career and public role are colored by emotion and care. Work with people or caregiving as a vocation is possible; reputation is visible and shifting. Strength: attunement to the public and being in demand; the risk, unstable status and reliance on others' opinions.",
+        "ic": "Solar-return Moon on the Imum Coeli: a deeply domestic, family year. Home, relatives, roots, and inner life are the main focus; you want to feather the nest and care for loved ones. Strength: comfort, emotional grounding, family connection; the risk, withdrawal and moodiness at home."
+      },
+      "mercury": {
+        "asc": "Solar-return Mercury on the Ascendant: a year of communication, learning, contacts, and movement. You speak, write, and learn actively; mind and word are the year's main tool. Strength: liveliness, quick learning, useful connections; the risk, restlessness, scattered focus, and nervous tension.",
+        "dc": "Solar-return Mercury on the Descendant: a year of negotiations, agreements, and communication with partners. Relationships are built through dialogue and contact, possibly a joint venture or contract. Strength: mutual understanding and good deals; the risk, arguments and misunderstanding in the pair.",
+        "mc": "Solar-return Mercury on the Midheaven: a year where career moves through words, ideas, and contacts. Great for study, negotiation, writing, trade, any visible mental work. Strength: business connections and an intellectual reputation; the risk, busywork and superficiality in affairs.",
+        "ic": "Solar-return Mercury on the Imum Coeli: a year full of communication and tasks around home and family — moves, paperwork, talks with relatives, sorting out the household. Strength: getting domestic matters and connections in order; the risk, fuss and nervous tension in the family sphere."
+      },
+      "venus": {
+        "asc": "Solar-return Venus on the Ascendant: a year of charm, love, and magnetism. You blossom, you're well-liked, and you're drawn to beauty and pleasure; great for appearance, romance, and creativity. Strength: charm, goodwill, harmony; the risk, laziness, vanity, and self-indulgence.",
+        "dc": "Solar-return Venus on the Descendant: one of the best signatures for love and marriage in a year. Relationships, union, and romance take center stage; high odds of a meaningful meeting or a strengthened bond. Strength: love, accord, partnership; the risk, yielding at your own expense.",
+        "mc": "Solar-return Venus on the Midheaven: a year where charm and connections help your career. Good for work tied to beauty, art, and diplomacy; you appeal to the public and to superiors. Strength: a pleasant reputation and useful contacts; the risk, blurring the personal and the professional.",
+        "ic": "Solar-return Venus on the Imum Coeli: a year of comfort, beauty, and love at home. You're drawn to beautifying your space, warming up family ties, and creating harmony in private life. Strength: coziness, peace at home, pleasure in daily life; the risk, laziness and too much comfort."
+      },
+      "mars": {
+        "asc": "Solar-return Mars on the Ascendant: an energetic, assertive year when you act boldly and go after what you want. Plenty of drive, initiative, and will to win. Strength: drive, courage, breakthrough force; the risk, temper, conflict, haste, and injury.",
+        "dc": "Solar-return Mars on the Descendant: a year of active but tense relationships. Partnership is charged with energy and passion, but clashes, rivalry, and open conflict are possible. Strength: passion and dynamism in the pair; the risk, quarrels and struggles for the upper hand.",
+        "mc": "Solar-return Mars on the Midheaven: a year of fighting for your career and an ambitious push. Lots of energy in your work, initiative, advancement by willpower; conflict with superiors is possible. Strength: drive, achievement, leadership; the risk, conflict and harshness at work.",
+        "ic": "Solar-return Mars on the Imum Coeli: a year of activity and tension at home. Energetic work on the house, renovation, a move — but also possible family conflict and pent-up irritation. Strength: energy for the home and protecting loved ones; the risk, quarrels at home and domestic stress."
+      },
+      "jupiter": {
+        "asc": "Solar-return Jupiter on the Ascendant: one of the luckiest signatures of the year. Growth, optimism, new opportunities, and good fortune come to you personally; you're on the rise. Strength: luck, confidence, broadening horizons; the risk, overconfidence and a taste for excess.",
+        "dc": "Solar-return Jupiter on the Descendant: a fortunate year for relationships and partnership. Luck favors meaningful meetings, unions, and beneficial cooperation; a partner brings growth. Strength: lucky alliances and support; the risk, overrating relationships and promises.",
+        "mc": "Solar-return Jupiter on the Midheaven: an excellent year for career and status. Advancement, recognition, new opportunities, and growth; your reputation strengthens. Strength: career luck and expansion; the risk, overrating your powers and ambitions.",
+        "ic": "Solar-return Jupiter on the Imum Coeli: a prosperous year for home and family. Improved housing, a family addition, and growing comfort and warmth at home are all possible. Strength: abundance and support in private life; the risk, complacency and excess in daily life."
+      },
+      "saturn": {
+        "asc": "Solar-return Saturn on the Ascendant: a serious year of tests and growing up. You feel responsibility, limits, sometimes fatigue — but you toughen and take life into your own hands. Strength: discipline, maturity, durable results; the risk, pessimism, heaviness, and isolation.",
+        "dc": "Solar-return Saturn on the Descendant: a year of serious relationships tested for strength. The union demands responsibility and effort; commitment or marriage is possible, or, conversely, cooling and parting. Strength: maturity and a durable bond; the risk, coldness, distance, and heaviness in the pair.",
+        "mc": "Solar-return Saturn on the Midheaven: a year of work, responsibility, and serious career tasks. Success comes through effort and discipline, but what you build is solid; tests and heavy load are possible. Strength: a reliable, earned result; the risk, overload, pressure, and fear of failure.",
+        "ic": "Solar-return Saturn on the Imum Coeli: a year where home and family demand responsibility. Care for relatives, housing obligations, and putting your foundations in order; daily life feels heavy. Strength: strengthening the foundation for the long haul; the risk, the weight of family duties and a cold home."
+      },
+      "uranus": {
+        "asc": "Solar-return Uranus on the Ascendant: a year of sudden change and freedom. Life refreshes sharply, you crave independence and a new self-image; surprises and reversals are likely. Strength: liberation, originality, breakthrough; the risk, instability and impulsive decisions.",
+        "dc": "Solar-return Uranus on the Descendant: a year of change in relationships. Sudden meetings, unconventional unions — or abrupt breakups; partnership becomes freer and more unpredictable. Strength: renewal and freshness in bonds; the risk, instability and sudden splits.",
+        "mc": "Solar-return Uranus on the Midheaven: a year of sharp career and status changes. A job change, an unexpected turn, an unconventional path, a pull toward freedom in your work. Strength: breakthrough, innovation, release from routine; the risk, sudden disruptions and unstable status.",
+        "ic": "Solar-return Uranus on the Imum Coeli: a year of change at home and in family. A move, a reshaped household, unexpected family events, a pull toward a new way of living. Strength: renewal of life and freedom in the private sphere; the risk, instability at home and abrupt shifts."
+      },
+      "neptune": {
+        "asc": "Solar-return Neptune on the Ascendant: a subtle, dreamy, slightly blurred year. Sensitivity, intuition, creativity, and spirituality intensify; your boundaries soften. Strength: inspiration, empathy, a creative upswing; the risk, fog, fatigue, illusions, and loss of clarity.",
+        "dc": "Solar-return Neptune on the Descendant: a year of romance and idealization in relationships. You're drawn to elevated love and spiritual closeness — but at risk of illusions, deception, or self-sacrifice in the pair. Strength: tenderness and spiritual connection; the risk, deception, disappointment, and blurred boundaries.",
+        "mc": "Solar-return Neptune on the Midheaven: a year where career is colored by creativity, ideals, or fog. Good for art, helping, and spiritual work; but goals may be unclear and reputation shaky. Strength: an inspired calling and creative lift; the risk, an unclear path and disappointment.",
+        "ic": "Solar-return Neptune on the Imum Coeli: a year of a subtle, dreamy home atmosphere. You're drawn to solitude, the spiritual, and making a quiet corner; but housing and family matters may be murky. Strength: peace of mind, spiritual grounding, creativity at home; the risk, fog and escapism in private life."
+      },
+      "pluto": {
+        "asc": "Solar-return Pluto on the Ascendant: a year of deep personal transformation. Your life and you yourself pass through powerful change, crisis, and rebirth; inner strength and influence grow. Strength: rebirth, willpower, magnetism; the risk, crises, control struggles, and obsessiveness.",
+        "dc": "Solar-return Pluto on the Descendant: a year of intense, transforming relationships. Partnership moves through depth, passion, crisis, or power struggle; bonds are powerful and anything but indifferent. Strength: deep intimacy and transformation through another; the risk, control, jealousy, and power games.",
+        "mc": "Solar-return Pluto on the Midheaven: a year of powerful career and status change. A radical overhaul of your work, a fight for power and influence, a rise or a fall followed by rebirth. Strength: influence, scale, the power to rebuild your path; the risk, power struggles and crisis at work.",
+        "ic": "Solar-return Pluto on the Imum Coeli: a year of deep change at home, in family, and in your inner world. Crises and transformation in private life, working through roots and old themes. Strength: deep renewal of foundations and inner strength; the risk, heavy family crises and a struggle for control at home."
+      }
+    },
+    "natal": {
+      "sun": {
+        "asc": "Natal Sun on the solar-return Ascendant: a year when your core essence and character come to the foreground. Who you truly are shows up vividly — a year of self-realization and visibility. Strength: wholeness, confidence, being true to yourself; the risk, self-centeredness and stubbornness.",
+        "dc": "Natal Sun on the solar-return Descendant: a year when your identity unfolds through relationships. Partnership and key people mirror your essence; the 'me and the other' theme is central. Strength: growth through union; the risk, dependence on a partner and losing yourself.",
+        "mc": "Natal Sun on the solar-return Midheaven: a year when your true essence shows up in your work and in public. Vocation, status, and self-realization in career come to the foreground. Strength: recognition for who you are; the risk, identifying yourself with success alone.",
+        "ic": "Natal Sun on the solar-return Imum Coeli: a year of turning toward roots, home, and your inner core. Your deep nature unfolds in private life, family, and on your own ground. Strength: strengthening your inner backbone and family bond; the risk, retreating into the private and a dip in outer activity."
+      },
+      "moon": {
+        "asc": "Natal Moon on the solar-return Ascendant: a year of heightened sensitivity when your emotional nature comes to the foreground. Feelings, the need for care, and intuition are especially visible. Strength: responsiveness and attunement to your needs; the risk, mood swings and vulnerability.",
+        "dc": "Natal Moon on the solar-return Descendant: a year when your need for closeness shows up through relationships. You're drawn to emotional support in a partner, to care and attachment. Strength: warmth and emotional closeness in the pair; the risk, emotional dependence.",
+        "mc": "Natal Moon on the solar-return Midheaven: a year when your feelings and need to nurture move into the public, career sphere. Work with people or caregiving as a calling is possible. Strength: being in demand and attuned to the public; the risk, self-worth riding on recognition.",
+        "ic": "Natal Moon on the solar-return Imum Coeli: a deeply domestic, family year — your emotional nature returns to its roots. Home, relatives, and inner life provide support. Strength: comfort, emotional foundation, family connection; the risk, withdrawal and getting stuck in the past."
+      },
+      "mercury": {
+        "asc": "Natal Mercury on the solar-return Ascendant: a year when your mind and way of speaking and thinking come to the foreground. Communication, study, and contacts intensify — you're especially active mentally. Strength: quick wit and useful connections; the risk, fuss and nervous tension.",
+        "dc": "Natal Mercury on the solar-return Descendant: a year when your thinking unfolds through dialogue with others. Relationships and affairs are built on communication, negotiation, and exchange. Strength: mutual understanding and contacts; the risk, arguments and misunderstanding.",
+        "mc": "Natal Mercury on the solar-return Midheaven: a year when your mind and word work for career and reputation. Great for intellectual work, writing, and visible negotiation. Strength: business intellect and connections; the risk, superficiality and fuss in affairs.",
+        "ic": "Natal Mercury on the solar-return Imum Coeli: a year when thoughts and communication turn toward home and family. Paperwork, talks with relatives, settling in, moves. Strength: getting domestic matters in order; the risk, nervous tension and fuss in private life."
+      },
+      "venus": {
+        "asc": "Natal Venus on the solar-return Ascendant: a year when your charm and capacity for love come to the foreground. You're attractive and drawn to beauty, love, and pleasure. Strength: charm, goodwill, harmony; the risk, laziness and self-indulgence.",
+        "dc": "Natal Venus on the solar-return Descendant: a year when your nature of loving unfolds in relationships. A beautiful signature for romance, union, and marriage. Strength: love, accord, and attraction; the risk, yielding at your own expense.",
+        "mc": "Natal Venus on the solar-return Midheaven: a year when charm and a sense of beauty work for your career and image. You appeal to the public; aesthetics and diplomacy help. Strength: a pleasant reputation and connections; the risk, blurring the personal and the professional.",
+        "ic": "Natal Venus on the solar-return Imum Coeli: a year of warmth, beauty, and love at home. Harmony in the family, comfort, and pleasure in private life come to the foreground. Strength: peace and coziness at home; the risk, laziness and too much comfort."
+      },
+      "mars": {
+        "asc": "Natal Mars on the solar-return Ascendant: a year when your energy, drive, and will come to the foreground. You act boldly and actively, going after what you want. Strength: drive, courage, initiative; the risk, temper, conflict, and haste.",
+        "dc": "Natal Mars on the solar-return Descendant: a year when your assertiveness shows up in relationships. Partnership is charged with passion and energy, but clashes are possible. Strength: passion and dynamism; the risk, quarrels and rivalry in the pair.",
+        "mc": "Natal Mars on the solar-return Midheaven: a year when your will and energy aim at career and ambition. An active push in your work, initiative, a fight for position. Strength: drive and achievement; the risk, conflict with superiors and harshness.",
+        "ic": "Natal Mars on the solar-return Imum Coeli: a year when energy and tension aim at home and family. Active settling in, renovation — but also possible conflict at home. Strength: energy for the home and protecting your own; the risk, quarrels at home and stress."
+      },
+      "jupiter": {
+        "asc": "Natal Jupiter on the solar-return Ascendant: a year when your gift for growth, optimism, and luck comes to the foreground. You're on the rise, open to opportunity, and self-assured. Strength: luck, expansion, confidence; the risk, overconfidence and excess.",
+        "dc": "Natal Jupiter on the solar-return Descendant: a year when your generosity and faith unfold in relationships. Luck favors unions, support, and beneficial partnership. Strength: lucky connections and growth through another; the risk, overrating relationships.",
+        "mc": "Natal Jupiter on the solar-return Midheaven: a year when your growth potential works for career and status. Advancement, recognition, expanding opportunities. Strength: career luck and authority; the risk, ambition beyond measure.",
+        "ic": "Natal Jupiter on the solar-return Imum Coeli: a year of well-being at home and in family. Growing prosperity, warmth, and support in private life, and possibly improved housing. Strength: abundance and support at home; the risk, complacency and excess."
+      },
+      "saturn": {
+        "asc": "Natal Saturn on the solar-return Ascendant: a year when your seriousness, responsibility, and need for solid ground come to the foreground. A time of discipline, growing up, and sometimes limits. Strength: maturity and durable results; the risk, heaviness, pessimism, and isolation.",
+        "dc": "Natal Saturn on the solar-return Descendant: a year when the theme of responsibility shows up in relationships. The union is tested for strength and demands maturity and effort. Strength: durability and commitment in the bond; the risk, coldness and distance in the pair.",
+        "mc": "Natal Saturn on the solar-return Midheaven: a year when your discipline and responsibility work for your career. Success comes through effort, but what you build is reliable. Strength: an earned, durable result; the risk, overload and pressure.",
+        "ic": "Natal Saturn on the solar-return Imum Coeli: a year when home and family demand responsibility and maturity. Care for relatives, housing obligations, shoring up foundations. Strength: a durable foundation for the long haul; the risk, the weight of family duties."
+      },
+      "uranus": {
+        "asc": "Natal Uranus on the solar-return Ascendant: a year when your pull toward freedom and originality comes to the foreground. You want change, independence, and a new self-image. Strength: liberation and breakthrough; the risk, instability and impulsiveness.",
+        "dc": "Natal Uranus on the solar-return Descendant: a year of change and freedom in relationships. Unconventional unions, unexpected turns, or a need for space in the pair. Strength: freshness and renewal in bonds; the risk, instability and splits.",
+        "mc": "Natal Uranus on the solar-return Midheaven: a year when the pull toward independence shows up in career. An unconventional path, a change of course, freedom in your work. Strength: innovation and breakthrough; the risk, unstable status.",
+        "ic": "Natal Uranus on the solar-return Imum Coeli: a year of change at home and in your way of living. A pull toward the new in private life, possibly a move or a reshaped household. Strength: renewal and freedom at home; the risk, instability in the private sphere."
+      },
+      "neptune": {
+        "asc": "Natal Neptune on the solar-return Ascendant: a year when your sensitivity, intuition, and dreaminess come to the foreground. Creativity and spirituality intensify, and so does blurriness. Strength: inspiration and empathy; the risk, fog, fatigue, and illusions.",
+        "dc": "Natal Neptune on the solar-return Descendant: a year when idealism and subtlety show up in relationships. Elevated love and spiritual closeness — but at risk of illusions. Strength: tenderness and spiritual connection; the risk, deception and disappointment.",
+        "mc": "Natal Neptune on the solar-return Midheaven: a year when creativity and ideals color your career. Good for art and helping, but goals may be unclear. Strength: an inspired calling; the risk, an unclear path.",
+        "ic": "Natal Neptune on the solar-return Imum Coeli: a year of a subtle, dreamy home atmosphere and a pull toward solitude. Spiritual grounding in private life, but housing may be murky. Strength: peace of mind and creativity at home; the risk, fog in the private sphere."
+      },
+      "pluto": {
+        "asc": "Natal Pluto on the solar-return Ascendant: a year of deep personal transformation when your inner strength and intensity come to the foreground. You go through a rebirth. Strength: power, willpower, magnetism; the risk, crises and control struggles.",
+        "dc": "Natal Pluto on the solar-return Descendant: a year when depth and intensity show up in relationships. Bonds are powerful and transforming, sometimes with a struggle for power. Strength: deep intimacy and transformation through another; the risk, control and jealousy.",
+        "mc": "Natal Pluto on the solar-return Midheaven: a year of powerful change in career and influence. A reshaping of your work, a fight for power, a rise through crisis. Strength: scale and the power to rebuild your path; the risk, power struggles at work.",
+        "ic": "Natal Pluto on the solar-return Imum Coeli: a year of deep change at home, in family, and in your inner world. Working through roots and old themes, transforming foundations. Strength: deep renewal of the foundation and inner strength; the risk, heavy family crises."
+      }
+    }
+  }
+}

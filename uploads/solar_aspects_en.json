@@ -1,0 +1,366 @@
+{
+  "meta": {
+    "version": "1.0",
+    "language": "en",
+    "type": "solar_aspects",
+    "description": "Interpretations of aspects within the solar-return chart. Show how the year's energies interact with one another.",
+    "note": "Pairs are non-directional: the key 'sun-moon' covers both Sun–Moon and Moon–Sun. Order in the key: faster/more personal planet first. Each text begins with an inline title: 'Solar-return Sun — Solar-return Moon, conjunction: …'",
+    "keys": {
+      "planets": [
+        "sun",
+        "moon",
+        "mercury",
+        "venus",
+        "mars",
+        "jupiter",
+        "saturn",
+        "uranus",
+        "neptune",
+        "pluto"
+      ],
+      "aspects": [
+        "conjunction",
+        "sextile",
+        "square",
+        "trine",
+        "opposition"
+      ]
+    },
+    "planet_names": {
+      "sun": "Solar-return Sun",
+      "moon": "Solar-return Moon",
+      "mercury": "Solar-return Mercury",
+      "venus": "Solar-return Venus",
+      "mars": "Solar-return Mars",
+      "jupiter": "Solar-return Jupiter",
+      "saturn": "Solar-return Saturn",
+      "uranus": "Solar-return Uranus",
+      "neptune": "Solar-return Neptune",
+      "pluto": "Solar-return Pluto"
+    },
+    "aspect_names": {
+      "conjunction": "conjunction",
+      "sextile": "sextile",
+      "square": "square",
+      "trine": "trine",
+      "opposition": "opposition"
+    }
+  },
+  "aspects": {
+    "sun-moon": {
+      "conjunction": "Solar-return Sun — Solar-return Moon, conjunction: a year of inner wholeness — will and feeling point in the same direction. You do what your soul wants; the personal and the external coincide. Strength: unity of intention and emotion, a strong start; the risk, subjectivity and difficulty hearing others.",
+      "sextile": "Solar-return Sun — Solar-return Moon, sextile: a year of easy accord between doing and feeling. Goals and emotional needs support each other without tension. Strength: harmony of will and soul, comfort; the risk, slackness and missed openings.",
+      "square": "Solar-return Sun — Solar-return Moon, square: a year of inner friction between what you want to do and what feels necessary. Tension between duty and emotion, between work and home. Strength: growth by reconciling outer and inner; the risk, stress, wavering, and inconsistency.",
+      "trine": "Solar-return Sun — Solar-return Moon, trine: a year of harmonious accord between will and feeling. It's easy to act in tune with yourself; goals and emotions support each other. Strength: inner peace, productivity, flow; the risk, complacency and untapped potential.",
+      "opposition": "Solar-return Sun — Solar-return Moon, opposition: a year with a full-moon quality — vivid and rich, but with an inner split between desires and feelings. It often plays out through relationships. Strength: awareness and fullness of experience; the risk, emotional swings and polarization."
+    },
+    "sun-mercury": {
+      "conjunction": "Solar-return Sun — Solar-return Mercury, conjunction: a year when thinking and self-expression are tightly linked. You talk, write, and think about yourself and your plans a great deal; ideas and identity are inseparable. Strength: clear self-expression and an active mind; the risk, subjectivity and overrating your own ideas.",
+      "sextile": "Solar-return Sun — Solar-return Mercury, sextile: a year of easy accord between goals and thinking. The mind helps your work; words serve your aims. Strength: clarity and communicativeness; the risk, superficiality.",
+      "square": "Solar-return Sun — Solar-return Mercury, square: a year of friction between will and mind. Thoughts and goals diverge; nervousness, arguments, and hasty words are possible. Strength: a mind sharpened by challenge; the risk, misunderstanding and rushed decisions.",
+      "trine": "Solar-return Sun — Solar-return Mercury, trine: a year of clear, productive thinking in tune with your goals. It's easy to express yourself and persuade others. Strength: a sharp mind and persuasiveness; the risk, ease without depth.",
+      "opposition": "Solar-return Sun — Solar-return Mercury, opposition: a year of active dialogue and testing ideas through others. Strength: seeing yourself from outside; the risk, arguments and clinging to being right."
+    },
+    "sun-venus": {
+      "conjunction": "Solar-return Sun — Solar-return Venus, conjunction: a year of charm, love, and pleasure. You're attractive and drawn to beauty; relationships and creativity blossom. Strength: charm, harmony, joy; the risk, laziness and self-indulgence.",
+      "sextile": "Solar-return Sun — Solar-return Venus, sextile: a year of easy affection, warm meetings, and enjoyment of life. Strength: charm and harmonious bonds; the risk, passivity.",
+      "square": "Solar-return Sun — Solar-return Venus, square: a year of friction between desires and values. Overspending and discord in relationships or values are possible. Strength: clarity about what you treasure; the risk, extravagance and self-indulgence.",
+      "trine": "Solar-return Sun — Solar-return Venus, trine: a year of harmony, love, and creativity without effort. Strength: ease, beauty, joy; the risk, laziness and too much comfort.",
+      "opposition": "Solar-return Sun — Solar-return Venus, opposition: a year when love and values surface through others. Strength: balancing 'me' and 'we'; the risk, dependence and wavering desires."
+    },
+    "sun-mars": {
+      "conjunction": "Solar-return Sun — Solar-return Mars, conjunction: an energetic, combative year. Will and action are fused — plenty of force, drive, and desire to win. A good year for bold pushes. Strength: drive, courage, initiative; the risk, temper, haste, and conflict.",
+      "sextile": "Solar-return Sun — Solar-return Mars, sextile: a year of brisk energy and handy openings to act. Strength: productivity and drive; the risk, not using the charge.",
+      "square": "Solar-return Sun — Solar-return Mars, square: a year of struggle and friction. Will meets obstacles; conflict and overstrain are possible. Strength: achievement through effort; the risk, outbursts, quarrels, and rashness.",
+      "trine": "Solar-return Sun — Solar-return Mars, trine: an energetic yet smooth year. Force and courage are there; action is effective. Strength: confident drive; the risk, taking easy energy for granted.",
+      "opposition": "Solar-return Sun — Solar-return Mars, opposition: a year when will meets resistance, often through others. Strength: tempering and a fair fight; the risk, quarrels and rivalry."
+    },
+    "sun-jupiter": {
+      "conjunction": "Solar-return Sun — Solar-return Jupiter, conjunction: one of the best years. Growth, optimism, and good fortune; life expands. Strength: luck, confidence, new horizons; the risk, overconfidence and excess.",
+      "sextile": "Solar-return Sun — Solar-return Jupiter, sextile: a year of easy good fortune and growth. Optimism and opportunities come without strain. Strength: luck and development; the risk, laziness and missed chances.",
+      "square": "Solar-return Sun — Solar-return Jupiter, square: a year of growth through overreach. Wanting more risks overrating your powers. Strength: ambition that drives development; the risk, overconfidence and excess.",
+      "trine": "Solar-return Sun — Solar-return Jupiter, trine: a happy, expanding year. Luck and growth come easily. Strength: good fortune, confidence, new horizons; the risk, slackness.",
+      "opposition": "Solar-return Sun — Solar-return Jupiter, opposition: a year of growth and opportunity, often through others. Strength: development through partners; the risk, overreach and empty promises."
+    },
+    "sun-saturn": {
+      "conjunction": "Solar-return Sun — Solar-return Saturn, conjunction: a serious year of work and growing up. Will meets responsibility; it can feel heavy, but what's built lasts. Strength: maturity, endurance, a reliable result; the risk, fatigue, pessimism, and a sense of burden.",
+      "sextile": "Solar-return Sun — Solar-return Saturn, sextile: a year of steady productivity. Discipline gives support without strain. Strength: reliability and earned progress; the risk, not making the most of a focused mood.",
+      "square": "Solar-return Sun — Solar-return Saturn, square: a year of tests and limits. Circumstances slow you down and demand patience. Strength: tempering and a solid result through effort; the risk, gloom and overload.",
+      "trine": "Solar-return Sun — Solar-return Saturn, trine: a year of steady, earned progress without extra weight. Strength: reliability and durable achievements; the risk, excessive caution.",
+      "opposition": "Solar-return Sun — Solar-return Saturn, opposition: a year of being tested for strength, often through limits or authority. Strength: maturity through challenges; the risk, pressure and a sense of blockage."
+    },
+    "sun-uranus": {
+      "conjunction": "Solar-return Sun — Solar-return Uranus, conjunction: a year of change, freedom, and surprises. Life refreshes in a leap; you crave independence and the new. Strength: breakthrough, originality, liberation; the risk, instability and impulsiveness.",
+      "sextile": "Solar-return Sun — Solar-return Uranus, sextile: a year of fresh openings and useful change. Openness to the new is rewarded. Strength: flexibility and renewal; the risk, not seizing the chance.",
+      "square": "Solar-return Sun — Solar-return Uranus, square: a year of sudden jolts and a pull toward freedom. Abrupt change and disrupted plans are possible. Strength: liberation through tension; the risk, instability and impulsive decisions.",
+      "trine": "Solar-return Sun — Solar-return Uranus, trine: a year of light, refreshing change. The new enters without wreckage. Strength: renewal, flexibility, inspiration; the risk, underrating the chance to change.",
+      "opposition": "Solar-return Sun — Solar-return Uranus, opposition: a year of change and awakening through external events. Strength: liberation and a fresh view; the risk, sudden breaks and instability."
+    },
+    "sun-neptune": {
+      "conjunction": "Solar-return Sun — Solar-return Neptune, conjunction: a subtle, dreamy year. Will blurs into creativity and the spiritual; less vigor, more sensitivity. Strength: inspiration, empathy, a creative lift; the risk, fog, illusions, and lost clarity.",
+      "sextile": "Solar-return Sun — Solar-return Neptune, sextile: a year of gentle inspiration. Intuition and creativity support your aims. Strength: imagination and sensitivity; the risk, dreaming instead of doing.",
+      "square": "Solar-return Sun — Solar-return Neptune, square: a year of fog and lowered energy. Illusions, unclear goals, and energy leaks. Strength: creativity through sober reckoning; the risk, deception and a dip in vitality.",
+      "trine": "Solar-return Sun — Solar-return Neptune, trine: an inspired year with easy access to intuition and creativity. Strength: inspiration, compassion, imagination; the risk, retreating into dreams.",
+      "opposition": "Solar-return Sun — Solar-return Neptune, opposition: a year when ideals and illusions come to the foreground. Strength: compassion and spiritual awareness; the risk, deception and blurred boundaries."
+    },
+    "sun-pluto": {
+      "conjunction": "Solar-return Sun — Solar-return Pluto, conjunction: a year of deep transformation and growing personal power. Life moves through intense change and rebirth. Strength: power, willpower, the capacity to be reborn; the risk, crises, control struggles, and obsession.",
+      "sextile": "Solar-return Sun — Solar-return Pluto, sextile: a year of openings for deep, constructive change. Strength: willpower, influence, regeneration; the risk, leaving the potential untapped.",
+      "square": "Solar-return Sun — Solar-return Pluto, square: a year of power tension and forced transformation. Crises and control struggles are possible. Strength: deep rebirth through crisis; the risk, obsessiveness and destructive conflict.",
+      "trine": "Solar-return Sun — Solar-return Pluto, trine: a year of deep, organic change and growing influence. Strength: willpower, depth, regeneration; the risk, underrating your own intensity.",
+      "opposition": "Solar-return Sun — Solar-return Pluto, opposition: a year of power themes, often through external events or people. Strength: transformation through confrontation; the risk, power struggles and extremes."
+    },
+    "moon-mercury": {
+      "conjunction": "Solar-return Moon — Solar-return Mercury, conjunction: a year when thoughts and feelings are inseparable. Communication goes heart-to-heart; intuition and word work together. Strength: warm, attuned communication; the risk, subjectivity and anxious thinking.",
+      "sextile": "Solar-return Moon — Solar-return Mercury, sextile: a year of easy accord between mind and feeling. It's easy to put emotions into words. Strength: emotional honesty in communication; the risk, superficiality.",
+      "square": "Solar-return Moon — Solar-return Mercury, square: a year where logic and feeling argue. Anxious thoughts and misunderstanding are possible. Strength: learning to join head and heart; the risk, worry and indecision.",
+      "trine": "Solar-return Moon — Solar-return Mercury, trine: a year of warm, clear communication and good intuition. Strength: emotionally intelligent speech; the risk, ease without depth.",
+      "opposition": "Solar-return Moon — Solar-return Mercury, opposition: a year of balancing feeling and reason. Head and heart argue. Strength: balance; the risk, wavering and misunderstanding."
+    },
+    "moon-venus": {
+      "conjunction": "Solar-return Moon — Solar-return Venus, conjunction: a tender, warm year. Feeling and tenderness merge; you're drawn to closeness and comfort. Strength: warmth, attachment, emotional harmony; the risk, indulgence and avoiding what's hard.",
+      "sextile": "Solar-return Moon — Solar-return Venus, sextile: a gentle, pleasant year for warmth and closeness. Strength: tenderness and comfort; the risk, habit instead of depth.",
+      "square": "Solar-return Moon — Solar-return Venus, square: a year of friction between the need for care and your desires. Moodiness and discord in closeness. Strength: clarity about the heart's needs; the risk, hurt feelings and indulgence.",
+      "trine": "Solar-return Moon — Solar-return Venus, trine: a warm, harmonious year for love and comfort. Tenderness flows easily. Strength: emotional and romantic harmony; the risk, laziness and a habit of comfort.",
+      "opposition": "Solar-return Moon — Solar-return Venus, opposition: a year when closeness and tenderness surface through others. Strength: warm bonds; the risk, dependence and swings in love."
+    },
+    "moon-mars": {
+      "conjunction": "Solar-return Moon — Solar-return Mars, conjunction: an emotionally charged, passionate year. Feelings push you to act; reactions run hot. Strength: energy, protecting loved ones, passion; the risk, temper and emotional conflict.",
+      "sextile": "Solar-return Moon — Solar-return Mars, sextile: a year of brisk emotions and healthy energy. It's easy to act on the heart's prompting. Strength: warm drive; the risk, not channeling the impulse.",
+      "square": "Solar-return Moon — Solar-return Mars, square: a year of emotional outbursts. Irritation slips easily into quarrels. Strength: passionate energy for getting things done; the risk, outbursts and conflict.",
+      "trine": "Solar-return Moon — Solar-return Mars, trine: a year where feelings and energy are in tune. Passion blends with warmth. Strength: confident, protective energy; the risk, taking harmony for granted.",
+      "opposition": "Solar-return Moon — Solar-return Mars, opposition: a year of emotional clashes. Strength: honesty and dynamism in feeling; the risk, quarrels and irritability."
+    },
+    "moon-jupiter": {
+      "conjunction": "Solar-return Moon — Solar-return Jupiter, conjunction: a warm, generous year of emotional abundance. Feelings expand; you're drawn to care, share, and celebrate. Strength: generosity, optimism, emotional comfort; the risk, indulgence and emotional excess.",
+      "sextile": "Solar-return Moon — Solar-return Jupiter, sextile: a year of emotional warmth and optimism. Strength: optimism and emotional generosity; the risk, laziness.",
+      "square": "Solar-return Moon — Solar-return Jupiter, square: a year of emotional overreach. Feelings and expectations run inflated. Strength: a big heart; the risk, indulgence and disappointments.",
+      "trine": "Solar-return Moon — Solar-return Jupiter, trine: a warm, well-favored year. Generosity and optimism come easily. Strength: emotional abundance; the risk, indulgence and slackness.",
+      "opposition": "Solar-return Moon — Solar-return Jupiter, opposition: a year of emotional generosity with a risk of overdoing it. Strength: warmth and big-heartedness; the risk, over-caretaking."
+    },
+    "moon-saturn": {
+      "conjunction": "Solar-return Moon — Solar-return Saturn, conjunction: an emotionally restrained, serious year. Feelings are muted; you're drawn to responsibility. Strength: emotional maturity and reliability; the risk, coldness, sadness, and loneliness.",
+      "sextile": "Solar-return Moon — Solar-return Saturn, sextile: a year of calm emotional stability. Strength: reliability and emotional maturity; the risk, excessive restraint.",
+      "square": "Solar-return Moon — Solar-return Saturn, square: a year of emotional heaviness. Sadness, loneliness, and a shortage of warmth. Strength: tempering of feeling through hardship; the risk, coldness and low spirits.",
+      "trine": "Solar-return Moon — Solar-return Saturn, trine: a year of calm, steady emotional ground. Feelings are mature and reliable. Strength: stability and endurance; the risk, restraint and dryness.",
+      "opposition": "Solar-return Moon — Solar-return Saturn, opposition: a year where warmth and duty collide. Strength: maturity of feeling; the risk, coldness and distance."
+    },
+    "moon-uranus": {
+      "conjunction": "Solar-return Moon — Solar-return Uranus, conjunction: a year of emotional jolts and shifts. Mood is changeable; you crave freedom in the personal sphere. Strength: liveliness, freshness, emotional honesty; the risk, instability and sharp swings.",
+      "sextile": "Solar-return Moon — Solar-return Uranus, sextile: a year of emotional freshness and easy change. Strength: flexibility and openness; the risk, leaving the spark without depth.",
+      "square": "Solar-return Moon — Solar-return Uranus, square: a year of emotional unpredictability. Sudden shifts throw you off. Strength: freeing yourself from the outworn; the risk, instability and anxiety.",
+      "trine": "Solar-return Moon — Solar-return Uranus, trine: a year of light, refreshing change in feeling. Strength: liveliness, flexibility, renewal; the risk, mistaking freedom for coolness.",
+      "opposition": "Solar-return Moon — Solar-return Uranus, opposition: a year of emotional change through external events. Strength: an awakening of feeling; the risk, instability and distance."
+    },
+    "moon-neptune": {
+      "conjunction": "Solar-return Moon — Solar-return Neptune, conjunction: a very sensitive, dreamy year. Empathy is heightened; you're drawn to dreams and art. Strength: intuition, tenderness, a creative feel; the risk, illusions and lost boundaries.",
+      "sextile": "Solar-return Moon — Solar-return Neptune, sextile: a year of gentle sensitivity and inspiration. Strength: empathy and imagination; the risk, drifting in the clouds.",
+      "square": "Solar-return Moon — Solar-return Neptune, square: a year of emotional fog. Illusions, disappointments, and energy leaks. Strength: compassion through sober reckoning; the risk, illusions and lost boundaries.",
+      "trine": "Solar-return Moon — Solar-return Neptune, trine: a tender, inspired year with easy intuition. Strength: empathy, imagination, emotional softness; the risk, retreating into dreams.",
+      "opposition": "Solar-return Moon — Solar-return Neptune, opposition: a year when ideals in feeling surface. Strength: compassion and sensitivity; the risk, illusions and codependence."
+    },
+    "moon-pluto": {
+      "conjunction": "Solar-return Moon — Solar-return Pluto, conjunction: a year of deep, intense feeling and emotional transformation. Emotions are powerful; what's hidden surfaces. Strength: depth, emotional power, rebirth; the risk, jealousy, control, and obsessive states.",
+      "sextile": "Solar-return Moon — Solar-return Pluto, sextile: a year of openings for deep emotional work. Strength: depth and resilience; the risk, leaving the potential untapped.",
+      "square": "Solar-return Moon — Solar-return Pluto, square: a year of emotional crises. Jealousy, storms, and obsessive states. Strength: transformation through crisis; the risk, manipulation and extremes.",
+      "trine": "Solar-return Moon — Solar-return Pluto, trine: a year of deep, organic emotional change. Strength: depth, resilience, regeneration of feeling; the risk, underrating the power of attachments.",
+      "opposition": "Solar-return Moon — Solar-return Pluto, opposition: a year of intense feeling and power themes. Strength: transformation through deep experience; the risk, jealousy and emotional extremes."
+    },
+    "mercury-venus": {
+      "conjunction": "Solar-return Mercury — Solar-return Venus, conjunction: a year of charming, pleasant communication. Words ingratiate; good for creativity and diplomacy. Strength: tact, charm, accord; the risk, saying the pleasant instead of the honest.",
+      "sextile": "Solar-return Mercury — Solar-return Venus, sextile: a year of easy, warm contacts. Strength: charm and accord; the risk, superficiality.",
+      "square": "Solar-return Mercury — Solar-return Venus, square: a year of friction between words and values. Things left unsaid and disagreements over taste. Strength: clarity about priorities; the risk, smoothing over and misunderstanding.",
+      "trine": "Solar-return Mercury — Solar-return Venus, trine: a year of warm, charming communication. It's easy to find accord. Strength: tact and diplomacy; the risk, avoiding the uncomfortable truth.",
+      "opposition": "Solar-return Mercury — Solar-return Venus, opposition: a year where feeling and logic argue. Strength: balancing mind and heart; the risk, indecision."
+    },
+    "mercury-mars": {
+      "conjunction": "Solar-return Mercury — Solar-return Mars, conjunction: a year of a sharp, quick mind and heated debate. Thoughts are decisive; arguments are constant. Strength: decisiveness and persuasiveness; the risk, sharpness and hasty words.",
+      "sextile": "Solar-return Mercury — Solar-return Mars, sextile: a year of energetic, productive thinking. Strength: decisiveness and efficiency; the risk, not using the charge.",
+      "square": "Solar-return Mercury — Solar-return Mars, square: a year of verbal clashes and mental haste. Strength: a mind sharpened under pressure; the risk, quarrels and rashness.",
+      "trine": "Solar-return Mercury — Solar-return Mars, trine: a year of decisive thinking where ideas easily become action. Strength: a sharp, effective mind; the risk, taking ease for granted.",
+      "opposition": "Solar-return Mercury — Solar-return Mars, opposition: a year of heated debate. Strength: dynamic exchange; the risk, verbal battles."
+    },
+    "mercury-jupiter": {
+      "conjunction": "Solar-return Mercury — Solar-return Jupiter, conjunction: a year of broad views and big plans. Thinking is large-scale and optimistic. Strength: breadth of mind and good ideas; the risk, exaggeration and missing details.",
+      "sextile": "Solar-return Mercury — Solar-return Jupiter, sextile: a year of learning openings and optimism. Strength: breadth of view; the risk, superficiality.",
+      "square": "Solar-return Mercury — Solar-return Jupiter, square: a year of mental overreach. Big plans risk detaching from details. Strength: inspiring ideas; the risk, exaggeration and carelessness.",
+      "trine": "Solar-return Mercury — Solar-return Jupiter, trine: a year of broad, optimistic thinking. Strength: wisdom and range; the risk, laziness about details.",
+      "opposition": "Solar-return Mercury — Solar-return Jupiter, opposition: a year where detail and scale argue. Strength: joining breadth and concrete thinking; the risk, exaggeration."
+    },
+    "mercury-saturn": {
+      "conjunction": "Solar-return Mercury — Solar-return Saturn, conjunction: a year of serious, structured thinking. The mind is focused; good for deep work and thorough study. Strength: concentration and realism; the risk, pessimism and shaky confidence in speech.",
+      "sextile": "Solar-return Mercury — Solar-return Saturn, sextile: a year of a collected, practical mind. Strength: structured, reliable thinking; the risk, not making use of the focus.",
+      "square": "Solar-return Mercury — Solar-return Saturn, square: a year of mental tension. Criticism, blocks, and fear of error. Strength: depth through effort; the risk, pessimism and tightness in communication.",
+      "trine": "Solar-return Mercury — Solar-return Saturn, trine: a year of clear, disciplined thinking. Strength: concentration and reliability; the risk, excessive caution of mind.",
+      "opposition": "Solar-return Mercury — Solar-return Saturn, opposition: a year where flexibility and strictness of mind argue. Strength: balanced, mature thinking; the risk, self-criticism."
+    },
+    "mercury-uranus": {
+      "conjunction": "Solar-return Mercury — Solar-return Uranus, conjunction: a year of insights and unconventional ideas. The mind is fast; drawn to the new. Strength: inventiveness and insight; the risk, nervousness and scattered focus.",
+      "sextile": "Solar-return Mercury — Solar-return Uranus, sextile: a year of fresh ideas and quick insights. Strength: a flexible, original mind; the risk, leaving the spark undeveloped.",
+      "square": "Solar-return Mercury — Solar-return Uranus, square: a year of a nervous, jumpy mind. Strength: originality through tension; the risk, nervousness and glitches.",
+      "trine": "Solar-return Mercury — Solar-return Uranus, trine: a year of easy insights. The new is grasped on the fly. Strength: insight and mental speed; the risk, ease without depth.",
+      "opposition": "Solar-return Mercury — Solar-return Uranus, opposition: a year of mental awakening through the unexpected. Strength: a fresh view; the risk, nervousness and stubbornness."
+    },
+    "mercury-neptune": {
+      "conjunction": "Solar-return Mercury — Solar-return Neptune, conjunction: a year of imaginative, intuitive thinking. The mind is poetic but facts blur. Strength: imagination and intuition; the risk, confusion and self-deception.",
+      "sextile": "Solar-return Mercury — Solar-return Neptune, sextile: a year of gentle mental inspiration. Strength: imagination and sensitivity; the risk, vagueness.",
+      "square": "Solar-return Mercury — Solar-return Neptune, square: a year of mental fog. Strength: imagination through sober reckoning; the risk, illusions and misunderstanding.",
+      "trine": "Solar-return Mercury — Solar-return Neptune, trine: a year of intuitive, creative thinking. Strength: imagination and inspiration; the risk, drifting from facts.",
+      "opposition": "Solar-return Mercury — Solar-return Neptune, opposition: a year where logic and intuition argue. Strength: a visionary view; the risk, misunderstanding."
+    },
+    "mercury-pluto": {
+      "conjunction": "Solar-return Mercury — Solar-return Pluto, conjunction: a year of deep, penetrating thinking. The mind digs to the core; words carry weight. Strength: insight and persuasiveness; the risk, obsessive thoughts and verbal manipulation.",
+      "sextile": "Solar-return Mercury — Solar-return Pluto, sextile: a year of openings for a deep mind. Strength: insight and influence; the risk, leaving the depth untapped.",
+      "square": "Solar-return Mercury — Solar-return Pluto, square: a year of obsessive thoughts and power-charged arguments. Strength: insight through tension; the risk, fixations and verbal struggle.",
+      "trine": "Solar-return Mercury — Solar-return Pluto, trine: a year of deep, focused thinking. Strength: insight and concentration; the risk, underrating the power of your words.",
+      "opposition": "Solar-return Mercury — Solar-return Pluto, opposition: a year where depth and control over meaning surface. Strength: transforming exchange; the risk, verbal power games."
+    },
+    "venus-mars": {
+      "conjunction": "Solar-return Venus — Solar-return Mars, conjunction: a passionate, romantic year. Tenderness and desire merge — strong attraction, active love, creative heat. Strength: chemistry, passion, charm; the risk, impulsiveness in love and jealousy.",
+      "sextile": "Solar-return Venus — Solar-return Mars, sextile: a year of pleasant attraction and lively passion. Strength: healthy attraction and charm; the risk, not using the spark.",
+      "square": "Solar-return Venus — Solar-return Mars, square: a year of stormy love and friction between 'want' and 'like.' Strength: vivid attraction; the risk, conflict in love and impulsiveness.",
+      "trine": "Solar-return Venus — Solar-return Mars, trine: a year of warm, passionate attraction. Strength: magnetism and romance; the risk, taking chemistry for granted.",
+      "opposition": "Solar-return Venus — Solar-return Mars, opposition: a year of attraction and friction. Strength: passionate dynamism; the risk, swings of attraction and jealousy."
+    },
+    "venus-jupiter": {
+      "conjunction": "Solar-return Venus — Solar-return Jupiter, conjunction: a warm, generous, lucky year for love and joy. Strength: warmth, luck in love, generosity; the risk, indulgence and extravagance.",
+      "sextile": "Solar-return Venus — Solar-return Jupiter, sextile: a year of easy warmth and luck in the pleasant. Strength: goodwill and harmony; the risk, overdoing the pleasures.",
+      "square": "Solar-return Venus — Solar-return Jupiter, square: a year of romantic and financial excess. Strength: generous warmth; the risk, extravagance and idealization.",
+      "trine": "Solar-return Venus — Solar-return Jupiter, trine: a happy, warm year for love and prosperity. Strength: luck in love and generosity; the risk, indulgence.",
+      "opposition": "Solar-return Venus — Solar-return Jupiter, opposition: a year of warmth and generosity with a risk of overdoing it. Strength: big-heartedness and joy; the risk, extravagance."
+    },
+    "venus-saturn": {
+      "conjunction": "Solar-return Venus — Solar-return Saturn, conjunction: a serious year for love and money. Relationships are tested for durability. Strength: loyalty, mature feeling, commitment; the risk, coldness, distance, and a shortage of ease.",
+      "sextile": "Solar-return Venus — Solar-return Saturn, sextile: a year of calm, reliable love. Strength: loyalty and stability; the risk, excessive restraint.",
+      "square": "Solar-return Venus — Solar-return Saturn, square: a year of cooling and tests in love. Strength: maturity of feeling through hardship; the risk, coldness and loneliness.",
+      "trine": "Solar-return Venus — Solar-return Saturn, trine: a year of solid, mature love. Strength: loyalty and lasting feeling; the risk, restraint and dryness.",
+      "opposition": "Solar-return Venus — Solar-return Saturn, opposition: a year where tenderness and duty collide. Strength: mature, tested love; the risk, coldness and distance."
+    },
+    "venus-uranus": {
+      "conjunction": "Solar-return Venus — Solar-return Uranus, conjunction: a year of exciting, sudden love and change in relationships. Strength: spark, freshness, charm; the risk, inconstancy and fear of commitment.",
+      "sextile": "Solar-return Venus — Solar-return Uranus, sextile: a year of freshness and pleasant change in love. Strength: originality and attraction; the risk, leaving the spark without depth.",
+      "square": "Solar-return Venus — Solar-return Uranus, square: a year of instability in love — sudden infatuations and coolings. Strength: excitement and novelty; the risk, inconstancy.",
+      "trine": "Solar-return Venus — Solar-return Uranus, trine: a year of light, fresh love and pleasant change. Strength: originality, attraction, freedom; the risk, valuing freedom over depth.",
+      "opposition": "Solar-return Venus — Solar-return Uranus, opposition: a year of exciting but seesawing attractions. Strength: vivid, awakening bonds; the risk, inconstancy."
+    },
+    "venus-neptune": {
+      "conjunction": "Solar-return Venus — Solar-return Neptune, conjunction: an elevated, romantic year. Love is colored by dream and ideal. Strength: tenderness, creativity, spiritual romance; the risk, idealization and disappointment.",
+      "sextile": "Solar-return Venus — Solar-return Neptune, sextile: a year of gentle romance and inspiration. Strength: compassion, tenderness, artistry; the risk, dreaming more than seeing.",
+      "square": "Solar-return Venus — Solar-return Neptune, square: a year of romantic illusions. Strength: tender compassion through sober reckoning; the risk, deception and self-sacrifice.",
+      "trine": "Solar-return Venus — Solar-return Neptune, trine: a tender, romantic, creative year. Strength: tenderness and spiritual beauty; the risk, idealization.",
+      "opposition": "Solar-return Venus — Solar-return Neptune, opposition: a year of romantic ideals. Strength: compassion and romance; the risk, illusions and codependence."
+    },
+    "venus-pluto": {
+      "conjunction": "Solar-return Venus — Solar-return Pluto, conjunction: a year of deep, transforming love. Attraction is powerful; feelings are intense. Strength: magnetism, depth, passion; the risk, jealousy, possessiveness, and control.",
+      "sextile": "Solar-return Venus — Solar-return Pluto, sextile: a year of openings for deep intimacy. Strength: magnetism and depth; the risk, leaving the intensity untapped.",
+      "square": "Solar-return Venus — Solar-return Pluto, square: a year of obsessive attractions and power themes in love. Strength: transforming passion; the risk, control and obsession.",
+      "trine": "Solar-return Venus — Solar-return Pluto, trine: a year of deep, passionate closeness. Strength: magnetism and transforming love; the risk, underrating the power of attachment.",
+      "opposition": "Solar-return Venus — Solar-return Pluto, opposition: a year of powerful attractions and control struggles in love. Strength: a deep, transforming bond; the risk, jealousy and extremes."
+    },
+    "mars-jupiter": {
+      "conjunction": "Solar-return Mars — Solar-return Jupiter, conjunction: an energetic, enterprising year. Courage and optimism combine; big ventures beckon. Strength: drive, enterprise, luck in new starts; the risk, overrating your powers and recklessness.",
+      "sextile": "Solar-return Mars — Solar-return Jupiter, sextile: a year of brisk energy and lucky openings. Strength: energetic, fortunate drive; the risk, waiting instead of acting.",
+      "square": "Solar-return Mars — Solar-return Jupiter, square: a year of risk and excess in action. Strength: bold ambition; the risk, rashness and wasted energy.",
+      "trine": "Solar-return Mars — Solar-return Jupiter, trine: a year of confident, lucky energy with good results. Strength: enthusiasm, boldness, productivity; the risk, overdoing it.",
+      "opposition": "Solar-return Mars — Solar-return Jupiter, opposition: a year of activity and ambition with a risk of excess. Strength: enterprising energy; the risk, reckless ventures."
+    },
+    "mars-saturn": {
+      "conjunction": "Solar-return Mars — Solar-return Saturn, conjunction: a year of disciplined but heavy effort. Energy meets limits. Strength: endurance, strategy, persistence; the risk, frustration and blocked energy.",
+      "sextile": "Solar-return Mars — Solar-return Saturn, sextile: a year of focused, persistent energy. Strength: endurance and productivity; the risk, not using the focus.",
+      "square": "Solar-return Mars — Solar-return Saturn, square: a year of blockages and friction. Strength: tempered achievement through resistance; the risk, frustration and overstrain.",
+      "trine": "Solar-return Mars — Solar-return Saturn, trine: a year of enduring, disciplined energy. Strength: resilience and a reliable result; the risk, caution that holds back boldness.",
+      "opposition": "Solar-return Mars — Solar-return Saturn, opposition: a year where drive meets limits. Strength: disciplined force; the risk, frustration and conflict."
+    },
+    "mars-uranus": {
+      "conjunction": "Solar-return Mars — Solar-return Uranus, conjunction: a year of sudden, daring energy. You crave freedom and risk; reactions are instant. Strength: courage, originality, breakthrough; the risk, recklessness and outbursts.",
+      "sextile": "Solar-return Mars — Solar-return Uranus, sextile: a year of inventive, lively energy. Strength: original initiative; the risk, needing a trigger to activate the charge.",
+      "square": "Solar-return Mars — Solar-return Uranus, square: a year of impulsive, rebellious urges. Strength: daring originality; the risk, recklessness and destructive impulses.",
+      "trine": "Solar-return Mars — Solar-return Uranus, trine: a year of bold, fast, original energy. Strength: courage and innovation; the risk, taking boldness for granted.",
+      "opposition": "Solar-return Mars — Solar-return Uranus, opposition: a year of sharp, explosive energy. Strength: an awakening, electrifying drive; the risk, clashes and sudden breaks."
+    },
+    "mars-neptune": {
+      "conjunction": "Solar-return Mars — Solar-return Neptune, conjunction: a year when energy blurs and flows by inspiration rather than force. Strength: inspired, compassionate action; the risk, a dip in motivation and unclear goals.",
+      "sextile": "Solar-return Mars — Solar-return Neptune, sextile: a year of gentle, inspired activity. Strength: purposeful, sensitive energy; the risk, letting energy dissolve.",
+      "square": "Solar-return Mars — Solar-return Neptune, square: a year of unclear goals and lowered drive. Strength: inspired action when grounded; the risk, weak motivation and disappointments.",
+      "trine": "Solar-return Mars — Solar-return Neptune, trine: a year where action is spiritualized by creativity. Strength: artistic, purposeful energy; the risk, drifting from concrete goals.",
+      "opposition": "Solar-return Mars — Solar-return Neptune, opposition: a year where drive and ideals argue. Strength: inspired, compassionate energy; the risk, confusion and action going nowhere."
+    },
+    "mars-pluto": {
+      "conjunction": "Solar-return Mars — Solar-return Pluto, conjunction: a year of enormous willpower and intense energy. You act with power and full commitment. Strength: iron will and endurance; the risk, power struggles and dangerous intensity.",
+      "sextile": "Solar-return Mars — Solar-return Pluto, sextile: a year of openings for powerful, transforming action. Strength: intense, effective willpower; the risk, leaving the power untapped.",
+      "square": "Solar-return Mars — Solar-return Pluto, square: a year of power tension and explosive energy. Strength: the deepest willpower through crisis; the risk, ruthlessness and self-destruction.",
+      "trine": "Solar-return Mars — Solar-return Pluto, trine: a year of deep, focused willpower and endurance. Strength: powerful will and resilience; the risk, underrating your own intensity.",
+      "opposition": "Solar-return Mars — Solar-return Pluto, opposition: a year of power struggle. Strength: transforming willpower through confrontation; the risk, power games and extremes."
+    },
+    "jupiter-saturn": {
+      "conjunction": "Solar-return Jupiter — Solar-return Saturn, conjunction: a year where optimism and caution combine — realistic, grounded growth. Strength: measured ambition and solid plans; the risk, seesawing between hope and doubt.",
+      "sextile": "Solar-return Jupiter — Solar-return Saturn, sextile: a year of practical growth where faith and discipline complement each other. Strength: steady development; the risk, not using the balance.",
+      "square": "Solar-return Jupiter — Solar-return Saturn, square: a year of tension between 'take the risk' and 'slow down.' Strength: tempered, realistic achievement; the risk, frustration and swings between optimism and pessimism.",
+      "trine": "Solar-return Jupiter — Solar-return Saturn, trine: a year of sensible, steady growth. Faith and realism work together. Strength: realistic ambition and durable success; the risk, caution that holds back potential.",
+      "opposition": "Solar-return Jupiter — Solar-return Saturn, opposition: a year of balancing growth and caution. Strength: mature equilibrium of risk and support; the risk, seesawing between overreach and blockage."
+    },
+    "jupiter-uranus": {
+      "conjunction": "Solar-return Jupiter — Solar-return Uranus, conjunction: a year of lucky breakthroughs and unexpected opportunities. Change brings growth. Strength: luck through change and originality; the risk, restlessness and reckless moves.",
+      "sextile": "Solar-return Jupiter — Solar-return Uranus, sextile: a year of fresh openings through change and novelty. Strength: inventive optimism and good instincts; the risk, waiting for luck instead of creating it.",
+      "square": "Solar-return Jupiter — Solar-return Uranus, square: a year of a pull toward freedom and risky change. Strength: bold innovation; the risk, reckless change and sharp reversals.",
+      "trine": "Solar-return Jupiter — Solar-return Uranus, trine: a year of luck through originality and openness to the new. Strength: inventive optimism, freedom, luck; the risk, taking luck for granted.",
+      "opposition": "Solar-return Jupiter — Solar-return Uranus, opposition: a year of growth through the unexpected. Strength: development through change; the risk, restlessness and sharp turns."
+    },
+    "jupiter-neptune": {
+      "conjunction": "Solar-return Jupiter — Solar-return Neptune, conjunction: a year of idealism, dreaming, and spiritual uplift. Faith and imagination expand. Strength: inspired faith, generosity, a shared dream; the risk, illusions and unrealistic idealism.",
+      "sextile": "Solar-return Jupiter — Solar-return Neptune, sextile: a year of gentle idealism and inspiration. Strength: spiritual warmth and imagination; the risk, dreaming more than doing.",
+      "square": "Solar-return Jupiter — Solar-return Neptune, square: a year of inflated dreams and detachment from reality. Strength: a dream grounded by sober reckoning; the risk, unrealistic hopes.",
+      "trine": "Solar-return Jupiter — Solar-return Neptune, trine: a year of inspired faith, compassion, and creative dreaming. Strength: idealism, generosity, spirituality; the risk, retreating into dreams.",
+      "opposition": "Solar-return Jupiter — Solar-return Neptune, opposition: a year of ideals with a risk of illusions. Strength: compassionate dreaming; the risk, illusions and disappointments."
+    },
+    "jupiter-pluto": {
+      "conjunction": "Solar-return Jupiter — Solar-return Pluto, conjunction: a year of large-scale ambition and deep transformation. The pull toward great influence is powerful. Strength: powerful faith, willpower, and the ability to reshape; the risk, obsession with power and fanaticism.",
+      "sextile": "Solar-return Jupiter — Solar-return Pluto, sextile: a year of openings for deep, large-scale change. Strength: focused ambition and influence; the risk, leaving the power untapped.",
+      "square": "Solar-return Jupiter — Solar-return Pluto, square: a year of a hunger for control and fanatical ambition. Strength: large-scale achievement through tension; the risk, obsession and a drive to dominate.",
+      "trine": "Solar-return Jupiter — Solar-return Pluto, trine: a year of deep, powerful growth and influence. Strength: faith, regeneration, major success; the risk, underrating the pull toward power.",
+      "opposition": "Solar-return Jupiter — Solar-return Pluto, opposition: a year of growth and power through big stakes. Strength: transformation through major confrontations; the risk, power struggle and excess."
+    },
+    "saturn-uranus": {
+      "conjunction": "Solar-return Saturn — Solar-return Uranus, conjunction: a year of tension between order and freedom. Old structures and the urge to change collide. Strength: disciplined renewal; the risk, lurching between stability and rebellion.",
+      "sextile": "Solar-return Saturn — Solar-return Uranus, sextile: a year where discipline and innovation complement each other. Strength: practical, grounded change; the risk, not using the balance.",
+      "square": "Solar-return Saturn — Solar-return Uranus, square: a year of friction between control and freedom. Strength: reform through tension; the risk, lurches and disruptions.",
+      "trine": "Solar-return Saturn — Solar-return Uranus, trine: a year where order and innovation blend — renewal without destruction. Strength: practical, steady innovation; the risk, taking the balance for granted.",
+      "opposition": "Solar-return Saturn — Solar-return Uranus, opposition: a year where stability and freedom pull in opposite directions. Strength: joining tradition and change; the risk, seesawing between rigidity and chaos."
+    },
+    "saturn-neptune": {
+      "conjunction": "Solar-return Saturn — Solar-return Neptune, conjunction: a year where reality meets the dream. An attempt to ground ideals, or a quiet erosion of what's solid. Strength: practical idealism; the risk, doubt, disappointment, and fog.",
+      "sextile": "Solar-return Saturn — Solar-return Neptune, sextile: a year where discipline and imagination complement each other. Strength: a grounded dream; the risk, leaving the vision unmanifested.",
+      "square": "Solar-return Saturn — Solar-return Neptune, square: a year of doubt and a clash between dream and duty. Strength: a dream earned through effort; the risk, gloom and swings between fantasy and cynicism.",
+      "trine": "Solar-return Saturn — Solar-return Neptune, trine: a year where a dream takes shape through patience. Strength: practical idealism and disciplined creativity; the risk, the vision staying foggy without effort.",
+      "opposition": "Solar-return Saturn — Solar-return Neptune, opposition: a year where reality and ideal argue. Strength: a dream tested by reality; the risk, doubt and swings of illusion and skepticism."
+    },
+    "saturn-pluto": {
+      "conjunction": "Solar-return Saturn — Solar-return Pluto, conjunction: a year of heavy, deep transformation through crisis. Work proceeds with relentless will. Strength: endurance and the power to rebuild; the risk, harshness, control, and a crushing weight.",
+      "sextile": "Solar-return Saturn — Solar-return Pluto, sextile: a year where discipline and depth complement each other for sustained work. Strength: dogged resilience; the risk, leaving the power unused.",
+      "square": "Solar-return Saturn — Solar-return Pluto, square: a year of pressure and forced transformation. Strength: iron endurance through crisis; the risk, harshness and a sense of heavy blockage.",
+      "trine": "Solar-return Saturn — Solar-return Pluto, trine: a year of persistent, disciplined transformation. Strength: endurance and the steady power of renewal; the risk, underrating your own relentlessness.",
+      "opposition": "Solar-return Saturn — Solar-return Pluto, opposition: a year of power pressure and structural overhaul. Strength: deep resilience under pressure; the risk, power struggle and an exhausting conflict."
+    },
+    "uranus-neptune": {
+      "conjunction": "Solar-return Uranus — Solar-return Neptune, conjunction: a year where innovation meets the dream — vision, progress, and ideals intertwined. Strength: inspired innovation and awakening; the risk, unstable ideals and confusion.",
+      "sextile": "Solar-return Uranus — Solar-return Neptune, sextile: a year where innovation and imagination complement each other. Strength: visionary creativity; the risk, vagueness.",
+      "square": "Solar-return Uranus — Solar-return Neptune, square: a year of tension between change and ideals. Strength: creative breakthroughs through friction; the risk, instability and disappointed ideals.",
+      "trine": "Solar-return Uranus — Solar-return Neptune, trine: a year where innovation and dreaming are in tune. Strength: inspired innovation; the risk, influence stays foggy without focus.",
+      "opposition": "Solar-return Uranus — Solar-return Neptune, opposition: a year where innovation and ideal argue. Strength: tension that gives birth to vision; the risk, instability and illusions."
+    },
+    "uranus-pluto": {
+      "conjunction": "Solar-return Uranus — Solar-return Pluto, conjunction: a year of radical change and deep transformation — a powerful breaking of the old. Strength: the force of renewal and breakthrough; the risk, extremism and chaotic change.",
+      "sextile": "Solar-return Uranus — Solar-return Pluto, sextile: a year of openings for deep, constructive change. Strength: large-scale, constructive renewal; the risk, loss of focus.",
+      "square": "Solar-return Uranus — Solar-return Pluto, square: a year of upheaval and forced transformation. Strength: revolutionary energy; the risk, extremism and destructiveness.",
+      "trine": "Solar-return Uranus — Solar-return Pluto, trine: a year where change and transformation are in tune — deep renewal comes more easily. Strength: powerful, constructive change; the risk, the force staying impersonal without focus.",
+      "opposition": "Solar-return Uranus — Solar-return Pluto, opposition: a year of confrontations — freedom and power on opposite poles. Strength: transforming tension; the risk, extremism and destructive conflict."
+    },
+    "neptune-pluto": {
+      "conjunction": "Solar-return Neptune — Solar-return Pluto, conjunction: a year of deep transformation of ideals and values. A slow but powerful reshaping of worldview. Strength: deep spiritual renewal; the risk, shapelessness and passivity without focus.",
+      "sextile": "Solar-return Neptune — Solar-return Pluto, sextile: a year of gentle openings for deep spiritual renewal. Strength: deep creative-spiritual potential; the risk, influence stays diffuse.",
+      "square": "Solar-return Neptune — Solar-return Pluto, square: a year of subtle but charged re-evaluation of deep values. Strength: transformation of faith; the risk, vague crises and disorientation.",
+      "trine": "Solar-return Neptune — Solar-return Pluto, trine: a year of harmonious deep evolution of ideals. Strength: regenerative vision; the risk, influence stays background without focus.",
+      "opposition": "Solar-return Neptune — Solar-return Pluto, opposition: a year of subtle opposition between ideals and deep force. Strength: transformation of values; the risk, vague disorientation."
+    }
+  }
+}
