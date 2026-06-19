@@ -1,4 +1,4 @@
-﻿// birthedit.jsx — editable birth data: calendar date · time precision · city search
+// birthedit.jsx — editable birth data: calendar date · time precision · city search
 // Self-contained: depends only on React + props (th, lang). Shares via window.
 
 const { useState, useEffect, useRef, useMemo } = React;

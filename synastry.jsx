@@ -1,4 +1,4 @@
-﻿// synastry.jsx — Synastry (compatibility) module.
+// synastry.jsx — Synastry (compatibility) module.
 // Compares two natal charts via cross-aspects between Person A's and Person B's
 // planets — the primary tool of synastry — weighted by personal planets and orb
 // tightness. Reuses the natal ephemeris engine (window.computeRealChart) so it
