@@ -1,5 +1,8 @@
-import type { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { getPersonById } from '../db/queries/people.js';
+import { getUserById } from '../db/queries/users.js';
+import { ownsAccount } from '../plugins/auth.js';
+import type { DbPerson } from '../types.js';
 
 /**
  * Роуты для астрологических расчётов.
@@ -8,6 +11,25 @@ import { getPersonById } from '../db/queries/people.js';
  *
  * TODO: реализовать после подключения astronomy-engine к бэкенду.
  */
+
+/** Загружает профиль и проверяет, что он принадлежит вызывающему. */
+async function loadOwnedPerson(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  personId: string,
+): Promise<DbPerson | null> {
+  const person = await getPersonById(personId);
+  if (!person) { reply.status(404).send({ error: 'Person not found' }); return null; }
+  if (request.authCtx?.caller !== 'bot') {
+    const owner = await getUserById(person.owner_id);
+    if (!owner || !ownsAccount(request, owner.tg_id)) {
+      reply.status(403).send({ error: 'Forbidden: profile does not belong to caller' });
+      return null;
+    }
+  }
+  return person;
+}
+
 const chartsRoutes: FastifyPluginAsync = async (fastify) => {
 
   /** GET /people/:personId/natal
@@ -17,8 +39,8 @@ const chartsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{ Params: { personId: string } }>(
     '/people/:personId/natal',
     async (request, reply) => {
-      const person = await getPersonById(request.params.personId);
-      if (!person) return reply.status(404).send({ error: 'Person not found' });
+      const person = await loadOwnedPerson(request, reply, request.params.personId);
+      if (!person) return;
 
       // TODO: проверить кэш в natal_charts, если пусто — вычислить
       return reply.status(501).send({ error: 'Chart computation not yet implemented' });
@@ -36,8 +58,8 @@ const chartsRoutes: FastifyPluginAsync = async (fastify) => {
   }>(
     '/people/:personId/solar',
     async (request, reply) => {
-      const person = await getPersonById(request.params.personId);
-      if (!person) return reply.status(404).send({ error: 'Person not found' });
+      const person = await loadOwnedPerson(request, reply, request.params.personId);
+      if (!person) return;
 
       const year = Number(request.query.year ?? new Date().getFullYear());
       if (!Number.isInteger(year) || year < 1900 || year > 2100) {
@@ -58,8 +80,8 @@ const chartsRoutes: FastifyPluginAsync = async (fastify) => {
   }>(
     '/people/:personId/aspects',
     async (request, reply) => {
-      const person = await getPersonById(request.params.personId);
-      if (!person) return reply.status(404).send({ error: 'Person not found' });
+      const person = await loadOwnedPerson(request, reply, request.params.personId);
+      if (!person) return;
 
       // month format: YYYY-MM
       const monthParam = request.query.month ?? new Date().toISOString().slice(0, 7);
@@ -86,6 +108,12 @@ const chartsRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ error: 'Cannot compute synastry for the same person' });
       }
 
+      // Оба профиля должны принадлежать вызывающему
+      const a = await loadOwnedPerson(request, reply, person_a_id);
+      if (!a) return;
+      const b = await loadOwnedPerson(request, reply, person_b_id);
+      if (!b) return;
+
       // TODO: вычислить синастрию
       return reply.status(501).send({ error: 'Chart computation not yet implemented' });
     },
@@ -100,8 +128,8 @@ const chartsRoutes: FastifyPluginAsync = async (fastify) => {
   }>(
     '/people/:personId/milestones',
     async (request, reply) => {
-      const person = await getPersonById(request.params.personId);
-      if (!person) return reply.status(404).send({ error: 'Person not found' });
+      const person = await loadOwnedPerson(request, reply, request.params.personId);
+      if (!person) return;
 
       const VALID_THEMES = ['marriage','divorce','child','career','relocation',
                            'health','surgery','travel','change','key'];
