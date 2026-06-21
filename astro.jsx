@@ -961,9 +961,11 @@ function App() {
   const isTg = typeof window !== 'undefined' && window.IS_TG;
 
   // В Telegram — на весь экран, без рамки телефона и dev-панели.
+  // paddingTop/Bottom через CSS-переменные безопасной зоны (fullscreen-режим).
   if (isTg) {
     return (
-      <div style={{position:'fixed',inset:0,background:'#0a0812'}}>
+      <div style={{position:'fixed',inset:0,background:'#0a0812',boxSizing:'border-box',
+        paddingTop:'var(--tg-safe-top, 0px)', paddingBottom:'var(--tg-safe-bottom, 0px)'}}>
         <AstroPhone th={th} lang={lang} onChangeLang={handleChangeLang} embedded/>
       </div>
     );
