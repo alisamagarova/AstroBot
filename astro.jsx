@@ -884,7 +884,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
             <Sky th={th}/>
             <div style={{position:'relative',zIndex:1,height:'100%'}}>
               <BirthDataEditor th={th} lang={lang}
-                initial={{ ...DEFAULT_BIRTH, name:'', city:null, residence:null }}
+                initial={{ name:'', day:null, month:1, year:2000, timeMode:null, hour:null, minute:null, approx:null, city:null, residence:null }}
                 onSave={finishOnboarding} onCancel={()=>{}} onboarding/>
             </div>
           </div>

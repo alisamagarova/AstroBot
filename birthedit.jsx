@@ -641,13 +641,13 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
         )}
 
         {/* DATE */}
-        <EditField th={th} icon="cal" label={T.date} value={fmtBirthDate(b)} open={open==='date'} onToggle={() => setOpen(open==='date'?null:'date')}>
+        <EditField th={th} icon="cal" label={T.date} value={b.day ? fmtBirthDate(b) : (en?'Pick a date':'Выберите дату')} open={open==='date'} onToggle={() => setOpen(open==='date'?null:'date')}>
           <Calendar th={th} lang={lang} day={b.day} month={b.month} year={b.year}
             onPick={(d,m,y) => setB({ ...b, day:d, month:m, year:y })}/>
         </EditField>
 
         {/* TIME */}
-        <EditField th={th} icon="clock" label={T.time} value={time} open={open==='time'} onToggle={() => setOpen(open==='time'?null:'time')}>
+        <EditField th={th} icon="clock" label={T.time} value={b.timeMode ? time : (en?'Set the time':'Укажите время')} open={open==='time'} onToggle={() => setOpen(open==='time'?null:'time')}>
           <div style={{marginTop:10, background:th.glass, border:`1px solid ${th.glassBorder}`, borderRadius:18, padding:14, backdropFilter:'blur(18px)', WebkitBackdropFilter:'blur(18px)'}}>
             <div style={{display:'flex', gap:5, background: th.effDark?'rgba(255,255,255,0.06)':'rgba(255,255,255,0.55)', borderRadius:13, padding:4, marginBottom:14}}>
               {modeBtn('exact', T.exact)}
@@ -657,7 +657,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
 
             {b.timeMode === 'exact' && (
               <div>
-                <TimeInput th={th} hour={pad2(b.hour)} minute={pad2(b.minute)}
+                <TimeInput th={th} hour={b.hour==null?'':pad2(b.hour)} minute={b.minute==null?'':pad2(b.minute)}
                   onChange={(h,m) => setB({ ...b, hour: parseInt(h||'0',10)||0, minute: parseInt(m||'0',10)||0 })}/>
                 <div style={{textAlign:'center', fontFamily:'"Manrope",sans-serif', fontSize:11.5, color:th.muted, marginTop:10}}>{T.exactHint}</div>
               </div>
@@ -683,7 +683,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
 
         {/* CITY */}
         <EditField th={th} icon="pin" label={T.city} value={cityVal} open={open==='city'} onToggle={() => setOpen(open==='city'?null:'city')}>
-          <CitySearch th={th} lang={lang} value={b.city} onPick={(c) => { setB({ ...b, city: c }); }}/>
+          <CitySearch th={th} lang={lang} value={b.city} onPick={(c) => { setB({ ...b, city: c }); setOpen(null); }}/>
         </EditField>
 
         {/* RESIDENCE (свой профиль + онбординг, но не партнёр) — нужен для соляра */}
@@ -696,7 +696,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
                 <button onClick={() => setB({ ...b, residence: null })} style={{flex:1, padding:'9px 4px', border:'none', cursor:'pointer', background: !b.residence ? th.accent : 'transparent', color: !b.residence ? '#fff' : th.inkSoft, fontFamily:'"Manrope",sans-serif', fontWeight: !b.residence ? 700 : 600, fontSize:12.5, borderRadius:11, transition:'background .15s'}}>{T.sameAsBirth}</button>
                 <button onClick={() => setB({ ...b, residence: b.residence || b.city })} style={{flex:1, padding:'9px 4px', border:'none', cursor:'pointer', background: b.residence ? th.accent : 'transparent', color: b.residence ? '#fff' : th.inkSoft, fontFamily:'"Manrope",sans-serif', fontWeight: b.residence ? 700 : 600, fontSize:12.5, borderRadius:11, transition:'background .15s'}}>{T.otherCity}</button>
               </div>
-              {b.residence && <CitySearch th={th} lang={lang} value={b.residence} onPick={(c) => setB({ ...b, residence: c })}/>}
+              {b.residence && <CitySearch th={th} lang={lang} value={b.residence} onPick={(c) => { setB({ ...b, residence: c }); setOpen(null); }}/>}
               <div style={{display:'flex', gap:9, alignItems:'flex-start', padding:'10px 2px 2px'}}>
                 <div style={{flexShrink:0, marginTop:1}}><BeIco name="home" size={15} color={th.glyphClr} sw={1.6}/></div>
                 <div style={{fontFamily:'"Manrope",sans-serif', fontSize:11.5, lineHeight:1.5, color:th.muted, textWrap:'pretty'}}>{T.residenceHint}</div>
@@ -734,7 +734,9 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
         {(() => {
           const nameOk = !nameVisible || (b.name && b.name.trim().length > 0);
           const cityOk = !!b.city;
-          const canSubmit = onboarding ? (nameOk && cityOk && consent) : true;
+          const dateOk = !!(b.day && b.month && b.year);
+          const timeOk = !!b.timeMode && (b.timeMode !== 'approx' || !!b.approx);
+          const canSubmit = onboarding ? (nameOk && cityOk && dateOk && timeOk && consent) : true;
           return (
             <button disabled={!canSubmit} onClick={() => {
               if (!canSubmit) return;
