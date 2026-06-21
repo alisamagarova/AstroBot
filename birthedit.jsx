@@ -194,6 +194,7 @@ function BeIco({ name, size=20, color='currentColor', sw=1.7 }) {
     case 'x':       return (<svg {...c}><path d="M6 6l12 12M18 6 6 18"/></svg>);
     case 'user':    return (<svg {...c}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);
     case 'home':    return (<svg {...c}><path d="M4 11.5 12 4l8 7.5"/><path d="M5.5 10.2V20h13v-9.8"/><path d="M10 20v-5h4v5"/></svg>);
+    case 'lock':    return (<svg {...c}><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>);
     default: return null;
   }
 }
@@ -238,14 +239,19 @@ function Calendar({ th, lang, day, month, year, onPick }) {
   for (let d = 1; d <= daysIn; d++) cells.push(d);
 
   const accent = th.accent;
+  const _now = new Date();
+  const _nowY = _now.getFullYear(), _nowM = _now.getMonth(), _nowD = _now.getDate();
+  const isFuture = (d) => vY > _nowY || (vY === _nowY && vM > _nowM) || (vY === _nowY && vM === _nowM && d > _nowD);
   const cellBtn = (d) => {
     if (d == null) return <div key={Math.random()} />;
     const sel = d === day && vM === month - 1 && vY === year;
+    const future = isFuture(d);
     return (
-      <button key={d} onClick={() => onPick(d, vM + 1, vY)} style={{
-        height:36, borderRadius:10, border:'none', cursor:'pointer',
+      <button key={d} disabled={future} onClick={future ? undefined : () => onPick(d, vM + 1, vY)} style={{
+        height:36, borderRadius:10, border:'none', cursor: future ? 'default' : 'pointer',
         background: sel ? accent : 'transparent',
         color: sel ? '#fff' : th.ink,
+        opacity: future ? 0.25 : 1,
         fontFamily:'"Manrope",sans-serif', fontWeight: sel ? 700 : 500, fontSize:13.5,
         display:'flex', alignItems:'center', justifyContent:'center',
         boxShadow: sel ? `0 4px 14px ${th.accentGlow}` : 'none',
@@ -299,9 +305,10 @@ function Calendar({ th, lang, day, month, year, onPick }) {
         <div style={{display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6}}>
           {months.map((m,i) => {
             const sel = i === vM;
+            const futureM = vY === _nowY && i > _nowM;
             return (
-              <button key={m} onClick={() => { setVM(i); setMode('days'); }} style={{
-                height:46, borderRadius:12, cursor:'pointer',
+              <button key={m} disabled={futureM} onClick={futureM ? undefined : () => { setVM(i); setMode('days'); }} style={{
+                height:46, borderRadius:12, cursor: futureM ? 'default' : 'pointer', opacity: futureM ? 0.3 : 1,
                 border:`1px solid ${sel?accent+'80':th.glassBorder}`,
                 background: sel ? `${accent}26` : 'transparent', color:th.ink,
                 fontFamily:'"Manrope",sans-serif', fontWeight: sel?700:500, fontSize:12.5,
@@ -335,7 +342,7 @@ function Calendar({ th, lang, day, month, year, onPick }) {
 // ═══════════════════════════════════════════════════════
 // EXACT TIME INPUT  (HH : MM)
 // ═══════════════════════════════════════════════════════
-function TimeInput({ th, hour, minute, onChange }) {
+function TimeInput({ th, hour, minute, onChange, max, onError }) {
   // Local string state so the user can fully clear a field and type fresh.
   // The displayed value is NOT re-derived from the parent on every keystroke
   // (that's what made clearing snap back to "00"). Empty → stored as 0,
@@ -351,12 +358,32 @@ function TimeInput({ th, hour, minute, onChange }) {
     color:th.ink, fontFamily:'var(--ds-serif)', fontWeight:600, fontSize:26, outline:'none',
   };
 
+  // Если задан max (дата = сегодня) и время позже — ставим максимально наступившее.
+  const overMax = (hh, mm) => max && (hh * 60 + mm) > (max.h * 60 + max.m);
+  const clampToMax = () => {
+    const ph = pad2(max.h), pm = pad2(max.m);
+    setH(ph); setM(pm); onChange(ph, pm);
+    if (onError) onError(true);
+  };
+
   const clean = (s) => s.replace(/[^0-9]/g, '').slice(0, 2);
   const onH = (e) => { const v = clean(e.target.value); setH(v); onChange(v, m); };
   const onM = (e) => { const v = clean(e.target.value); setM(v); onChange(h, v); };
-  // On blur: keep an empty field empty (don't force "0"); otherwise clamp + pad for tidiness.
-  const blurH = () => { if (h === '') { onChange('', m); return; } const p = pad2(Math.max(0, Math.min(23, parseInt(h, 10) || 0))); setH(p); onChange(p, m); };
-  const blurM = () => { if (m === '') { onChange(h, ''); return; } const p = pad2(Math.max(0, Math.min(59, parseInt(m, 10) || 0))); setM(p); onChange(h, p); };
+  // On blur: keep an empty field empty; clamp 0-23/0-59; затем — к max, если сегодня.
+  const blurH = () => {
+    if (h === '') { onChange('', m); return; }
+    const p = Math.max(0, Math.min(23, parseInt(h, 10) || 0));
+    const mm = m === '' ? 0 : (parseInt(m, 10) || 0);
+    if (overMax(p, mm)) { clampToMax(); return; }
+    const ph = pad2(p); setH(ph); onChange(ph, m); if (onError) onError(false);
+  };
+  const blurM = () => {
+    if (m === '') { onChange(h, ''); return; }
+    const p = Math.max(0, Math.min(59, parseInt(m, 10) || 0));
+    const hh = h === '' ? 0 : (parseInt(h, 10) || 0);
+    if (overMax(hh, p)) { clampToMax(); return; }
+    const pm = pad2(p); setM(pm); onChange(h, pm); if (onError) onError(false);
+  };
 
   return (
     <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:10, padding:'4px 0 2px'}}>
@@ -491,13 +518,14 @@ function CitySearch({ th, lang, value, onPick }) {
 // ═══════════════════════════════════════════════════════
 // FIELD WRAPPER (label + tappable summary that expands)
 // ═══════════════════════════════════════════════════════
-function EditField({ th, icon, label, value, open, onToggle, children }) {
+function EditField({ th, icon, label, value, open, onToggle, children, locked = false, lockedNote }) {
   return (
     <div style={{marginBottom:14}}>
-      <button onClick={onToggle} style={{
-        width:'100%', display:'flex', alignItems:'center', gap:13, cursor:'pointer', textAlign:'left',
+      <button onClick={locked ? undefined : onToggle} disabled={locked} style={{
+        width:'100%', display:'flex', alignItems:'center', gap:13, cursor: locked ? 'default' : 'pointer', textAlign:'left',
         background:th.glassStrong, border:`1px solid ${open ? th.accent+'70' : th.glassBorder}`,
         borderRadius:16, padding:'14px 16px', backdropFilter:'blur(18px)', WebkitBackdropFilter:'blur(18px)', color:th.ink,
+        opacity: locked ? 0.6 : 1,
       }}>
         <div style={{width:40, height:40, borderRadius:12, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:`${th.accent}22`, border:`1px solid ${th.accent}40`}}>
           <BeIco name={icon} size={20} color={th.glyphClr}/>
@@ -506,11 +534,16 @@ function EditField({ th, icon, label, value, open, onToggle, children }) {
           <div style={{fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:10, letterSpacing:1.4, textTransform:'uppercase', color:th.muted, marginBottom:3}}>{label}</div>
           <div style={{fontFamily:'var(--ds-serif)', fontWeight:600, fontSize:17, color:th.ink, lineHeight:1.1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{value}</div>
         </div>
-        <div style={{transform: open ? 'rotate(180deg)' : 'none', transition:'transform .22s', flexShrink:0}}>
-          <BeIco name="chevD" size={18} color={th.muted}/>
+        <div style={{flexShrink:0}}>
+          {locked
+            ? <BeIco name="lock" size={16} color={th.muted}/>
+            : <div style={{transform: open ? 'rotate(180deg)' : 'none', transition:'transform .22s'}}><BeIco name="chevD" size={18} color={th.muted}/></div>}
         </div>
       </button>
-      {open && <div className="astro-in-f">{children}</div>}
+      {locked && lockedNote && (
+        <div style={{fontFamily:'"Manrope",sans-serif', fontSize:11, color:th.muted, margin:'6px 4px 0', lineHeight:1.4}}>{lockedNote}</div>
+      )}
+      {open && !locked && <div className="astro-in-f">{children}</div>}
     </div>
   );
 }
@@ -524,9 +557,19 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   const [open, setOpen] = useState(null); // 'date' | 'time' | 'city' | null
   const [dateWarn, setDateWarn] = useState(false); // предупреждение о смене даты
   const [consent, setConsent] = useState(false);   // галочка согласия (онбординг)
+  const [timeErr, setTimeErr] = useState(false);   // время в будущем (сегодня)
 
   // В онбординге показываем поле имени (как для партнёра) и не спрашиваем город проживания.
   const nameVisible = showName || onboarding;
+
+  // Дата рождения для своего профиля меняется только 1 раз — после блокируется.
+  const dateLocked = !nameVisible && !!initial.dateLocked;
+
+  // Если дата рождения = сегодня, время не может быть позже текущего момента.
+  const _now = new Date();
+  const isBirthToday = b.day === _now.getDate() && b.month === (_now.getMonth() + 1) && b.year === _now.getFullYear();
+  const nowMax = { h: _now.getHours(), m: _now.getMinutes() };
+  const APPROX_START = { night: 0, morning: 6, day: 12, evening: 18 };
 
   const T = {
     title:   title || (onboarding ? (en ? 'The stars are waiting ✨' : 'Звёзды уже ждут ✨')
@@ -588,10 +631,12 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   const approxBtn = (id) => {
     const active = b.approx === id;
     const L = APPROX_LBL[id];
+    // Если дата = сегодня, период, который ещё не начался, выбрать нельзя.
+    const future = isBirthToday && APPROX_START[id] > _now.getHours();
     return (
-      <button key={id} onClick={() => setB({ ...b, approx: id })} style={{
-        display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor:'pointer',
-        padding:'14px 8px', borderRadius:14,
+      <button key={id} disabled={future} onClick={future ? undefined : () => setB({ ...b, approx: id })} style={{
+        display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor: future ? 'default' : 'pointer',
+        padding:'14px 8px', borderRadius:14, opacity: future ? 0.35 : 1,
         border:`1.5px solid ${active ? th.accent+'90' : th.glassBorder}`,
         background: active ? `${th.accent}1F` : (th.effDark ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.5)'),
         color:th.ink,
@@ -641,7 +686,10 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
         )}
 
         {/* DATE */}
-        <EditField th={th} icon="cal" label={T.date} value={b.day ? fmtBirthDate(b) : (en?'Pick a date':'Выберите дату')} open={open==='date'} onToggle={() => setOpen(open==='date'?null:'date')}>
+        <EditField th={th} icon="cal" label={T.date} value={b.day ? fmtBirthDate(b) : (en?'Pick a date':'Выберите дату')}
+          open={open==='date'} onToggle={() => setOpen(open==='date'?null:'date')}
+          locked={dateLocked}
+          lockedNote={en ? 'Date of birth has already been changed once and is now locked.' : 'Дата рождения уже была изменена и теперь заблокирована.'}>
           <Calendar th={th} lang={lang} day={b.day} month={b.month} year={b.year}
             onPick={(d,m,y) => setB({ ...b, day:d, month:m, year:y })}/>
         </EditField>
@@ -658,8 +706,12 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
             {b.timeMode === 'exact' && (
               <div>
                 <TimeInput th={th} hour={b.hour==null?'':pad2(b.hour)} minute={b.minute==null?'':pad2(b.minute)}
+                  max={isBirthToday ? nowMax : null}
+                  onError={setTimeErr}
                   onChange={(h,m) => setB({ ...b, hour: parseInt(h||'0',10)||0, minute: parseInt(m||'0',10)||0 })}/>
-                <div style={{textAlign:'center', fontFamily:'"Manrope",sans-serif', fontSize:11.5, color:th.muted, marginTop:10}}>{T.exactHint}</div>
+                {timeErr
+                  ? <div style={{textAlign:'center', fontFamily:'"Manrope",sans-serif', fontSize:11.5, color:'#E0664A', marginTop:10, lineHeight:1.4}}>{en?'This time hasn\'t come yet today — set to the current time.':'Это время сегодня ещё не наступило — поставили текущее.'}</div>
+                  : <div style={{textAlign:'center', fontFamily:'"Manrope",sans-serif', fontSize:11.5, color:th.muted, marginTop:10}}>{T.exactHint}</div>}
               </div>
             )}
 

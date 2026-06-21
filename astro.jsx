@@ -765,7 +765,28 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const partner = selPartnerIdx !== null && partners[selPartnerIdx] ? partners[selPartnerIdx] : null;
 
   const openEdit   = () => setEditing(true);
-  const saveBirth  = (nb) => { setBirth(nb); setEditing(false); setSolarCity(residenceCity(nb)); };
+  const saveBirth  = async (nb) => {
+    const dateChanged = nb.day !== birth.day || nb.month !== birth.month || nb.year !== birth.year;
+    setEditing(false);
+    setSolarCity(residenceCity(nb));
+    const api = window.AstroAPI;
+    if (api && api.isConfigured() && api.inTelegram()) {
+      try {
+        const person = await api.updateSelf(nb, dateChanged);
+        setBirth(api.personToBirth(person)); // подхватываем актуальную блокировку даты
+        return;
+      } catch (e) {
+        if (e && e.message === 'BIRTH_DATE_LOCKED') {
+          try { window.Telegram.WebApp.showAlert('Дату рождения можно изменить только один раз.'); } catch(_){}
+          try { const p = await api.getSelf(); if (p) { setBirth(api.personToBirth(p)); return; } } catch(_){}
+          return;
+        }
+        console.error('updateSelf failed:', e);
+      }
+    }
+    // Локальный фолбэк (вне Telegram / без backend): фиксируем блокировку локально.
+    setBirth({ ...nb, dateLocked: dateChanged ? true : birth.dateLocked });
+  };
   const cancelEdit = () => setEditing(false);
 
   const openAddPartner  = () => setEditPartnerIdx(-1);

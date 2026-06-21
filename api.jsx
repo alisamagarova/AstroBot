@@ -68,6 +68,7 @@ function birthToPersonBody(b) {
 function personToBirth(p) {
   return {
     name:   p.name,
+    dateLocked: p.birth_date_changed_at != null, // дата уже менялась → заблокирована
     day:    p.birth_day,
     month:  p.birth_month,
     year:   p.birth_year,
@@ -150,6 +151,19 @@ const AstroAPI = {
       });
     }
     return true;
+  },
+
+  /** Обновляет self-профиль. includeDate=false — не трогаем дату (чтобы не сработала блокировка). */
+  async updateSelf(b, includeDate) {
+    const id = tgUserId();
+    if (!id) throw new Error('no tg user');
+    const body = birthToPersonBody(b);
+    if (!includeDate) { delete body.birth_day; delete body.birth_month; delete body.birth_year; }
+    const res = await apiFetch(`/api/users/${id}/self`, { method: 'PATCH', body: JSON.stringify(body) });
+    if (res.status === 409) { const e = new Error('BIRTH_DATE_LOCKED'); throw e; }
+    if (!res.ok) throw new Error('updateSelf failed: ' + res.status);
+    const data = await res.json();
+    return data.person;
   },
 
   /** ВРЕМЕННОЕ: удаляет профиль на бэкенде (для повторного теста онбординга). */
