@@ -569,7 +569,15 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   const _now = new Date();
   const isBirthToday = b.day === _now.getDate() && b.month === (_now.getMonth() + 1) && b.year === _now.getFullYear();
   const nowMax = { h: _now.getHours(), m: _now.getMinutes() };
-  const APPROX_START = { night: 0, morning: 6, day: 12, evening: 18 };
+  // Период «ещё не наступил сегодня», если его начало позже текущего часа.
+  // Ночь (22:00–06:00) переходит через полночь: наступившей считаем, если сейчас ≥22 или <6.
+  const isApproxFuture = (id) => {
+    if (!isBirthToday) return false;
+    const h = _now.getHours();
+    if (id === 'night') return h >= 6 && h < 22;
+    const start = { morning: 6, day: 12, evening: 17 }[id];
+    return start > h;
+  };
 
   const T = {
     title:   title || (onboarding ? (en ? 'The stars are waiting ✨' : 'Звёзды уже ждут ✨')
@@ -632,7 +640,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
     const active = b.approx === id;
     const L = APPROX_LBL[id];
     // Если дата = сегодня, период, который ещё не начался, выбрать нельзя.
-    const future = isBirthToday && APPROX_START[id] > _now.getHours();
+    const future = isApproxFuture(id);
     return (
       <button key={id} disabled={future} onClick={future ? undefined : () => setB({ ...b, approx: id })} style={{
         display:'flex', flexDirection:'column', alignItems:'center', gap:6, cursor: future ? 'default' : 'pointer',
@@ -691,7 +699,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
           locked={dateLocked}
           lockedNote={en ? 'Date of birth has already been changed once and is now locked.' : 'Дата рождения уже была изменена и теперь заблокирована.'}>
           <Calendar th={th} lang={lang} day={b.day} month={b.month} year={b.year}
-            onPick={(d,m,y) => setB({ ...b, day:d, month:m, year:y })}/>
+            onPick={(d,m,y) => { setB({ ...b, day:d, month:m, year:y }); setOpen(null); }}/>
         </EditField>
 
         {/* TIME */}

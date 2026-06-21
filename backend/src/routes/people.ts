@@ -51,7 +51,7 @@ const DATE_ERROR = {
 
 // Самый ранний час каждого примерного периода — для проверки «не из будущего».
 const APPROX_START_HOUR: Record<string, number> = {
-  night: 0, morning: 6, day: 12, evening: 18,
+  morning: 6, day: 12, evening: 17,
 };
 
 /**
@@ -76,8 +76,10 @@ function isBirthTimeNotFuture(d: {
     return birthMins <= nowMins;
   }
   if (d.time_mode === 'approx' && d.approx_time) {
-    const startHour = APPROX_START_HOUR[d.approx_time] ?? 0;
-    return startHour <= now.getHours();
+    const h = now.getHours();
+    // Ночь (22:00–06:00) переходит через полночь: наступила, если сейчас ≥22 или <6.
+    if (d.approx_time === 'night') return !(h >= 6 && h < 22);
+    return (APPROX_START_HOUR[d.approx_time] ?? 0) <= h;
   }
   return true; // unknown — без ограничений
 }
