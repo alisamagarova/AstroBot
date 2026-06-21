@@ -529,11 +529,11 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   const nameVisible = showName || onboarding;
 
   const T = {
-    title:   title || (onboarding ? (en ? 'Welcome' : 'Добро пожаловать')
+    title:   title || (onboarding ? (en ? 'The stars are waiting ✨' : 'Звёзды уже ждут ✨')
                                    : (en ? 'Birth data' : 'Данные рождения')),
     sub:     onboarding
-               ? (en ? 'Tell me about yourself — I\'ll build your personal natal chart.'
-                     : 'Расскажи о себе — построю твою персональную натальную карту.')
+               ? (en ? 'A couple of steps — and I\'ll tell you what the sky promises. Let\'s start with you.'
+                     : 'Пара шагов — и я расскажу, что обещает тебе небо. Начнём с тебя.')
                : showName
                ? (en ? 'Enter your partner\'s details to compare charts' : 'Введите данные партнёра, чтобы сравнить карты')
                : (en ? 'These details power your natal chart' : 'По этим данным строится натальная карта'),
@@ -685,8 +685,8 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
           <CitySearch th={th} lang={lang} value={b.city} onPick={(c) => { setB({ ...b, city: c }); }}/>
         </EditField>
 
-        {/* RESIDENCE (own profile only, not during onboarding) — drives the solar return */}
-        {!nameVisible && (
+        {/* RESIDENCE (свой профиль + онбординг, но не партнёр) — нужен для соляра */}
+        {(!showName || onboarding) && (
           <EditField th={th} icon="home" label={T.residence}
             value={b.residence ? (en ? b.residence.en : b.residence.ru) : T.sameAsBirth}
             open={open==='res'} onToggle={() => setOpen(open==='res'?null:'res')}>

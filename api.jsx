@@ -52,6 +52,15 @@ function birthToPersonBody(b) {
   } else if (body.time_mode === 'approx') {
     body.approx_time = b.approx || 'day';
   }
+  // Город проживания (для соляра) — только если отличается от места рождения
+  if (b.residence) {
+    const r = b.residence;
+    body.res_city_ru  = r.ru ?? null;
+    body.res_city_en  = r.en ?? null;
+    body.res_lat      = r.lat;
+    body.res_lon      = r.lon;
+    body.res_timezone = r.zone ?? null;
+  }
   return body;
 }
 
