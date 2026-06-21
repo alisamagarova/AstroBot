@@ -24,6 +24,10 @@ const client = new pg.Client({ connectionString: url });
 
 try {
   await client.connect();
+  if (process.env.RESET === '1') {
+    console.log('RESET=1 — очищаю схему public…');
+    await client.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
+  }
   console.log('Подключение установлено. Применяю схему…');
   await client.query(sql);          // pg выполняет multi-statement SQL целиком
   console.log('✅ Схема применена успешно.');
