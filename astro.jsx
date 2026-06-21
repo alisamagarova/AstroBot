@@ -314,15 +314,14 @@ function BottomNav({ th, lang, activeTab, onTab }) {
 // ════════════════════════════════════════════════════════════
 // MAIN SCREEN
 // ════════════════════════════════════════════════════════════
-function CosmicMain({ th, lang, onOpen, sun, userName }) {
+function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
   const first4    = POSSIBILITIES.slice(0,4);
   const milestone = POSSIBILITIES[4];
   const signLine  = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
-  const [helpItem, setHelpItem] = useState(null); // услуга, объяснение которой открыто
 
-  // Маленькая круглая кнопка «?» — открывает объяснение услуги
+  // Маленькая круглая кнопка «?» — открывает объяснение услуги (оверлей рисует AstroPhone)
   const helpBtn = (item, pos) => (
-    <button onClick={(e)=>{ e.stopPropagation(); setHelpItem(item); }} style={{
+    <button onClick={(e)=>{ e.stopPropagation(); onHelp(item); }} style={{
       position:'absolute', ...pos, width:22, height:22, borderRadius:999, zIndex:3,
       border:`1px solid ${th.glassBorder}`, background:th.chip, color:th.inkSoft,
       cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
@@ -438,33 +437,36 @@ function CosmicMain({ th, lang, onOpen, sun, userName }) {
         </div>
       </GlassCard>
 
-      {/* ── Объяснение услуги (bottom-sheet по «?») ── */}
-      {helpItem && (
-        <div onClick={()=>setHelpItem(null)} style={{position:'fixed',inset:0,zIndex:80,display:'flex',alignItems:'flex-end',background:'rgba(0,0,0,0.55)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)'}}>
-          <div onClick={(e)=>e.stopPropagation()} style={{width:'100%',background:th.effDark?'#1a1430':'#fff',borderRadius:'24px 24px 0 0',padding:'26px 22px 34px',boxShadow:'0 -8px 40px rgba(0,0,0,0.3)'}}>
-            <div style={{width:40,height:4,borderRadius:99,background:th.glassBorder,margin:'0 auto 20px'}}/>
-            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
-              <div style={{width:44,height:44,borderRadius:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`}}>
-                <AstroGlyph name={helpItem.glyph} size={24} color={th.glyphClr} sw={1.4}/>
-              </div>
-              <div>
-                <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9.5,letterSpacing:1.4,color:th.gold,marginBottom:3}}>{helpItem.kicker[lang]}</div>
-                <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,lineHeight:1.05}}>{helpItem.title[lang]}</div>
-              </div>
-            </div>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:13.5,lineHeight:1.55,color:th.inkSoft,textWrap:'pretty',marginBottom:22}}>
-              {helpItem.help ? helpItem.help[lang] : helpItem.desc[lang]}
-            </div>
-            <button onClick={()=>setHelpItem(null)} style={{
-              width:'100%',height:50,borderRadius:999,border:'none',cursor:'pointer',
-              background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,
-              boxShadow:`0 8px 26px ${th.accentGlow}`,
-            }}>
-              {lang==='en'?'Got it':'Понятно'}
-            </button>
+    </div>
+  );
+}
+
+// Bottom-sheet с объяснением услуги (рендерится на уровне телефона, над нижним меню)
+function ServiceHelpSheet({ th, lang, item, onClose }) {
+  return (
+    <div onClick={onClose} style={{position:'absolute',inset:0,zIndex:95,display:'flex',alignItems:'flex-end',background:'rgba(0,0,0,0.55)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)'}}>
+      <div onClick={(e)=>e.stopPropagation()} style={{width:'100%',background:th.effDark?'#1a1430':'#fff',borderRadius:'24px 24px 0 0',padding:'26px 22px 36px',boxShadow:'0 -8px 40px rgba(0,0,0,0.3)'}}>
+        <div style={{width:40,height:4,borderRadius:99,background:th.glassBorder,margin:'0 auto 20px'}}/>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+          <div style={{width:44,height:44,borderRadius:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`}}>
+            <AstroGlyph name={item.glyph} size={24} color={th.glyphClr} sw={1.4}/>
+          </div>
+          <div>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9.5,letterSpacing:1.4,color:th.gold,marginBottom:3}}>{item.kicker[lang]}</div>
+            <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,lineHeight:1.05}}>{item.title[lang]}</div>
           </div>
         </div>
-      )}
+        <div style={{fontFamily:'"Manrope",sans-serif',fontSize:13.5,lineHeight:1.55,color:th.inkSoft,textWrap:'pretty',marginBottom:22}}>
+          {item.help ? item.help[lang] : item.desc[lang]}
+        </div>
+        <button onClick={onClose} style={{
+          width:'100%',height:50,borderRadius:999,border:'none',cursor:'pointer',
+          background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,
+          boxShadow:`0 8px 26px ${th.accentGlow}`,
+        }}>
+          {lang==='en'?'Got it':'Понятно'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -706,6 +708,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [solarYear, setSolarYear] = useState(() => Math.max(birth.year + 1, new Date().getFullYear()));
   const [solarCity, setSolarCity] = useState(() => residenceCity(birth));
   const [milestoneTheme, setMilestoneTheme] = useState(null);
+  const [helpItem, setHelpItem] = useState(null); // объяснение услуги (bottom-sheet)
   const [onb, setOnb] = useState('loading'); // 'loading' | 'needed' | 'done'
 
   useEffect(()=>{ try{ localStorage.setItem(BIRTH_KEY, JSON.stringify(birth)); }catch(e){} }, [birth]);
@@ -819,7 +822,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   if (activeTab === 'profile') {
     mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={setUserName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key}/>;
   } else if (screen === 'home') {
-    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName}/>;
+    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem}/>;
   } else if (screen === 'natal') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>{}}/>;
@@ -872,6 +875,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
         </div>
         {/* ── Bottom nav ── */}
         <BottomNav th={th} lang={lang} activeTab={activeTab} onTab={handleTabChange}/>
+
+        {/* ── Объяснение услуги (над нижним меню) ── */}
+        {helpItem && <ServiceHelpSheet th={th} lang={lang} item={helpItem} onClose={()=>setHelpItem(null)}/>}
 
         {/* ── Онбординг: проверка профиля / форма приветствия ── */}
         {onb === 'loading' && (
@@ -961,11 +967,9 @@ function App() {
   const isTg = typeof window !== 'undefined' && window.IS_TG;
 
   // В Telegram — на весь экран, без рамки телефона и dev-панели.
-  // paddingTop/Bottom через CSS-переменные безопасной зоны (fullscreen-режим).
   if (isTg) {
     return (
-      <div style={{position:'fixed',inset:0,background:'#0a0812',boxSizing:'border-box',
-        paddingTop:'var(--tg-safe-top, 0px)', paddingBottom:'var(--tg-safe-bottom, 0px)'}}>
+      <div style={{position:'fixed',inset:0,background:'#0a0812'}}>
         <AstroPhone th={th} lang={lang} onChangeLang={handleChangeLang} embedded/>
       </div>
     );
