@@ -630,7 +630,8 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
                 <div style={{fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:10, letterSpacing:1.4, textTransform:'uppercase', color:th.muted, marginBottom:3}}>{T.name}</div>
                 <input
                   value={b.name || ''}
-                  onChange={(e) => setB({ ...b, name: e.target.value })}
+                  onChange={(e) => setB({ ...b, name: e.target.value.slice(0, 15) })}
+                  maxLength={15}
                   placeholder={T.namePh}
                   style={{width:'100%', appearance:'none', background:'none', border:'none', outline:'none', color:th.ink, fontFamily:'var(--ds-serif)', fontWeight:600, fontSize:17, padding:0}}
                 />

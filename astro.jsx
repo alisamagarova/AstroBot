@@ -137,11 +137,16 @@ function fmtDate(lang, d=new Date()) {
 }
 
 const POSSIBILITIES = [
-  {id:'natal',     glyph:'natal',      title:{ru:'Натальная карта',  en:'Natal chart'},        kicker:{ru:'РАСШИФРОВКА',    en:'DECODE'},        desc:{ru:'Полная расшифровка карты рождения',      en:'A full read of your birth chart'}},
-  {id:'synastry',  glyph:'synastry',   title:{ru:'Синастрия',        en:'Synastry'},            kicker:{ru:'СОВМЕСТИМОСТЬ',  en:'COMPATIBILITY'}, desc:{ru:'Сравни две карты и узнай об отношениях', en:'Compare two charts and read your bond'}},
-  {id:'solar',     glyph:'solar',      title:{ru:'Соляр',            en:'Solar return'},        kicker:{ru:'ГОД ВПЕРЁД',     en:'YEAR AHEAD'},    desc:{ru:'Прогноз на твой астрологический год',    en:'A forecast for your astrological year'}},
-  {id:'pinpoint',  glyph:'pinpoint',   title:{ru:'Точечные вопросы', en:'Pinpoint questions'},  kicker:{ru:'ХОРАР',          en:'HORARY'},        desc:{ru:'Точный ответ на один конкретный вопрос', en:'A precise answer to one question'}},
-  {id:'milestones',glyph:'milestones', title:{ru:'Жизненные вехи',   en:'Life Milestones'},     kicker:{ru:'ЦИКЛЫ СУДЬБЫ',   en:'LIFE CYCLES'},   desc:{ru:'Когда ждать переломов в карьере, союзах и судьбе — по планетарным циклам', en:'When to expect turning points in career, partnerships and fate'}},
+  {id:'natal',     glyph:'natal',      title:{ru:'Натальная карта',  en:'Natal chart'},        kicker:{ru:'РАСШИФРОВКА',    en:'DECODE'},        desc:{ru:'Полная расшифровка карты рождения',      en:'A full read of your birth chart'},
+    help:{ru:'Натальная карта — это «снимок неба» в момент твоего рождения. По положению Солнца, Луны и планет она описывает твой характер, сильные стороны, таланты и жизненные задачи. Это основа всей астрологии — с неё начинается знакомство с собой.', en:'Your natal chart is a snapshot of the sky at the moment you were born. From the positions of the Sun, Moon and planets it describes your character, strengths, talents and life themes — the foundation of everything in astrology.'}},
+  {id:'synastry',  glyph:'synastry',   title:{ru:'Синастрия',        en:'Synastry'},            kicker:{ru:'СОВМЕСТИМОСТЬ',  en:'COMPATIBILITY'}, desc:{ru:'Сравни две карты и узнай об отношениях', en:'Compare two charts and read your bond'},
+    help:{ru:'Синастрия — это сравнение твоей карты с картой другого человека: партнёра, друга, родителя. Она показывает, где между вами притяжение и тепло, а где — трение и точки роста. Помогает лучше понять ваши отношения.', en:'Synastry compares your chart with another person\'s — a partner, friend or parent. It reveals where there\'s attraction and warmth between you, and where there\'s friction and room to grow.'}},
+  {id:'solar',     glyph:'solar',      title:{ru:'Соляр',            en:'Solar return'},        kicker:{ru:'ГОД ВПЕРЁД',     en:'YEAR AHEAD'},    desc:{ru:'Прогноз на твой астрологический год',    en:'A forecast for your astrological year'},
+    help:{ru:'Соляр — это карта на твой личный год: от одного дня рождения до следующего. Она подсказывает главные темы и события, которые принесёт ближайший год — в работе, отношениях, внутреннем росте.', en:'A solar return is a chart for your personal year — from one birthday to the next. It highlights the main themes and events the coming year will bring in work, relationships and growth.'}},
+  {id:'pinpoint',  glyph:'pinpoint',   title:{ru:'Точечные вопросы', en:'Pinpoint questions'},  kicker:{ru:'ХОРАР',          en:'HORARY'},        desc:{ru:'Точный ответ на один конкретный вопрос', en:'A precise answer to one question'},
+    help:{ru:'Хорар отвечает на один конкретный вопрос по карте, построенной на момент, когда ты его задал. Например: «получу ли я эту работу?» или «стоит ли соглашаться?». Точный ответ здесь и сейчас.', en:'Horary answers one specific question using a chart cast for the moment you ask it — like "will I get this job?" A precise answer, here and now.'}},
+  {id:'milestones',glyph:'milestones', title:{ru:'Жизненные вехи',   en:'Life Milestones'},     kicker:{ru:'ЦИКЛЫ СУДЬБЫ',   en:'LIFE CYCLES'},   desc:{ru:'Когда ждать переломов в карьере, союзах и судьбе — по планетарным циклам', en:'When to expect turning points in career, partnerships and fate'},
+    help:{ru:'Жизненные вехи показывают периоды, когда вероятны крупные перемены — в карьере, отношениях, переездах. Они рассчитываются по циклам медленных планет и помогают подготовиться к важным поворотам судьбы.', en:'Life Milestones reveal the periods when major changes are likely — in career, relationships or relocation — based on the cycles of the slow planets, so you can prepare for the turning points.'}},
 ];
 
 // ════════════════════════════════════════════════════════════
@@ -309,10 +314,22 @@ function BottomNav({ th, lang, activeTab, onTab }) {
 // ════════════════════════════════════════════════════════════
 // MAIN SCREEN
 // ════════════════════════════════════════════════════════════
-function CosmicMain({ th, lang, onOpen, sun }) {
+function CosmicMain({ th, lang, onOpen, sun, userName }) {
   const first4    = POSSIBILITIES.slice(0,4);
   const milestone = POSSIBILITIES[4];
   const signLine  = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
+  const [helpItem, setHelpItem] = useState(null); // услуга, объяснение которой открыто
+
+  // Маленькая круглая кнопка «?» — открывает объяснение услуги
+  const helpBtn = (item, pos) => (
+    <button onClick={(e)=>{ e.stopPropagation(); setHelpItem(item); }} style={{
+      position:'absolute', ...pos, width:22, height:22, borderRadius:999, zIndex:3,
+      border:`1px solid ${th.glassBorder}`, background:th.chip, color:th.inkSoft,
+      cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+      fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:12, lineHeight:1, padding:0,
+      backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)',
+    }}>?</button>
+  );
 
   return (
     <div style={{position:'relative',zIndex:1,padding:'2px 18px 28px'}}>
@@ -336,7 +353,7 @@ function CosmicMain({ th, lang, onOpen, sun }) {
             {STR[lang].greet[th.tod]},
           </div>
           <div style={{fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:52,lineHeight:0.96,color:th.ink,letterSpacing:-1,marginBottom:16}}>
-            {lang==='ru'?USER.name:USER.nameEn}
+            {userName || (lang==='ru'?USER.name:USER.nameEn)}
           </div>
           <div style={{
             display:'inline-flex',alignItems:'center',gap:7,padding:'5px 11px 5px 9px',
@@ -367,8 +384,14 @@ function CosmicMain({ th, lang, onOpen, sun }) {
       </button>
 
       {/* ── POSSIBILITIES GRID ───────────────────────── */}
-      <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:10.5,letterSpacing:2,textTransform:'uppercase',color:th.muted,marginBottom:11}}>
-        {STR[lang].possibilities}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:11}}>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:10.5,letterSpacing:2,textTransform:'uppercase',color:th.muted}}>
+          {STR[lang].possibilities}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:5,fontFamily:'"Manrope",sans-serif',fontSize:10.5,color:th.muted}}>
+          <span style={{width:15,height:15,borderRadius:999,border:`1px solid ${th.glassBorder}`,background:th.chip,display:'inline-flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:9.5}}>?</span>
+          {lang==='en'?'tap to learn':'нажми — объясню'}
+        </div>
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
@@ -379,12 +402,13 @@ function CosmicMain({ th, lang, onOpen, sun }) {
               style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130,
                       opacity:soon?0.62:1,cursor:soon?'default':'pointer',position:'relative',overflow:'hidden'}}>
               {soon && (
-                <div style={{position:'absolute',top:9,right:9,background:th.gold,color:th.effDark?'#1a1230':'#fff',
+                <div style={{position:'absolute',top:9,left:9,background:th.gold,color:th.effDark?'#1a1230':'#fff',
                   fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:8.5,letterSpacing:1,
                   borderRadius:99,padding:'2px 7px'}}>
                   {lang==='en'?'SOON':'СКОРО'}
                 </div>
               )}
+              {helpBtn(p, {top:9, right:9})}
               <div style={{width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`,marginBottom:10,flexShrink:0}}>
                 <AstroGlyph name={p.glyph} size={22} color={th.glyphClr} sw={1.4}/>
               </div>
@@ -399,6 +423,7 @@ function CosmicMain({ th, lang, onOpen, sun }) {
       {/* ── MILESTONES — скоро ───────────────────────── */}
       <GlassCard th={th} strong style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden',opacity:0.62,cursor:'default'}}>
         <WheelWatermark color={th.effDark?'#fff':th.ink} opacity={th.effDark?0.09:0.06}/>
+        {helpBtn(milestone, {top:9, right:9})}
         <div style={{width:50,height:50,borderRadius:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}25`,border:`1px solid ${th.accent}50`,position:'relative'}}>
           <AstroGlyph name="milestones" size={26} color={th.glyphClr} sw={1.4}/>
         </div>
@@ -408,10 +433,38 @@ function CosmicMain({ th, lang, onOpen, sun }) {
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{milestone.desc[lang]}</div>
         </div>
         <div style={{background:th.gold,color:th.effDark?'#1a1230':'#fff',fontFamily:'"Manrope",sans-serif',
-          fontWeight:700,fontSize:9,letterSpacing:1,borderRadius:99,padding:'3px 9px',flexShrink:0}}>
+          fontWeight:700,fontSize:9,letterSpacing:1,borderRadius:99,padding:'3px 9px',flexShrink:0,marginRight:26}}>
           {lang==='en'?'SOON':'СКОРО'}
         </div>
       </GlassCard>
+
+      {/* ── Объяснение услуги (bottom-sheet по «?») ── */}
+      {helpItem && (
+        <div onClick={()=>setHelpItem(null)} style={{position:'fixed',inset:0,zIndex:80,display:'flex',alignItems:'flex-end',background:'rgba(0,0,0,0.55)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)'}}>
+          <div onClick={(e)=>e.stopPropagation()} style={{width:'100%',background:th.effDark?'#1a1430':'#fff',borderRadius:'24px 24px 0 0',padding:'26px 22px 34px',boxShadow:'0 -8px 40px rgba(0,0,0,0.3)'}}>
+            <div style={{width:40,height:4,borderRadius:99,background:th.glassBorder,margin:'0 auto 20px'}}/>
+            <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+              <div style={{width:44,height:44,borderRadius:13,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`}}>
+                <AstroGlyph name={helpItem.glyph} size={24} color={th.glyphClr} sw={1.4}/>
+              </div>
+              <div>
+                <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9.5,letterSpacing:1.4,color:th.gold,marginBottom:3}}>{helpItem.kicker[lang]}</div>
+                <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,lineHeight:1.05}}>{helpItem.title[lang]}</div>
+              </div>
+            </div>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:13.5,lineHeight:1.55,color:th.inkSoft,textWrap:'pretty',marginBottom:22}}>
+              {helpItem.help ? helpItem.help[lang] : helpItem.desc[lang]}
+            </div>
+            <button onClick={()=>setHelpItem(null)} style={{
+              width:'100%',height:50,borderRadius:999,border:'none',cursor:'pointer',
+              background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,
+              boxShadow:`0 8px 26px ${th.accentGlow}`,
+            }}>
+              {lang==='en'?'Got it':'Понятно'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -500,7 +553,8 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
           <div style={{display:'flex',gap:8,alignItems:'center'}}>
             <input
               value={draft}
-              onChange={e=>setDraft(e.target.value)}
+              onChange={e=>setDraft(e.target.value.slice(0,15))}
+              maxLength={15}
               onKeyDown={e=>{if(e.key==='Enter')saveName();if(e.key==='Escape')cancelEdit();}}
               autoFocus
               style={{
@@ -575,7 +629,7 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
             })}
           </div>
         }/>
-        <ProfRow th={th} label="Telegram ID" value={USER.tgId} last/>
+        <ProfRow th={th} label="Telegram ID" value={(window.AstroAPI && window.AstroAPI.tgUserId()) || USER.tgId} last/>
       </ProfSection>
 
       {/* ── LEGAL DOCUMENTS ──────────────────────── */}
@@ -765,7 +819,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   if (activeTab === 'profile') {
     mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={setUserName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key}/>;
   } else if (screen === 'home') {
-    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun}/>;
+    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName}/>;
   } else if (screen === 'natal') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>{}}/>;
