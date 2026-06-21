@@ -280,6 +280,19 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
     },
   );
 
+  /** DELETE /users/:tgId/self
+   *  Удаляет self-профиль пользователя (сброс онбординга / «удалить мои данные»).
+   */
+  fastify.delete<{ Params: { tgId: string } }>(
+    '/users/:tgId/self',
+    async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
+      const person = await getSelfPerson(request.params.tgId);
+      if (person) await deletePerson(person.id);
+      return reply.status(204).send();
+    },
+  );
+
   /** GET /users/:tgId/people
    *  Список всех профилей пользователя (себя + партнёры).
    */

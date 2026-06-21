@@ -151,6 +151,14 @@ const AstroAPI = {
     }
     return true;
   },
+
+  /** ВРЕМЕННОЕ: удаляет профиль на бэкенде (для повторного теста онбординга). */
+  async resetSelf() {
+    const id = tgUserId();
+    if (id && this.isConfigured()) {
+      try { await apiFetch(`/api/users/${id}/self`, { method: 'DELETE' }); } catch (e) {}
+    }
+  },
 };
 
 window.AstroAPI = AstroAPI;
