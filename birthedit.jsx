@@ -518,19 +518,27 @@ function EditField({ th, icon, label, value, open, onToggle, children }) {
 // ═══════════════════════════════════════════════════════
 // MAIN EDITOR  (full overlay content: header + form + save)
 // ═══════════════════════════════════════════════════════
-function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false, title }) {
+function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false, title, onboarding = false }) {
   const en = lang === 'en';
   const [b, setB] = useState(() => JSON.parse(JSON.stringify(initial)));
   const [open, setOpen] = useState(null); // 'date' | 'time' | 'city' | null
   const [dateWarn, setDateWarn] = useState(false); // предупреждение о смене даты
+  const [consent, setConsent] = useState(false);   // галочка согласия (онбординг)
+
+  // В онбординге показываем поле имени (как для партнёра) и не спрашиваем город проживания.
+  const nameVisible = showName || onboarding;
 
   const T = {
-    title:   title || (en ? 'Birth data' : 'Данные рождения'),
-    sub:     showName
+    title:   title || (onboarding ? (en ? 'Welcome' : 'Добро пожаловать')
+                                   : (en ? 'Birth data' : 'Данные рождения')),
+    sub:     onboarding
+               ? (en ? 'Tell me about yourself — I\'ll build your personal natal chart.'
+                     : 'Расскажи о себе — построю твою персональную натальную карту.')
+               : showName
                ? (en ? 'Enter your partner\'s details to compare charts' : 'Введите данные партнёра, чтобы сравнить карты')
                : (en ? 'These details power your natal chart' : 'По этим данным строится натальная карта'),
     name:    en ? 'Name' : 'Имя',
-    namePh:  en ? 'Partner\'s name' : 'Имя партнёра',
+    namePh:  onboarding ? (en ? 'Your name' : 'Твоё имя') : (en ? 'Partner\'s name' : 'Имя партнёра'),
     date:    en ? 'Date of birth' : 'Дата рождения',
     time:    en ? 'Time of birth' : 'Время рождения',
     city:    en ? 'City of birth' : 'Город рождения',
@@ -598,9 +606,11 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
   return (
     <div style={{position:'relative', height:'100%', display:'flex', flexDirection:'column'}}>
       {/* ── Header ── */}
-      <div style={{paddingTop:54, flexShrink:0}}>
+      <div style={{paddingTop: (typeof window!=='undefined' && window.IS_TG) ? 12 : 54, flexShrink:0}}>
         <div style={{height:50, display:'flex', alignItems:'center', gap:10, padding:'0 16px'}}>
-          {circle(<BeIco name="back" size={16} color={th.ink} sw={1.9}/>, onCancel)}
+          {onboarding
+            ? <div style={{width:33, flexShrink:0}}/>  /* без «назад»: онбординг нельзя пропустить */
+            : circle(<BeIco name="back" size={16} color={th.ink} sw={1.9}/>, onCancel)}
           <div style={{flex:1, textAlign:'center', fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:15, color:th.ink, paddingRight:43}}>{T.title}</div>
         </div>
       </div>
@@ -609,8 +619,8 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
       <div style={{flex:1, overflowY:'auto', scrollbarWidth:'none', padding:'8px 18px 20px'}}>
         <div style={{fontFamily:'"Manrope",sans-serif', fontSize:12.5, color:th.inkSoft, marginBottom:18, lineHeight:1.4}}>{T.sub}</div>
 
-        {/* NAME (partner flow only) */}
-        {showName && (
+        {/* NAME (partner flow + onboarding) */}
+        {nameVisible && (
           <div style={{marginBottom:14}}>
             <div style={{display:'flex', alignItems:'center', gap:13, background:th.glassStrong, border:`1px solid ${th.glassBorder}`, borderRadius:16, padding:'10px 16px', backdropFilter:'blur(18px)', WebkitBackdropFilter:'blur(18px)'}}>
               <div style={{width:40, height:40, borderRadius:12, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', background:`${th.accent}22`, border:`1px solid ${th.accent}40`}}>
@@ -675,8 +685,8 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
           <CitySearch th={th} lang={lang} value={b.city} onPick={(c) => { setB({ ...b, city: c }); }}/>
         </EditField>
 
-        {/* RESIDENCE (own profile only) — drives the solar return */}
-        {!showName && (
+        {/* RESIDENCE (own profile only, not during onboarding) — drives the solar return */}
+        {!nameVisible && (
           <EditField th={th} icon="home" label={T.residence}
             value={b.residence ? (en ? b.residence.en : b.residence.ru) : T.sameAsBirth}
             open={open==='res'} onToggle={() => setOpen(open==='res'?null:'res')}>
@@ -697,19 +707,54 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
 
       {/* ── Save footer ── */}
       <div style={{flexShrink:0, padding:'12px 18px', paddingBottom:30, background: th.effDark ? 'rgba(10,6,22,0.72)' : 'rgba(248,245,255,0.72)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderTop:`1px solid ${th.glassBorder}`}}>
-        <button onClick={() => {
-          // Для своего профиля (не партнёр) — предупреждение, если дата изменилась
-          const dateChanged = !showName && (
-            b.day !== initial.day || b.month !== initial.month || b.year !== initial.year
+
+        {/* Согласие (только онбординг) — кнопка неактивна, пока галочка не нажата */}
+        {onboarding && (
+          <button onClick={() => setConsent(c => !c)} style={{
+            display:'flex', alignItems:'flex-start', gap:11, width:'100%', textAlign:'left',
+            background:'transparent', border:'none', cursor:'pointer', padding:'0 2px 14px',
+          }}>
+            <div style={{
+              width:22, height:22, borderRadius:7, flexShrink:0, marginTop:1,
+              border:`2px solid ${consent ? th.accent : th.muted}`,
+              background: consent ? th.accent : 'transparent',
+              display:'flex', alignItems:'center', justifyContent:'center', transition:'all .15s',
+            }}>
+              {consent && <BeIco name="check" size={13} color="#fff" sw={2.6}/>}
+            </div>
+            <span style={{fontFamily:'"Manrope",sans-serif', fontSize:12, lineHeight:1.45, color:th.inkSoft, textWrap:'pretty'}}>
+              {en
+                ? 'I have read and accept the Privacy Policy and Terms of Service'
+                : 'Я ознакомлен(а) и согласен(на) с политикой конфиденциальности и пользовательским соглашением'}
+            </span>
+          </button>
+        )}
+
+        {(() => {
+          const nameOk = !nameVisible || (b.name && b.name.trim().length > 0);
+          const cityOk = !!b.city;
+          const canSubmit = onboarding ? (nameOk && cityOk && consent) : true;
+          return (
+            <button disabled={!canSubmit} onClick={() => {
+              if (!canSubmit) return;
+              // Для своего профиля (не партнёр, не онбординг) — предупреждение при смене даты
+              const dateChanged = !nameVisible && (
+                b.day !== initial.day || b.month !== initial.month || b.year !== initial.year
+              );
+              if (dateChanged) { setDateWarn(true); } else { onSave(b); }
+            }} style={{
+              display:'flex', width:'100%', justifyContent:'center', alignItems:'center', gap:8, height:52,
+              borderRadius:999, border:'none', cursor: canSubmit ? 'pointer' : 'default',
+              background: canSubmit ? th.accent : (th.effDark ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.08)'),
+              color: canSubmit ? '#fff' : th.muted, opacity: canSubmit ? 1 : 0.7,
+              fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:15.5,
+              boxShadow: canSubmit ? `0 8px 26px ${th.accentGlow}` : 'none',
+            }}>
+              <BeIco name="check" size={18} color={canSubmit ? '#fff' : th.muted} sw={2}/>
+              {onboarding ? (en ? 'Continue' : 'Продолжить') : T.save}
+            </button>
           );
-          if (dateChanged) { setDateWarn(true); } else { onSave(b); }
-        }} style={{
-          display:'flex', width:'100%', justifyContent:'center', alignItems:'center', gap:8, height:52,
-          borderRadius:999, border:'none', cursor:'pointer', background:th.accent, color:'#fff',
-          fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:15.5, boxShadow:`0 8px 26px ${th.accentGlow}`,
-        }}>
-          <BeIco name="check" size={18} color="#fff" sw={2}/>{T.save}
-        </button>
+        })()}
       </div>
 
       {/* ── Предупреждение: дату можно менять только 1 раз ── */}

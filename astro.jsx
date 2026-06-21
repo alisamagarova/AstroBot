@@ -639,9 +639,54 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [solarYear, setSolarYear] = useState(() => Math.max(birth.year + 1, new Date().getFullYear()));
   const [solarCity, setSolarCity] = useState(() => residenceCity(birth));
   const [milestoneTheme, setMilestoneTheme] = useState(null);
+  const [onb, setOnb] = useState('loading'); // 'loading' | 'needed' | 'done'
 
   useEffect(()=>{ try{ localStorage.setItem(BIRTH_KEY, JSON.stringify(birth)); }catch(e){} }, [birth]);
   useEffect(()=>{ try{ localStorage.setItem(PARTNERS_KEY, JSON.stringify(partners)); }catch(e){} }, [partners]);
+
+  // ── Гейтинг онбординга: есть ли у пользователя профиль ──
+  const ONB_KEY = 'astro_onboarded_v1';
+  const localDone = () => { try { return !!localStorage.getItem(ONB_KEY); } catch(e){ return false; } };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const api = window.AstroAPI;
+      // Вне Telegram или без backend — решаем по локальному флагу.
+      if (!api || !api.inTelegram() || !api.isConfigured()) {
+        if (!cancelled) setOnb(localDone() ? 'done' : 'needed');
+        return;
+      }
+      try {
+        const person = await api.getSelf();
+        if (cancelled) return;
+        if (person) {
+          setBirth(api.personToBirth(person));
+          setUserName(person.name);
+          try { localStorage.setItem(ONB_KEY, '1'); } catch(e){}
+          setOnb('done');
+        } else {
+          setOnb('needed');
+        }
+      } catch (e) {
+        if (!cancelled) setOnb(localDone() ? 'done' : 'needed');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const finishOnboarding = async (b) => {
+    setBirth(b);
+    if (b.name) setUserName(b.name);
+    setSolarCity(residenceCity(b));
+    try { localStorage.setItem(ONB_KEY, '1'); } catch(e){}
+    setOnb('done');
+    // Фоновое сохранение в backend (профиль + согласие)
+    const api = window.AstroAPI;
+    if (api && api.isConfigured() && api.inTelegram()) {
+      try { await api.completeOnboarding(b); }
+      catch (e) { console.error('onboarding save failed:', e); }
+    }
+  };
 
   const sun  = sunSignInfo(birth, lang);
   sun.key    = SIGN_KEYS[sun.idx];
@@ -760,6 +805,23 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
         </div>
         {/* ── Bottom nav ── */}
         <BottomNav th={th} lang={lang} activeTab={activeTab} onTab={handleTabChange}/>
+
+        {/* ── Онбординг: проверка профиля / форма приветствия ── */}
+        {onb === 'loading' && (
+          <div style={{position:'absolute',inset:0,zIndex:90,display:'flex',alignItems:'center',justifyContent:'center',background:th.effDark?'#0a0812':'#f6f3ff'}}>
+            <div style={{width:34,height:34,borderRadius:'50%',border:`3px solid ${th.glassBorder}`,borderTopColor:th.accent,animation:'astroSpin .8s linear infinite'}}/>
+          </div>
+        )}
+        {onb === 'needed' && (
+          <div className="astro-in-f" style={{position:'absolute',inset:0,zIndex:90,overflow:'hidden'}}>
+            <Sky th={th}/>
+            <div style={{position:'relative',zIndex:1,height:'100%'}}>
+              <BirthDataEditor th={th} lang={lang}
+                initial={{ ...DEFAULT_BIRTH, name:'', city:null, residence:null }}
+                onSave={finishOnboarding} onCancel={()=>{}} onboarding/>
+            </div>
+          </div>
+        )}
 
         {/* ── Birth-data editor overlay (returns to wherever it was opened) ── */}
         {editing && (
