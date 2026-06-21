@@ -3,6 +3,7 @@ import type { DbConsent, DocumentType } from '../../types.js';
 
 export interface SaveConsentInput {
   user_id:          string;
+  tg_id:            string;
   document_type:    DocumentType;
   document_version: string;
   tg_client?:       string | null;
@@ -12,13 +13,14 @@ export interface SaveConsentInput {
 /** Сохраняет согласие. Если пользователь уже принял эту версию — возвращает существующую запись. */
 export async function saveConsent(input: SaveConsentInput): Promise<DbConsent> {
   const { rows } = await pool.query<DbConsent>(
-    `INSERT INTO legal_consents (user_id, document_type, document_version, tg_client, ip_address)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO legal_consents (user_id, tg_id, document_type, document_version, tg_client, ip_address)
+     VALUES ($1, $2, $3, $4, $5, $6)
      ON CONFLICT ON CONSTRAINT uq_consent_per_version DO UPDATE
        SET accepted_at = legal_consents.accepted_at  -- без изменений, возвращаем оригинал
      RETURNING *`,
     [
       input.user_id,
+      input.tg_id,
       input.document_type,
       input.document_version,
       input.tg_client  ?? null,

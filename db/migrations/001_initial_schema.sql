@@ -61,7 +61,7 @@ CREATE TABLE people (
   -- Дата рождения
   birth_day       SMALLINT     NOT NULL CHECK (birth_day   BETWEEN 1  AND 31),
   birth_month     SMALLINT     NOT NULL CHECK (birth_month BETWEEN 1  AND 12),
-  birth_year      SMALLINT     NOT NULL CHECK (birth_year  BETWEEN 1900 AND 2025),
+  birth_year      SMALLINT     NOT NULL CHECK (birth_year  BETWEEN 1900 AND 2100),
 
   -- Время рождения
   time_mode       time_mode    NOT NULL DEFAULT 'unknown',
@@ -112,12 +112,15 @@ CREATE UNIQUE INDEX uq_one_self_per_user ON people (owner_id) WHERE is_self = tr
 
 -- ─────────────────────────────────────
 -- LEGAL CONSENTS (юридические согласия)
--- Хранятся навсегда даже при удалении пользователя (SET NULL)
+-- Хранятся навсегда: при удалении пользователя user_id обнуляется (SET NULL),
+-- но сама запись согласия остаётся — для юридического аудита.
+-- tg_id — денормализованный снимок: кто именно соглашался (переживает удаление).
 -- ─────────────────────────────────────
 
 CREATE TABLE legal_consents (
   id               BIGSERIAL    PRIMARY KEY,
-  user_id          BIGINT       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id          BIGINT       REFERENCES users(id) ON DELETE SET NULL,
+  tg_id            BIGINT       NOT NULL,     -- снимок Telegram ID на момент согласия
 
   -- Тип документа: политика конфиденциальности или пользовательское соглашение
   document_type    TEXT         NOT NULL
@@ -128,7 +131,7 @@ CREATE TABLE legal_consents (
 
   -- Контекст принятия (аудит)
   tg_client        TEXT,                      -- из initData Telegram, если доступно
-  ip_address       INET,                      -- IP сервера бота (не пользователя)
+  ip_address       INET,                      -- IP запроса (Mini App — реальный IP пользователя)
 
   -- Один пользователь не может принять одну версию дважды
   CONSTRAINT uq_consent_per_version UNIQUE (user_id, document_type, document_version)

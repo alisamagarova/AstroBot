@@ -8,6 +8,7 @@ import {
   setBlocked,
 } from '../db/queries/users.js';
 import { saveConsent, getConsentsByUser } from '../db/queries/consents.js';
+import { requireOwner } from '../plugins/auth.js';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     if (!body.success) {
       return reply.status(400).send({ error: body.error.flatten() });
     }
+    if (!requireOwner(request, reply, body.data.tg_id)) return;
 
     const user = await upsertUser(body.data);
     return reply.status(200).send({ user });
@@ -56,6 +58,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
    */
   fastify.get<{ Params: { tgId: string } }>('/users/:tgId', async (request, reply) => {
     const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
     const user = await getUserByTgId(tgId);
     if (!user) return reply.status(404).send({ error: 'User not found' });
     return { user };
@@ -67,6 +70,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch<{ Params: { tgId: string } }>(
     '/users/:tgId/onboarding-step',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const body = SetStepBody.safeParse(request.body);
       if (!body.success) {
         return reply.status(400).send({ error: body.error.flatten() });
@@ -82,6 +86,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch<{ Params: { tgId: string } }>(
     '/users/:tgId/lang',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const body = SetLangBody.safeParse(request.body);
       if (!body.success) {
         return reply.status(400).send({ error: body.error.flatten() });
@@ -97,6 +102,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch<{ Params: { tgId: string } }>(
     '/users/:tgId/blocked',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const body = z.object({ blocked: z.boolean() }).safeParse(request.body);
       if (!body.success) {
         return reply.status(400).send({ error: body.error.flatten() });
@@ -113,6 +119,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Params: { tgId: string } }>(
     '/users/:tgId/consents',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const body = ConsentBody.safeParse(request.body);
       if (!body.success) {
         return reply.status(400).send({ error: body.error.flatten() });
@@ -123,6 +130,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
       const consent = await saveConsent({
         user_id:          user.id,
+        tg_id:            user.tg_id,
         document_type:    body.data.document_type,
         document_version: body.data.document_version,
         tg_client:        body.data.tg_client ?? null,
@@ -139,6 +147,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{ Params: { tgId: string } }>(
     '/users/:tgId/consents',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const user = await getUserByTgId(request.params.tgId);
       if (!user) return reply.status(404).send({ error: 'User not found' });
 

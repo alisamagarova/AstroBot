@@ -67,7 +67,8 @@ export interface DbPerson {
 
 export interface DbConsent {
   id:               string;
-  user_id:          string;
+  user_id:          string | null;   // null после удаления пользователя
+  tg_id:            string;           // снимок: кто соглашался (сохраняется навсегда)
   document_type:    DocumentType;
   document_version: string;
   accepted_at:      Date;

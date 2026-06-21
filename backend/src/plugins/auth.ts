@@ -1,8 +1,36 @@
 import crypto from 'node:crypto';
 import fp from 'fastify-plugin';
-import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { config, isDev } from '../config.js';
 import type { TgInitUser } from '../types.js';
+
+// ─── Authorization helpers ────────────────────────────────────────────────────
+
+/**
+ * true, если запрос имеет право действовать от имени данного tg_id.
+ * Бот (caller='bot') доверенный — проходит всегда.
+ * Mini App — только если авторизованный пользователь совпадает с tgId.
+ */
+export function ownsAccount(request: FastifyRequest, tgId: string): boolean {
+  const ctx = request.authCtx;
+  if (!ctx) return false;
+  if (ctx.caller === 'bot') return true;
+  return ctx.tgUser != null && String(ctx.tgUser.id) === String(tgId);
+}
+
+/**
+ * Проверяет доступ к аккаунту; при отказе отправляет 403 и возвращает false.
+ * Использование: if (!requireOwner(request, reply, tgId)) return;
+ */
+export function requireOwner(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  tgId: string,
+): boolean {
+  if (ownsAccount(request, tgId)) return true;
+  reply.status(403).send({ error: 'Forbidden: account does not belong to caller' });
+  return false;
+}
 
 // ─── Telegram WebApp initData validation ──────────────────────────────────────
 // Алгоритм: https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app

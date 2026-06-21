@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { FastifyPluginAsync } from 'fastify';
-import { getUserByTgId } from '../db/queries/users.js';
+import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import { getUserByTgId, getUserById } from '../db/queries/users.js';
 import {
   createPerson,
   getSelfPerson,
@@ -9,8 +9,83 @@ import {
   updatePerson,
   deletePerson,
 } from '../db/queries/people.js';
+import { requireOwner, ownsAccount } from '../plugins/auth.js';
+import type { DbPerson } from '../types.js';
+
+/** Проверяет, что профиль принадлежит вызывающему (через owner_id → tg_id). */
+async function requirePersonOwner(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  person: DbPerson,
+): Promise<boolean> {
+  if (request.authCtx?.caller === 'bot') return true;
+  const owner = await getUserById(person.owner_id);
+  if (owner && ownsAccount(request, owner.tg_id)) return true;
+  reply.status(403).send({ error: 'Forbidden: profile does not belong to caller' });
+  return false;
+}
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
+
+/**
+ * Дата существует (не 31 февраля) и не находится в будущем.
+ * Проверяет полную дату, а не только год — иначе 31.12 текущего года
+ * прошёл бы валидацию по году, будучи будущей датой.
+ */
+function isRealPastDate(day: number, month: number, year: number): boolean {
+  const d = new Date(year, month - 1, day);
+  // Date нормализует несуществующие даты (31 фев → 3 мар) — проверяем совпадение
+  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) {
+    return false;
+  }
+  // Не из будущего (сравниваем по началу сегодняшнего дня)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return d.getTime() <= today.getTime();
+}
+
+const DATE_ERROR = {
+  message: 'Дата рождения должна существовать и не может быть в будущем',
+  path: ['birth_year'],
+};
+
+// Самый ранний час каждого примерного периода — для проверки «не из будущего».
+const APPROX_START_HOUR: Record<string, number> = {
+  night: 0, morning: 6, day: 12, evening: 18,
+};
+
+/**
+ * Если дата рождения — сегодня, время рождения не должно быть в будущем.
+ * Для exact сравниваем час:минуту, для approx — начало периода.
+ * Для дат в прошлом и time_mode='unknown' ограничений нет.
+ */
+function isBirthTimeNotFuture(d: {
+  birth_day: number; birth_month: number; birth_year: number;
+  time_mode: string; birth_hour?: number; birth_minute?: number; approx_time?: string;
+}): boolean {
+  const now = new Date();
+  const isToday =
+    d.birth_year === now.getFullYear() &&
+    d.birth_month === now.getMonth() + 1 &&
+    d.birth_day === now.getDate();
+  if (!isToday) return true;
+
+  if (d.time_mode === 'exact' && d.birth_hour != null && d.birth_minute != null) {
+    const birthMins = d.birth_hour * 60 + d.birth_minute;
+    const nowMins   = now.getHours() * 60 + now.getMinutes();
+    return birthMins <= nowMins;
+  }
+  if (d.time_mode === 'approx' && d.approx_time) {
+    const startHour = APPROX_START_HOUR[d.approx_time] ?? 0;
+    return startHour <= now.getHours();
+  }
+  return true; // unknown — без ограничений
+}
+
+const TIME_ERROR = {
+  message: 'Время рождения ещё не наступило сегодня',
+  path: ['birth_hour'],
+};
 
 const BirthLocation = z.object({
   birth_city_ru:    z.string().optional().nullable(),
@@ -44,7 +119,7 @@ const CreatePersonBody = z
     name_en:     z.string().max(100).optional().nullable(),
     birth_day:   z.number().int().min(1).max(31),
     birth_month: z.number().int().min(1).max(12),
-    birth_year:  z.number().int().min(1900).max(2025),
+    birth_year:  z.number().int().min(1900).max(new Date().getFullYear()),
     res_city_ru: z.string().optional().nullable(),
     res_city_en: z.string().optional().nullable(),
     res_lat:     z.number().min(-90).max(90).optional().nullable(),
@@ -52,7 +127,9 @@ const CreatePersonBody = z
     res_timezone: z.string().optional().nullable(),
   })
   .merge(BirthLocation)
-  .and(BirthTime);
+  .and(BirthTime)
+  .refine((d) => isRealPastDate(d.birth_day, d.birth_month, d.birth_year), DATE_ERROR)
+  .refine(isBirthTimeNotFuture, TIME_ERROR);
 
 // Обновление профиля — все поля опциональны
 const UpdatePersonBody = z.object({
@@ -62,7 +139,7 @@ const UpdatePersonBody = z.object({
   // Дата (для is_self — только 1 раз за всё время)
   birth_day:   z.number().int().min(1).max(31).optional(),
   birth_month: z.number().int().min(1).max(12).optional(),
-  birth_year:  z.number().int().min(1900).max(2025).optional(),
+  birth_year:  z.number().int().min(1900).max(new Date().getFullYear()).optional(),
 
   // Время — без ограничений
   time_mode:    z.enum(['exact', 'approx', 'unknown']).optional(),
@@ -85,7 +162,25 @@ const UpdatePersonBody = z.object({
   res_lat:      z.number().min(-90).max(90).optional().nullable(),
   res_lon:      z.number().min(-180).max(180).optional().nullable(),
   res_timezone: z.string().optional().nullable(),
-});
+})
+  // Если в запросе передана полная дата — проверяем, что она реальна и не из будущего.
+  .refine(
+    (d) => d.birth_day == null || d.birth_month == null || d.birth_year == null
+      || isRealPastDate(d.birth_day, d.birth_month, d.birth_year),
+    DATE_ERROR,
+  )
+  // Если передана и полная дата, и время — проверяем, что момент не из будущего.
+  .refine(
+    (d) => d.birth_day == null || d.birth_month == null || d.birth_year == null || d.time_mode == null
+      || isBirthTimeNotFuture({
+        birth_day: d.birth_day, birth_month: d.birth_month, birth_year: d.birth_year,
+        time_mode: d.time_mode,
+        birth_hour: d.birth_hour ?? undefined,
+        birth_minute: d.birth_minute ?? undefined,
+        approx_time: d.approx_time ?? undefined,
+      }),
+    TIME_ERROR,
+  );
 
 // ─── Plugin ───────────────────────────────────────────────────────────────────
 
@@ -97,6 +192,7 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Params: { tgId: string } }>(
     '/users/:tgId/self',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const user = await getUserByTgId(request.params.tgId);
       if (!user) return reply.status(404).send({ error: 'User not found' });
 
@@ -146,6 +242,7 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{ Params: { tgId: string } }>(
     '/users/:tgId/self',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const person = await getSelfPerson(request.params.tgId);
       if (!person) return reply.status(404).send({ error: 'Self profile not found' });
       return { person };
@@ -159,6 +256,7 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch<{ Params: { tgId: string } }>(
     '/users/:tgId/self',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const person = await getSelfPerson(request.params.tgId);
       if (!person) return reply.status(404).send({ error: 'Self profile not found' });
 
@@ -188,6 +286,7 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{ Params: { tgId: string } }>(
     '/users/:tgId/people',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const people = await getPeopleByOwner(request.params.tgId);
       return { people };
     },
@@ -199,6 +298,7 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Params: { tgId: string } }>(
     '/users/:tgId/people',
     async (request, reply) => {
+      if (!requireOwner(request, reply, request.params.tgId)) return;
       const user = await getUserByTgId(request.params.tgId);
       if (!user) return reply.status(404).send({ error: 'User not found' });
 
@@ -239,6 +339,10 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch<{ Params: { personId: string } }>(
     '/people/:personId',
     async (request, reply) => {
+      const target = await getPersonById(request.params.personId);
+      if (!target) return reply.status(404).send({ error: 'Person not found' });
+      if (!(await requirePersonOwner(request, reply, target))) return;
+
       const body = UpdatePersonBody.safeParse(request.body);
       if (!body.success) {
         return reply.status(400).send({ error: body.error.flatten() });
@@ -271,6 +375,7 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const person = await getPersonById(request.params.personId);
       if (!person) return reply.status(404).send({ error: 'Person not found' });
+      if (!(await requirePersonOwner(request, reply, person))) return;
       if (person.is_self) {
         return reply.status(403).send({ error: 'Cannot delete self profile' });
       }

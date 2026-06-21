@@ -259,8 +259,8 @@ async function finishOnboarding(ctx: Context, tgId: string): Promise<void> {
   }
 
   // Сохраняем оба согласия.
-  await saveConsent({ user_id: user.id, document_type: 'privacy_policy',   document_version: DOC_VERSION, tg_client: 'bot' });
-  await saveConsent({ user_id: user.id, document_type: 'terms_of_service', document_version: DOC_VERSION, tg_client: 'bot' });
+  await saveConsent({ user_id: user.id, tg_id: tgId, document_type: 'privacy_policy',   document_version: DOC_VERSION, tg_client: 'bot' });
+  await saveConsent({ user_id: user.id, tg_id: tgId, document_type: 'terms_of_service', document_version: DOC_VERSION, tg_client: 'bot' });
 
   // Создаём профиль себя, если ещё нет.
   const existing = await getSelfPerson(tgId);
