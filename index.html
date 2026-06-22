@@ -47,9 +47,31 @@
       try {
         tg.ready();
         tg.expand();
-        // подстраиваем фон под тему приложения
         if (tg.setBackgroundColor) tg.setBackgroundColor('#0a0812');
         if (tg.setHeaderColor)     tg.setHeaderColor('#0a0812');
+
+        // Полноэкранный режим — убирает шапку Telegram «бот · мини-приложение».
+        if (tg.requestFullscreen) { try { tg.requestFullscreen(); } catch (e) {} }
+
+        // Безопасная зона: отступы, чтобы контент не уходил под чёлку/часы и плавающую кнопку.
+        var setSafe = function () {
+          try {
+            var ci = tg.contentSafeAreaInset || {};
+            var si = tg.safeAreaInset || {};
+            var top = (ci.top || 0) + (si.top || 0);
+            var bot = (ci.bottom || 0) + (si.bottom || 0);
+            var root = document.documentElement;
+            root.style.setProperty('--tg-safe-top', top + 'px');
+            root.style.setProperty('--tg-safe-bottom', bot + 'px');
+          } catch (e) {}
+        };
+        if (tg.onEvent) {
+          tg.onEvent('fullscreenChanged', setSafe);
+          tg.onEvent('safeAreaChanged', setSafe);
+          tg.onEvent('contentSafeAreaChanged', setSafe);
+          tg.onEvent('viewportChanged', setSafe);
+        }
+        setSafe();
       } catch (e) {}
     }
   })();
@@ -80,6 +102,6 @@
 <script type="text/babel" src="milestones.jsx?v=8"></script>
 <script src="aspects-engine.js?v=8"></script>
 <script type="text/babel" src="aspects.jsx?v=8"></script>
-<script type="text/babel" src="astro.jsx?v=18"></script>
+<script type="text/babel" src="astro.jsx?v=19"></script>
 </body>
 </html>
