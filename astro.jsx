@@ -204,6 +204,12 @@ function Header({ th, lang, screen, title, onBack, activeTab }) {
     }}>{children}</button>
   );
 
+  // В Telegram на главной своя шапка не нужна — оставляем лишь маленький отступ,
+  // чтобы контент поднялся ближе к шапке Telegram (орб компенсируется в CosmicMain).
+  if (home && IS_TG) {
+    return <div style={{height:14}}/>;
+  }
+
   return (
     <div style={{position:'sticky',top:0,zIndex:30,paddingTop:STATUS_PAD}}>
       <div style={{height:50,display:'flex',alignItems:'center',gap:10,padding:'0 16px'}}>
@@ -338,7 +344,9 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
 
       {/* ── HERO ─────────────────────────────────────── */}
       <div style={{position:'relative',marginBottom:20,minHeight:178}}>
-        <div style={{position:'absolute',top:-10,right:-4,opacity:0.92,filter:'saturate(110%)'}}>
+        {/* В Telegram контент поднят (нет псевдо-шапки) — орб опускаем на ту же величину,
+            чтобы луна/солнце остались на прежнем месте, а текст и плашки поднялись. */}
+        <div style={{position:'absolute',top:(IS_TG?38:-10),right:-4,opacity:0.92,filter:'saturate(110%)'}}>
           <CelestialOrb kind={th.orb} size={118}/>
         </div>
         <div style={{
