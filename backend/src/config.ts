@@ -19,6 +19,9 @@ export const config = {
   },
   // URL веб-приложения (GitHub Pages) — для кнопки «Открыть» в боте.
   miniAppUrl: process.env.MINI_APP_URL ?? '',
+  // Публичный URL бэкенда для вебхуков бота. На Render автоматически в RENDER_EXTERNAL_URL.
+  // Если пусто — бот работает на long polling (локальная разработка).
+  webhookUrl: process.env.WEBHOOK_URL ?? process.env.RENDER_EXTERNAL_URL ?? '',
 } as const;
 
 export const isDev = config.nodeEnv === 'development';

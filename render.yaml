@@ -1,0 +1,23 @@
+# Render Blueprint — бэкенд AstroBot (API + бот на вебхуках).
+# DATABASE_URL/BOT_TOKEN/BOT_SECRET задать в дашборде (sync:false).
+# RENDER_EXTERNAL_URL Render подставляет автоматически → бот включает вебхук.
+services:
+  - type: web
+    name: astrobot
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MINI_APP_URL
+        value: https://alisamagarova.github.io/AstroBot/
+      - key: DATABASE_URL
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: BOT_SECRET
+        sync: false

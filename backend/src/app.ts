@@ -1,12 +1,13 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import sensible from '@fastify/sensible';
-import { isDev } from './config.js';
+import { isDev, config } from './config.js';
 import authPlugin from './plugins/auth.js';
 import usersRoutes from './routes/users.js';
 import peopleRoutes from './routes/people.js';
 import chartsRoutes from './routes/charts.js';
 import adminRoutes from './routes/admin.js';
+import { registerWebhookRoute } from './bot/bot.js';
 
 export async function buildApp() {
   const app = Fastify({
@@ -25,6 +26,9 @@ export async function buildApp() {
   await app.register(peopleRoutes, { prefix: '/api' });
   await app.register(chartsRoutes, { prefix: '/api' });
   await app.register(adminRoutes);
+
+  // ─── Telegram webhook (если задан публичный URL) ───────────────────────────
+  if (config.webhookUrl) registerWebhookRoute(app);
 
   // ─── Health check (без авторизации) ───────────────────────────────────────
   app.get('/health', { config: { skipAuth: true } }, async () => ({ ok: true }));

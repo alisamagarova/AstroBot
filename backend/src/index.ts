@@ -1,7 +1,7 @@
 import { buildApp } from './app.js';
 import { config } from './config.js';
 import { pool } from './db/pool.js';
-import { startBot, bot } from './bot/bot.js';
+import { startBot, activateWebhook, bot } from './bot/bot.js';
 
 async function main() {
   const app = await buildApp();
@@ -14,9 +14,14 @@ async function main() {
     process.exit(1);
   }
 
-  // Запускаем Telegram-бота в том же процессе (long polling).
-  startBot();
-  app.log.info('Telegram bot started alongside API');
+  // Бот: вебхук (прод, Render) если задан публичный URL, иначе long polling (локально).
+  if (config.webhookUrl) {
+    try { await activateWebhook(config.webhookUrl); app.log.info('Telegram bot: webhook mode'); }
+    catch (e) { app.log.error({ e }, 'Failed to set webhook'); }
+  } else {
+    startBot();
+    app.log.info('Telegram bot: long-polling mode');
+  }
 
   const shutdown = async (signal: string) => {
     app.log.info(`Received ${signal}, shutting down...`);

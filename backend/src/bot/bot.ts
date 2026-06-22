@@ -6,13 +6,17 @@
 //   • src/index.ts      — вместе с Fastify API на Railway (24/7)
 //   • src/bot/index.ts  — отдельный локальный запуск (npm run bot)
 
-import { Bot, InlineKeyboard } from 'grammy';
+import { Bot, InlineKeyboard, webhookCallback } from 'grammy';
 import type { Context } from 'grammy';
+import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { upsertUser, setBlocked } from '../db/queries/users.js';
 import { getSelfPerson } from '../db/queries/people.js';
 
 export const bot = new Bot(config.tg.botToken);
+
+// Путь вебхука. Безопасность — через secret_token (заголовок от Telegram).
+export const WEBHOOK_PATH = '/telegram/webhook';
 
 // ─── /start ───────────────────────────────────────────────────────────────────
 async function handleStart(ctx: Context): Promise<void> {
@@ -72,11 +76,31 @@ bot.catch(async (err) => {
 });
 
 /**
- * Запускает long-polling. НЕ ожидать (start() резолвится только при остановке).
+ * Запускает long-polling (локальная разработка). НЕ ожидать.
+ * Сначала снимаем возможный вебхук, иначе getUpdates конфликтует с ним.
  */
 export function startBot(): Bot {
-  void bot.start({
-    onStart: (info) => console.log(`AstroBot: @${info.username} online ✅`),
-  });
+  void bot.api.deleteWebhook().catch(() => {}).then(() =>
+    bot.start({
+      onStart: (info) => console.log(`AstroBot: @${info.username} online ✅ (long polling)`),
+    }),
+  );
   return bot;
+}
+
+/** Регистрирует Fastify-роут, принимающий апдейты от Telegram (вебхук). */
+export function registerWebhookRoute(app: FastifyInstance): void {
+  app.post(
+    WEBHOOK_PATH,
+    { config: { skipAuth: true } }, // авторизация — через secret_token Telegram
+    webhookCallback(bot, 'fastify', { secretToken: config.tg.botSecret }),
+  );
+}
+
+/** Сообщает Telegram, куда слать апдейты. Вызывать после app.listen(). */
+export async function activateWebhook(publicUrl: string): Promise<void> {
+  await bot.init(); // нужно для ctx.me (имя бота в ссылках)
+  const url = publicUrl.replace(/\/$/, '') + WEBHOOK_PATH;
+  await bot.api.setWebhook(url, { secret_token: config.tg.botSecret });
+  console.log(`AstroBot: @${bot.botInfo.username} online ✅ (webhook: ${url})`);
 }
