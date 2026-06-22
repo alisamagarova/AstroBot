@@ -35,13 +35,22 @@ async function handleStart(ctx: Context): Promise<void> {
       'Нажми кнопку ниже, заполни пару полей о себе — и звёзды раскроют, что обещает тебе небо.';
 
   const label = self ? 'Открыть приложение' : 'Заполнить данные';
+  await ctx.reply(text, { reply_markup: openAppKeyboard(ctx, label) });
+}
 
-  if (config.miniAppUrl) {
-    const kb = new InlineKeyboard().webApp(label, config.miniAppUrl);
-    await ctx.reply(text, { reply_markup: kb });
-  } else {
-    await ctx.reply(text + '\n\n(Открой приложение кнопкой меню слева от поля ввода.)');
+// Кнопка открытия приложения.
+// Открываем Main App через прямую ссылку t.me/<bot>?startapp — тогда Telegram
+// показывает чистую шапку (как у настроенного Mini App), без «бот · мини-приложение».
+// web_app-кнопка как fallback, если username почему-то недоступен.
+function openAppKeyboard(ctx: Context, label = 'Открыть приложение'): InlineKeyboard | undefined {
+  const username = ctx.me?.username;
+  if (username) {
+    return new InlineKeyboard().url(label, `https://t.me/${username}?startapp`);
   }
+  if (config.miniAppUrl) {
+    return new InlineKeyboard().webApp(label, config.miniAppUrl);
+  }
+  return undefined;
 }
 
 bot.command('start', async (ctx) => { await handleStart(ctx); });
@@ -49,10 +58,7 @@ bot.command('start', async (ctx) => { await handleStart(ctx); });
 // Любое сообщение/команда — мягко направляем в приложение.
 bot.on('message', async (ctx) => {
   if (ctx.message?.text?.startsWith('/start')) return; // уже обработано выше
-  const kb = config.miniAppUrl
-    ? new InlineKeyboard().webApp('Открыть приложение', config.miniAppUrl)
-    : undefined;
-  await ctx.reply('Всё происходит в приложении — открывай 👇', { reply_markup: kb });
+  await ctx.reply('Всё происходит в приложении — открывай 👇', { reply_markup: openAppKeyboard(ctx) });
 });
 
 // Пользователь заблокировал бота — помечаем в БД.
