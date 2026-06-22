@@ -1,6 +1,12 @@
-# Render Blueprint — бэкенд AstroBot (API + бот на вебхуках).
-# DATABASE_URL/BOT_TOKEN/BOT_SECRET задать в дашборде (sync:false).
+# Render Blueprint — бэкенд AstroBot (API + бот на вебхуках) + PostgreSQL.
+# BOT_TOKEN/BOT_SECRET задать в дашборде (sync:false).
+# DATABASE_URL подставляется автоматически из БД ниже.
 # RENDER_EXTERNAL_URL Render подставляет автоматически → бот включает вебхук.
+
+databases:
+  - name: astrobot-db
+    plan: free
+
 services:
   - type: web
     name: astrobot
@@ -16,7 +22,9 @@ services:
       - key: MINI_APP_URL
         value: https://alisamagarova.github.io/AstroBot/
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: astrobot-db
+          property: connectionString
       - key: BOT_TOKEN
         sync: false
       - key: BOT_SECRET
