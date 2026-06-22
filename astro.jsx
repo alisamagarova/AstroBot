@@ -351,9 +351,16 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
           <div style={{fontFamily:'var(--ds-serif)',fontWeight:400,fontStyle:'italic',fontSize:22,lineHeight:1.1,color:th.inkSoft,marginBottom:4}}>
             {STR[lang].greet[th.tod]},
           </div>
-          <div style={{fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:52,lineHeight:0.96,color:th.ink,letterSpacing:-1,marginBottom:16}}>
-            {userName || (lang==='ru'?USER.name:USER.nameEn)}
-          </div>
+          {(() => {
+            const nm = userName || (lang==='ru'?USER.name:USER.nameEn) || '';
+            // Уменьшаем шрифт длинных имён, чтобы не заходить под луну/солнце.
+            const fs = nm.length <= 10 ? 52 : nm.length <= 13 ? 40 : 32;
+            return (
+              <div style={{fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:fs,lineHeight:0.96,color:th.ink,letterSpacing:-1,marginBottom:16,maxWidth:'72%',wordBreak:'break-word'}}>
+                {nm}
+              </div>
+            );
+          })()}
           <div style={{
             display:'inline-flex',alignItems:'center',gap:7,padding:'5px 11px 5px 9px',
             borderRadius:999,background:th.chip,border:`1px solid ${th.glassBorder}`,

@@ -764,16 +764,15 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
             </div>
           </EditField>
         )}
-      </div>
 
-      {/* ── Save footer ── */}
-      <div style={{flexShrink:0, padding:'12px 18px', paddingBottom:30, background: th.effDark ? 'rgba(10,6,22,0.72)' : 'rgba(248,245,255,0.72)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderTop:`1px solid ${th.glassBorder}`}}>
-
-        {/* Согласие (только онбординг) — кнопка неактивна, пока галочка не нажата */}
+        {/* Согласие (только онбординг) — в самом низу формы, видно при прокрутке вниз,
+            чтобы не мешало заполнять поля выше. */}
         {onboarding && (
           <button onClick={() => setConsent(c => !c)} style={{
             display:'flex', alignItems:'flex-start', gap:11, width:'100%', textAlign:'left',
-            background:'transparent', border:'none', cursor:'pointer', padding:'0 2px 14px',
+            background: th.glass, border:`1px solid ${consent ? th.accent+'70' : th.glassBorder}`,
+            borderRadius:16, cursor:'pointer', padding:'14px 16px', marginTop:4,
+            backdropFilter:'blur(18px)', WebkitBackdropFilter:'blur(18px)',
           }}>
             <div style={{
               width:22, height:22, borderRadius:7, flexShrink:0, marginTop:1,
@@ -790,6 +789,10 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
             </span>
           </button>
         )}
+      </div>
+
+      {/* ── Save footer ── */}
+      <div style={{flexShrink:0, padding:'12px 18px', paddingBottom:30, background: th.effDark ? 'rgba(10,6,22,0.72)' : 'rgba(248,245,255,0.72)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', borderTop:`1px solid ${th.glassBorder}`}}>
 
         {(() => {
           const nameOk = !nameVisible || (b.name && b.name.trim().length > 0);
