@@ -212,9 +212,11 @@ function Header({ th, lang, screen, title, onBack, activeTab }) {
             <div style={{flex:1,textAlign:'center',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,color:th.ink}}>
               {s.profileTitle}
             </div>
-            {circle(<AstroGlyph name="close" size={15} color={th.ink} sw={1.8}/>,undefined,'x')}
+            {!IS_TG && circle(<AstroGlyph name="close" size={15} color={th.ink} sw={1.8}/>,undefined,'x')}
           </React.Fragment>
         ) : home ? (
+          // В Telegram своя шапка — псевдо-шапку чата не дублируем (показываем только в браузере-макете).
+          IS_TG ? <div style={{flex:1}}/> : (
           <React.Fragment>
             <div style={{width:30,height:30,borderRadius:999,background:'radial-gradient(circle at 35% 30%,#fff,#c8bef0)',boxShadow:`0 0 14px ${th.accentGlow}`,flexShrink:0}}/>
             <div style={{display:'flex',flexDirection:'column',lineHeight:1.1}}>
@@ -225,11 +227,12 @@ function Header({ th, lang, screen, title, onBack, activeTab }) {
             {circle(<AstroGlyph name="more" size={18} color={th.ink}/>,undefined,'m')}
             {circle(<AstroGlyph name="close" size={15} color={th.ink} sw={1.8}/>,undefined,'x')}
           </React.Fragment>
+          )
         ) : (
           <React.Fragment>
             {circle(<AstroGlyph name="back" size={16} color={th.ink} sw={1.9}/>,onBack,'b')}
             <div style={{flex:1,textAlign:'center',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,color:th.ink,paddingRight:10}}>{title}</div>
-            {circle(<AstroGlyph name="close" size={15} color={th.ink} sw={1.8}/>,undefined,'x')}
+            {!IS_TG && circle(<AstroGlyph name="close" size={15} color={th.ink} sw={1.8}/>,undefined,'x')}
           </React.Fragment>
         )}
       </div>
