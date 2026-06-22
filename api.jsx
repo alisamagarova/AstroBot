@@ -166,6 +166,39 @@ const AstroAPI = {
     return data.person;
   },
 
+  /** Настройки уведомлений: { notify_solar, notify_aspects } | null. */
+  async getNotifyPrefs() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/notifications`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return data.prefs;
+    } catch (e) { return null; }
+  },
+
+  /** Обновляет настройки уведомлений (частично). */
+  async setNotifyPrefs(patch) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return;
+    try {
+      await apiFetch(`/api/users/${id}/notifications`, { method: 'PATCH', body: JSON.stringify(patch) });
+    } catch (e) {}
+  },
+
+  /** Отмечает просмотр солярного года / месяца аспектов (для логики уведомлений). */
+  async markSolarViewed(year) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return;
+    try { await apiFetch(`/api/users/${id}/views/solar`, { method: 'POST', body: JSON.stringify({ year }) }); } catch (e) {}
+  },
+  async markAspectViewed(year, month) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return;
+    try { await apiFetch(`/api/users/${id}/views/aspects`, { method: 'POST', body: JSON.stringify({ year, month }) }); } catch (e) {}
+  },
+
   /** ВРЕМЕННОЕ: удаляет профиль на бэкенде (для повторного теста онбординга). */
   async resetSelf() {
     const id = tgUserId();

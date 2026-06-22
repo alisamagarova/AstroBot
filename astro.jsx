@@ -555,6 +555,22 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   const activeLang = lang === 'ru' ? 'RU' : 'EN';
   const sun        = sunSignInfo(birth, lang);
   const signLine   = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
+  const en         = lang === 'en';
+
+  // Настройки уведомлений
+  const [notify, setNotify] = useState({ notify_solar:false, notify_aspects:false });
+  useEffect(() => {
+    if (window.AstroAPI) {
+      window.AstroAPI.getNotifyPrefs().then(p => { if (p) setNotify({ notify_solar:!!p.notify_solar, notify_aspects:!!p.notify_aspects }); });
+    }
+  }, []);
+  const toggleNotify = (key) => {
+    setNotify(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      if (window.AstroAPI) window.AstroAPI.setNotifyPrefs({ [key]: next[key] });
+      return next;
+    });
+  };
 
   const saveName = () => {
     if (draft.trim()) onUpdateName(draft.trim());
@@ -629,6 +645,28 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
           </div>
         </button>
       </div>
+
+      {/* ── NOTIFICATIONS ────────────────────────── */}
+      <ProfSection th={th} label={en ? 'Notifications' : 'Уведомления'}>
+        {[
+          { key:'notify_solar',   t: en?'New solar year':'Новый солярный год',  d: en?'A week before your birthday — your year-ahead chart is ready':'За неделю до дня рождения — соляр на год вперёд уже ждёт' },
+          { key:'notify_aspects', t: en?'Monthly aspects':'Аспекты месяца',      d: en?'At the start of a new month — see what the sky brought':'В начале нового месяца — что приготовило небо' },
+        ].map((row, i, arr) => (
+          <div key={row.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom: i<arr.length-1?`1px solid ${th.glassBorder}`:'none'}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{row.t}</div>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,textWrap:'pretty'}}>{row.d}</div>
+            </div>
+            <button onClick={()=>toggleNotify(row.key)} style={{
+              width:46,height:27,borderRadius:999,flexShrink:0,cursor:'pointer',border:'none',padding:0,position:'relative',
+              background: notify[row.key] ? th.accent : (th.effDark?'rgba(255,255,255,0.16)':'rgba(0,0,0,0.16)'),
+              transition:'background .18s',
+            }}>
+              <span style={{position:'absolute',top:3,left: notify[row.key]?22:3,width:21,height:21,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
+            </button>
+          </div>
+        ))}
+      </ProfSection>
 
       {/* ── SETTINGS ─────────────────────────────── */}
       <ProfSection th={th} label={s.settings}>

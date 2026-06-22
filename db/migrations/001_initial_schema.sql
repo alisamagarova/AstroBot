@@ -39,6 +39,9 @@ CREATE TABLE users (
   -- Черновик ответов онбординга (имя, дата, время, город) до создания профиля.
   -- Хранится в БД, чтобы диалог переживал перезапуск/остановку бота.
   onboarding_draft      JSONB        NOT NULL DEFAULT '{}'::jsonb,
+  -- Настройки уведомлений (бот шлёт сообщения)
+  notify_solar          BOOLEAN      NOT NULL DEFAULT false,  -- приближается новый солярный год
+  notify_aspects        BOOLEAN      NOT NULL DEFAULT false,  -- наступил новый месяц аспектов
   created_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at            TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
@@ -312,6 +315,37 @@ CREATE TABLE payments (
 
   created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
+);
+
+-- ─────────────────────────────────────
+-- ОТСЛЕЖИВАНИЕ ПРОСМОТРОВ (для уведомлений)
+-- ─────────────────────────────────────
+
+-- Какие солярные годы пользователь уже открывал.
+CREATE TABLE solar_views (
+  user_id    BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  solar_year SMALLINT    NOT NULL,
+  viewed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, solar_year)
+);
+
+-- Какие месяцы аспектов пользователь уже смотрел.
+CREATE TABLE aspect_views (
+  user_id    BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  view_year  SMALLINT    NOT NULL,
+  view_month SMALLINT    NOT NULL CHECK (view_month BETWEEN 1 AND 12),
+  viewed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, view_year, view_month)
+);
+
+-- Журнал отправленных уведомлений — чтобы не дублировать.
+-- kind='solar' → ref = год соляра; kind='aspects' → ref = 'YYYY-MM'.
+CREATE TABLE notifications_sent (
+  user_id  BIGINT      NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind     TEXT        NOT NULL CHECK (kind IN ('solar','aspects')),
+  ref      TEXT        NOT NULL,
+  sent_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, kind, ref)
 );
 
 -- ════════════════════════════════════════════════════════════════════════════

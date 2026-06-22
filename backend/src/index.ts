@@ -2,6 +2,7 @@ import { buildApp } from './app.js';
 import { config } from './config.js';
 import { pool } from './db/pool.js';
 import { startBot, activateWebhook, bot } from './bot/bot.js';
+import { startNotificationScheduler } from './bot/scheduler.js';
 
 async function main() {
   const app = await buildApp();
@@ -22,6 +23,9 @@ async function main() {
     startBot();
     app.log.info('Telegram bot: long-polling mode');
   }
+
+  // Планировщик уведомлений (соляр / аспекты)
+  startNotificationScheduler();
 
   const shutdown = async (signal: string) => {
     app.log.info(`Received ${signal}, shutting down...`);

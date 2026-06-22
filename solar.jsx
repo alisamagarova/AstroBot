@@ -706,6 +706,11 @@ function SolarChartScreen({ th, lang, birth, year, srCity, onExpand }) {
     return () => clearTimeout(id);
   }, [birth, year, srCity]);
 
+  // Отмечаем, что пользователь открыл соляр на этот год (для уведомлений).
+  useEffect(() => {
+    if (window.AstroAPI) window.AstroAPI.markSolarViewed(year);
+  }, [year]);
+
   if (err) return <div style={{ padding: '40px 18px', textAlign: 'center', position: 'relative', zIndex: 1 }}><div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, color: th.muted }}>{en ? 'Calc error: ' : 'Ошибка расчёта: '}{err}</div></div>;
   if (!data) return (
     <div style={{ padding: '70px 18px', textAlign: 'center', position: 'relative', zIndex: 1 }}>

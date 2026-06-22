@@ -190,6 +190,11 @@ function AspectsMonthScreen({ th, lang, birth }) {
     return () => clearTimeout(id);
   }, [birth, ym.y, ym.m, lang]);
 
+  // Отмечаем просмотр этого месяца аспектов (для уведомлений).
+  useEffectAs(() => {
+    if (window.AstroAPI) window.AstroAPI.markAspectViewed(ym.y, ym.m);
+  }, [ym.y, ym.m]);
+
   const step = (d) => {
     let m = ym.m + d, y = ym.y;
     if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
