@@ -47,7 +47,8 @@ export async function runNotificationCheck(): Promise<void> {
     for (const u of solarUsers) {
       const { days, year } = nextBirthday(u.birth_month, u.birth_day);
       if (days < 0 || days > 7) continue;
-      if (await hasSolarView(u.id, year)) continue;
+      // Если notify_viewed выкл — не шлём о уже просмотренном году.
+      if (!u.notify_viewed && await hasSolarView(u.id, year)) continue;
       if (!(await claimNotification(u.id, 'solar', String(year)))) continue;
       await send(u.tg_id,
         '🌟 Через неделю начнётся твой новый солярный год!\n' +
@@ -62,7 +63,8 @@ export async function runNotificationCheck(): Promise<void> {
     const ref = `${y}-${String(m).padStart(2, '0')}`;
     const aspectUsers = await usersForAspectNotify();
     for (const u of aspectUsers) {
-      if (await hasAspectView(u.id, y, m)) continue;
+      // Если notify_viewed выкл — не шлём о уже просмотренном месяце.
+      if (!u.notify_viewed && await hasAspectView(u.id, y, m)) continue;
       if (!(await claimNotification(u.id, 'aspects', ref))) continue;
       await send(u.tg_id,
         '📅 Наступил новый месяц — у неба новые акценты.\n' +

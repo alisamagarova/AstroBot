@@ -42,6 +42,7 @@ CREATE TABLE users (
   -- Настройки уведомлений (бот шлёт сообщения)
   notify_solar          BOOLEAN      NOT NULL DEFAULT false,  -- приближается новый солярный год
   notify_aspects        BOOLEAN      NOT NULL DEFAULT false,  -- наступил новый месяц аспектов
+  notify_viewed         BOOLEAN      NOT NULL DEFAULT false,  -- слать даже о том, что уже просмотрено
   created_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
   updated_at            TIMESTAMPTZ  NOT NULL DEFAULT now()
 );

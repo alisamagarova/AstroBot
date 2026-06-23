@@ -5,11 +5,12 @@ import { pool } from '../pool.js';
 export interface NotifyPrefs {
   notify_solar:   boolean;
   notify_aspects: boolean;
+  notify_viewed:  boolean;  // слать даже о просмотренном
 }
 
 export async function getNotifyPrefs(tgId: string): Promise<NotifyPrefs | null> {
   const { rows } = await pool.query<NotifyPrefs>(
-    'SELECT notify_solar, notify_aspects FROM users WHERE tg_id = $1',
+    'SELECT notify_solar, notify_aspects, notify_viewed FROM users WHERE tg_id = $1',
     [tgId],
   );
   return rows[0] ?? null;
@@ -20,9 +21,10 @@ export async function setNotifyPrefs(tgId: string, prefs: Partial<NotifyPrefs>):
     `UPDATE users SET
        notify_solar   = COALESCE($2, notify_solar),
        notify_aspects = COALESCE($3, notify_aspects),
+       notify_viewed  = COALESCE($4, notify_viewed),
        updated_at     = now()
      WHERE tg_id = $1`,
-    [tgId, prefs.notify_solar ?? null, prefs.notify_aspects ?? null],
+    [tgId, prefs.notify_solar ?? null, prefs.notify_aspects ?? null, prefs.notify_viewed ?? null],
   );
 }
 
@@ -76,17 +78,18 @@ export async function claimNotification(userId: string, kind: 'solar' | 'aspects
 // ─── Выборки для планировщика бота ────────────────────────────────────────────
 
 export interface NotifyCandidate {
-  id:          string;   // users.id
-  tg_id:       string;
-  lang:        string;
-  birth_month: number;
-  birth_day:   number;
+  id:            string;   // users.id
+  tg_id:         string;
+  lang:          string;
+  birth_month:   number;
+  birth_day:     number;
+  notify_viewed: boolean;
 }
 
 /** Пользователи с включённым уведомлением о соляре, у кого есть self-профиль. */
 export async function usersForSolarNotify(): Promise<NotifyCandidate[]> {
   const { rows } = await pool.query<NotifyCandidate>(
-    `SELECT u.id, u.tg_id, u.lang, p.birth_month, p.birth_day
+    `SELECT u.id, u.tg_id, u.lang, u.notify_viewed, p.birth_month, p.birth_day
      FROM users u
      JOIN people p ON p.owner_id = u.id AND p.is_self = true
      WHERE u.notify_solar = true AND u.is_blocked = false`,
@@ -97,7 +100,7 @@ export async function usersForSolarNotify(): Promise<NotifyCandidate[]> {
 /** Пользователи с включённым уведомлением об аспектах месяца. */
 export async function usersForAspectNotify(): Promise<NotifyCandidate[]> {
   const { rows } = await pool.query<NotifyCandidate>(
-    `SELECT u.id, u.tg_id, u.lang, p.birth_month, p.birth_day
+    `SELECT u.id, u.tg_id, u.lang, u.notify_viewed, p.birth_month, p.birth_day
      FROM users u
      JOIN people p ON p.owner_id = u.id AND p.is_self = true
      WHERE u.notify_aspects = true AND u.is_blocked = false`,

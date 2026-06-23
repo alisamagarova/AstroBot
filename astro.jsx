@@ -558,10 +558,10 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   const en         = lang === 'en';
 
   // Настройки уведомлений
-  const [notify, setNotify] = useState({ notify_solar:false, notify_aspects:false });
+  const [notify, setNotify] = useState({ notify_solar:false, notify_aspects:false, notify_viewed:false });
   useEffect(() => {
     if (window.AstroAPI) {
-      window.AstroAPI.getNotifyPrefs().then(p => { if (p) setNotify({ notify_solar:!!p.notify_solar, notify_aspects:!!p.notify_aspects }); });
+      window.AstroAPI.getNotifyPrefs().then(p => { if (p) setNotify({ notify_solar:!!p.notify_solar, notify_aspects:!!p.notify_aspects, notify_viewed:!!p.notify_viewed }); });
     }
   }, []);
   const toggleNotify = (key) => {
@@ -666,6 +666,29 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
             </button>
           </div>
         ))}
+
+        {/* Пояснение про просмотренное + переключатель */}
+        <div style={{display:'flex',gap:9,alignItems:'flex-start',padding:'12px 0 10px'}}>
+          <span style={{flexShrink:0,fontSize:13,color:th.glyphClr,lineHeight:1.4,marginTop:1}}>✦</span>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
+            {en
+              ? 'If you\'ve already opened a solar year or a month\'s aspects, we won\'t notify you about them. Want a reminder anyway? Turn it on below.'
+              : 'Если ты уже открывал(а) солярный год или аспекты месяца — об этом не напомним. Хочешь получать уведомления в любом случае? Включи ниже.'}
+          </div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0 2px',borderTop:`1px solid ${th.glassBorder}`}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{en?'Notify about everything':'Уведомлять обо всём'}</div>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,textWrap:'pretty'}}>{en?'Including solar years and months you\'ve already viewed':'Включая уже просмотренные годы и месяцы'}</div>
+          </div>
+          <button onClick={()=>toggleNotify('notify_viewed')} style={{
+            width:46,height:27,borderRadius:999,flexShrink:0,cursor:'pointer',border:'none',padding:0,position:'relative',
+            background: notify.notify_viewed ? th.accent : (th.effDark?'rgba(255,255,255,0.16)':'rgba(0,0,0,0.16)'),
+            transition:'background .18s',
+          }}>
+            <span style={{position:'absolute',top:3,left: notify.notify_viewed?22:3,width:21,height:21,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
+          </button>
+        </div>
       </ProfSection>
 
       {/* ── SETTINGS ─────────────────────────────── */}
