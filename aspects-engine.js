@@ -210,14 +210,18 @@
     return { year, month, monthStart, monthEnd, key: key_, secondary: sec_, housesOK, approxHouses, count: key_.length + sec_.length };
   }
 
+  // Порядок планет для ключа пары (как в transits-interpretations.js).
+  const PAIR_ORDER = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+  function pairKey(a, b) {
+    const ia = PAIR_ORDER.indexOf(a), ib = PAIR_ORDER.indexOf(b);
+    if (ia < 0 || ib < 0) return null; // asc/mc и прочее — нет готового текста
+    return ia <= ib ? a + '-' + b : b + '-' + a;
+  }
+
   // ── description for one aspect event ──
   function describe(e, lang) {
     const en = lang === 'en';
-    const tp = plName(e.T, lang);
-    const np = natalLabel(e.N, lang);
-    const agent = AGENT[e.T] ? AGENT[e.T][en ? 'en' : 'ru'] : '';
-    const role = ROLE[e.N] ? ROLE[e.N][en ? 'en' : 'ru'] : np;
-    const flavor = (FLAVOR[e.asp.bucket] || FLAVOR.conj)[en ? 'en' : 'ru'];
+    // строка про сферу жизни (натальный дом цели)
     let house = '';
     if (e.house != null) {
       const themeRu = window.HOUSE_THEME && window.HOUSE_THEME[e.house];
@@ -225,8 +229,22 @@
       if (en && themeEn) house = ` Life area — ${themeEn}.`;
       else if (!en && themeRu) house = ` Сфера жизни — ${themeRu}.`;
     }
+
+    // Готовая курированная расшифровка (всегда используем, если есть для пары планет).
+    const interp = window.TRANSIT_INTERP && window.TRANSIT_INTERP[en ? 'en' : 'ru'];
+    const k = pairKey(e.T, e.N);
+    if (interp && k && interp[k] && interp[k][e.asp.key]) {
+      return interp[k][e.asp.key] + house;
+    }
+
+    // Фолбэк (Асцендент/MC или отсутствует текст) — сгенерированное описание.
+    const tp = plName(e.T, lang);
+    const np = natalLabel(e.N, lang);
+    const agent = AGENT[e.T] ? AGENT[e.T][en ? 'en' : 'ru'] : '';
+    const role = ROLE[e.N] ? ROLE[e.N][en ? 'en' : 'ru'] : np;
+    const flavor = (FLAVOR[e.asp.bucket] || FLAVOR.conj)[en ? 'en' : 'ru'];
     if (en) {
-      return `Transiting ${tp} ${agent} and touches ${role}. ${flavor}`;
+      return `Transiting ${tp} ${agent} and touches ${role}. ${flavor}${house}`;
     }
     return `Транзитный ${tp} ${agent} и затрагивает ${role}. ${flavor}${house}`;
   }
