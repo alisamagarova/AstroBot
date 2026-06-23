@@ -667,16 +667,8 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
           </div>
         ))}
 
-        {/* Пояснение про просмотренное + переключатель */}
-        <div style={{display:'flex',gap:9,alignItems:'flex-start',padding:'12px 0 10px'}}>
-          <span style={{flexShrink:0,fontSize:13,color:th.glyphClr,lineHeight:1.4,marginTop:1}}>✦</span>
-          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
-            {en
-              ? 'If you\'ve already opened a solar year or a month\'s aspects, we won\'t notify you about them. Want a reminder anyway? Turn it on below.'
-              : 'Если ты уже открывал(а) солярный год или аспекты месяца — об этом не напомним. Хочешь получать уведомления в любом случае? Включи ниже.'}
-          </div>
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0 2px',borderTop:`1px solid ${th.glassBorder}`}}>
+        {/* Переключатель «обо всём» */}
+        <div style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderTop:`1px solid ${th.glassBorder}`}}>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{en?'Notify about everything':'Уведомлять обо всём'}</div>
             <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,textWrap:'pretty'}}>{en?'Including solar years and months you\'ve already viewed':'Включая уже просмотренные годы и месяцы'}</div>
@@ -688,6 +680,16 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
           }}>
             <span style={{position:'absolute',top:3,left: notify.notify_viewed?22:3,width:21,height:21,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
           </button>
+        </div>
+
+        {/* Пояснение — под переключателем «обо всём» */}
+        <div style={{display:'flex',gap:9,alignItems:'flex-start',padding:'2px 0 4px'}}>
+          <span style={{flexShrink:0,fontSize:13,color:th.glyphClr,lineHeight:1.4,marginTop:1}}>✦</span>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
+            {en
+              ? 'By default, if you\'ve already opened a solar year or a month\'s aspects, we won\'t notify you about them. Turn this on to get reminders anyway.'
+              : 'По умолчанию, если ты уже открывал(а) солярный год или аспекты месяца — об этом не напомним. Включи это, чтобы получать уведомления в любом случае.'}
+          </div>
         </div>
       </ProfSection>
 
