@@ -67,6 +67,7 @@ function birthToPersonBody(b) {
 // ─── Преобразование backend person → объект формы (birthedit) ─────────────────
 function personToBirth(p) {
   return {
+    id:     p.id, // backend person_id (нужен для правки/удаления партнёра)
     name:   p.name,
     dateLocked: p.birth_date_changed_at != null, // дата уже менялась → заблокирована
     day:    p.birth_day,
@@ -164,6 +165,47 @@ const AstroAPI = {
     if (!res.ok) throw new Error('updateSelf failed: ' + res.status);
     const data = await res.json();
     return data.person;
+  },
+
+  /** Список партнёров (не-self профили) в форме birth, каждый с backend id. */
+  async listPartners() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/people`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return (data.people || []).filter(p => !p.is_self).map(personToBirth);
+    } catch (e) { return null; }
+  },
+
+  /** Создаёт партнёра, возвращает его в форме birth (с id) | null. */
+  async createPartner(b) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/people`, { method: 'POST', body: JSON.stringify(birthToPersonBody(b)) });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return personToBirth(data.person);
+    } catch (e) { return null; }
+  },
+
+  /** Обновляет партнёра по его backend id, возвращает birth | null. */
+  async updatePartner(personId, b) {
+    if (!personId || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/people/${personId}`, { method: 'PATCH', body: JSON.stringify(birthToPersonBody(b)) });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return personToBirth(data.person);
+    } catch (e) { return null; }
+  },
+
+  /** Удаляет партнёра по backend id. */
+  async deletePartner(personId) {
+    if (!personId || !this.isConfigured()) return;
+    try { await apiFetch(`/api/people/${personId}`, { method: 'DELETE' }); } catch (e) {}
   },
 
   /** Настройки уведомлений: { notify_solar, notify_aspects } | null. */

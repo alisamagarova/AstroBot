@@ -831,6 +831,8 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
           setUserName(person.name);
           try { localStorage.setItem(ONB_KEY, '1'); } catch(e){}
           setOnb('done');
+          // Подтягиваем партнёров из БД (источник истины).
+          try { const ps = await api.listPartners(); if (ps && !cancelled) setPartners(ps); } catch(e){}
         } else {
           setOnb('needed');
         }
@@ -901,18 +903,41 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
 
   const openAddPartner  = () => setEditPartnerIdx(-1);
   const openEditPartner = (idx) => setEditPartnerIdx(idx);
-  const savePartner = (np) => {
+  const savePartner = async (np) => {
+    const api = window.AstroAPI;
+    const online = api && api.isConfigured() && api.inTelegram();
     if (editPartnerIdx === -1) {
       const newIdx = partners.length;
-      setPartners(prev => [...prev, np]);
+      setPartners(prev => [...prev, np]);   // оптимистично
       setSelPartnerIdx(newIdx);
+      setEditPartnerIdx(null);
+      // Сохраняем в БД и подменяем на версию с backend id.
+      if (online) {
+        const saved = await api.createPartner(np);
+        if (saved) setPartners(prev => prev.map((p, i) => i === newIdx ? saved : p));
+      }
     } else {
-      setPartners(prev => prev.map((p, i) => i === editPartnerIdx ? np : p));
+      const idx = editPartnerIdx;
+      const existing = partners[idx];
+      setPartners(prev => prev.map((p, i) => i === idx ? { ...np, id: existing && existing.id } : p));
+      setEditPartnerIdx(null);
+      if (online && existing && existing.id) {
+        const saved = await api.updatePartner(existing.id, np);
+        if (saved) setPartners(prev => prev.map((p, i) => i === idx ? saved : p));
+      } else if (online && existing && !existing.id) {
+        // Партнёр был только локально — создаём в БД.
+        const saved = await api.createPartner(np);
+        if (saved) setPartners(prev => prev.map((p, i) => i === idx ? saved : p));
+      }
     }
-    setEditPartnerIdx(null);
   };
   const cancelPartner = () => setEditPartnerIdx(null);
   const deletePartner = (idx) => {
+    const api = window.AstroAPI;
+    const target = partners[idx];
+    if (api && api.isConfigured() && api.inTelegram() && target && target.id) {
+      api.deletePartner(target.id); // фоново
+    }
     setPartners(prev => prev.filter((_, i) => i !== idx));
     setSelPartnerIdx(prev => {
       if (prev === null) return null;
