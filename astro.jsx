@@ -729,13 +729,29 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
         </div>
       </ProfSection>
 
+      {/* ── ВРЕМЕННО: тест уведомления от бота ── */}
+      <button onClick={async () => {
+        if (!window.AstroAPI) return;
+        const r = await window.AstroAPI.sendTestNotification();
+        const msg = r.ok
+          ? (en ? 'Sent! Check the chat with the bot.' : 'Отправлено! Загляни в чат с ботом.')
+          : (en ? 'Failed: ' : 'Не получилось: ') + (r.error||'');
+        try { window.Telegram.WebApp.showAlert(msg); } catch(e){ alert(msg); }
+      }} style={{
+        width:'100%',marginTop:18,padding:'12px',borderRadius:14,
+        border:`1px solid ${th.accent}66`,background:`${th.accent}18`,color:th.ink,
+        fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,cursor:'pointer',
+      }}>
+        🔔 {en?'Send test notification':'Прислать тестовое уведомление'}
+      </button>
+
       {/* ── ВРЕМЕННО: сброс данных для повторного теста онбординга ── */}
       <button onClick={async () => {
         try { if (window.AstroAPI) await window.AstroAPI.resetSelf(); } catch(e){}
         try { localStorage.removeItem('astro_onboarded_v1'); localStorage.removeItem('astro_birth_v2'); } catch(e){}
         location.reload();
       }} style={{
-        width:'100%',marginTop:18,padding:'12px',borderRadius:14,
+        width:'100%',marginTop:10,padding:'12px',borderRadius:14,
         border:`1px solid ${th.muted}55`,background:'transparent',color:th.muted,
         fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,cursor:'pointer',
       }}>
