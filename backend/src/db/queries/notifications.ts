@@ -75,6 +75,14 @@ export async function claimNotification(userId: string, kind: 'solar' | 'aspects
   return rows.length > 0;
 }
 
+/** Снимает пометку (если отправка не удалась по временной причине — чтобы повторить позже). */
+export async function unclaimNotification(userId: string, kind: 'solar' | 'aspects', ref: string): Promise<void> {
+  await pool.query(
+    'DELETE FROM notifications_sent WHERE user_id = $1 AND kind = $2 AND ref = $3',
+    [userId, kind, ref],
+  );
+}
+
 // ─── Выборки для планировщика бота ────────────────────────────────────────────
 
 export interface NotifyCandidate {
