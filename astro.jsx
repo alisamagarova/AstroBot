@@ -886,6 +886,19 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   };
   const cancelEdit = () => setEditing(false);
 
+  // Смена имени в профиле — обновляем состояние и сохраняем в БД (без изменения даты).
+  const updateName = async (name) => {
+    const nm = (name || '').trim();
+    if (!nm) return;
+    setUserName(nm);
+    setBirth((b) => ({ ...b, name: nm }));
+    const api = window.AstroAPI;
+    if (api && api.isConfigured() && api.inTelegram()) {
+      try { await api.updateSelf({ ...birth, name: nm }, false); }
+      catch (e) { console.error('name save failed:', e); }
+    }
+  };
+
   const openAddPartner  = () => setEditPartnerIdx(-1);
   const openEditPartner = (idx) => setEditPartnerIdx(idx);
   const savePartner = (np) => {
@@ -938,7 +951,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   let mainContent;
 
   if (activeTab === 'profile') {
-    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={setUserName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key}/>;
+    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key}/>;
   } else if (screen === 'home') {
     mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem}/>;
   } else if (screen === 'natal') {
