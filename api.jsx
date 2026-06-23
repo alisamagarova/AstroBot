@@ -12,9 +12,9 @@ function tgUserId() {
   return u ? String(u.id) : null;
 }
 
-/** Базовые заголовки авторизации. */
+/** Базовые заголовки авторизации (без Content-Type — он добавляется только при наличии тела). */
 function authHeaders() {
-  const h = { 'Content-Type': 'application/json' };
+  const h = {};
   const initData = tg() && tg().initData;
   if (initData) h['Authorization'] = 'tma ' + initData;
   return h;
@@ -22,10 +22,10 @@ function authHeaders() {
 
 async function apiFetch(path, opts = {}) {
   if (!API_BASE) throw new Error('API base URL not configured');
-  const res = await fetch(API_BASE + path, {
-    ...opts,
-    headers: { ...authHeaders(), ...(opts.headers || {}) },
-  });
+  const headers = { ...authHeaders(), ...(opts.headers || {}) };
+  // Content-Type ставим ТОЛЬКО когда есть тело: иначе Fastify ругается на пустой JSON (400).
+  if (opts.body != null && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  const res = await fetch(API_BASE + path, { ...opts, headers });
   return res;
 }
 

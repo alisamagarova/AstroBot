@@ -61,9 +61,11 @@ function verifyTelegramInitData(initData: string): TgInitUser | null {
 
   if (expectedHash !== hash) return null;
 
-  // Проверяем свежесть (не старше 1 часа)
+  // Свежесть как защита от replay. Telegram не обновляет initData, пока приложение
+  // открыто, поэтому короткое окно (1ч) давало 401 на долгих сессиях. Берём 7 суток —
+  // подпись по-прежнему валидна (HMAC проверен выше).
   const authDate = Number(params.get('auth_date') ?? 0);
-  if (Date.now() / 1000 - authDate > 3600) return null;
+  if (Date.now() / 1000 - authDate > 7 * 24 * 3600) return null;
 
   const userJson = params.get('user');
   if (!userJson) return null;
