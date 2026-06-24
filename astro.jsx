@@ -413,7 +413,7 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
         {first4.map(p=>{
-          const soon = p.id === 'pinpoint'; // Хорар — скоро
+          const soon = false; // все услуги доступны
           return (
             <GlassCard key={p.id} th={th} onClick={soon ? undefined : ()=>onOpen(p.id)}
               style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130,
@@ -1087,6 +1087,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     const mt = window.MILESTONES && window.MILESTONES.THEMES.find(t=>t.id===milestoneTheme);
     title = mt ? mt.title[lang] : (lang==='ru' ? 'Жизненные вехи' : 'Life Milestones');
     mainContent = <MilestonesResultScreen th={th} lang={lang} birth={birth} themeId={milestoneTheme}/>;
+  } else if (screen === 'pinpoint') {
+    title = lang==='ru' ? 'Хорар' : 'Horary';
+    mainContent = <HorarScreen th={th} lang={lang} city={residenceCity(birth)}/>;
   } else if (screen === 'aspects') {
     title = lang==='ru' ? 'Аспекты на месяц' : 'Aspects this month';
     mainContent = <AspectsMonthScreen th={th} lang={lang} birth={birth}/>;
