@@ -10,6 +10,8 @@ const HZ_ASP = {
   trine:       { ru: 'трин',       en: 'trine',       sym: '△' },
   opposition:  { ru: 'оппозиция',  en: 'opposition',  sym: '☍' },
 };
+const HZ_COOLDOWN_MS = 8 * 3600 * 1000; // пауза между хорарными вопросами
+
 function hzPl(id, en) { return (window.PL_META && window.PL_META[id]) ? window.PL_META[id][en ? 'en' : 'ru'] : id; }
 function hzSign(i, en) { return (en ? HZ_SIGN_EN : HZ_SIGN_RU)[i] || ''; }
 function hzHouseOrd(h, en) { return en ? `house ${h}` : `${h}-й дом`; }
@@ -32,7 +34,7 @@ function HorarScreen({ th, lang, city }) {
     try { setVoc(window.HORAR.moonVoidOfCourse(new Date())); } catch (e) { setVoc({ voc: false, error: true }); }
     try {
       const last = +localStorage.getItem('astro_horar_last') || 0;
-      const next = last + 24 * 3600 * 1000;
+      const next = last + HZ_COOLDOWN_MS;
       if (Date.now() < next) setCool({ nextMs: next });
     } catch (e) {}
     const t = setInterval(() => setNow(Date.now()), 30000);
@@ -52,7 +54,7 @@ function HorarScreen({ th, lang, city }) {
       const r = window.HORAR.ask(city, topicObj.house);
       setResult({ ...r, question: q.trim(), topicLabel: en ? topicObj.en : topicObj.ru });
       try { localStorage.setItem('astro_horar_last', String(Date.now())); } catch (e) {}
-      setCool({ nextMs: Date.now() + 24 * 3600 * 1000 });
+      setCool({ nextMs: Date.now() + HZ_COOLDOWN_MS });
     } catch (e) { setResult({ error: e.message }); }
   };
 
