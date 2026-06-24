@@ -50,7 +50,7 @@
     function fill() { pdf.setFillColor(rgb.r, rgb.g, rgb.b); pdf.rect(0, 0, pageW, pageH, 'F'); }
     function page() { if (!first) pdf.addPage(); first = false; fill(); y = M; }
     function snap(node) {
-      return window.html2canvas(node, { scale: 2, backgroundColor: bg, useCORS: true, logging: false, windowWidth: node.scrollWidth });
+      return window.html2canvas(node, { scale: 1.7, backgroundColor: bg, useCORS: true, logging: false, windowWidth: node.scrollWidth });
     }
 
     // ── Page 1: wheel, fully fitting ──
@@ -60,7 +60,7 @@
       page();
       let w = usableW, h = c.height * (w / c.width);
       if (h > usableH) { h = usableH; w = c.width * (h / c.height); }
-      pdf.addImage(c.toDataURL('image/jpeg', 0.95), 'JPEG', (pageW - w) / 2, (pageH - h) / 2, w, h);
+      pdf.addImage(c.toDataURL('image/jpeg', 0.85), 'JPEG', (pageW - w) / 2, (pageH - h) / 2, w, h);
     }
 
     // ── Sections: block-by-block, no mid-block cut ──
@@ -69,7 +69,7 @@
     for (const node of secs) {
       const c = await snap(node);
       const w = usableW, h = c.height * (w / c.width);
-      const img = c.toDataURL('image/jpeg', 0.92);
+      const img = c.toDataURL('image/jpeg', 0.85);
       if (h <= usableH) {
         if (!started || y + h > pageH - M) { page(); started = true; }
         pdf.addImage(img, 'JPEG', M, y, w, h);

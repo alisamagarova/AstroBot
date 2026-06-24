@@ -16,6 +16,7 @@ const ShareBody = z.object({
 const shareRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Params: { tgId: string } }>(
     '/users/:tgId/share/natal',
+    { bodyLimit: 16 * 1024 * 1024 }, // PDF в base64 крупный — поднимаем лимит тела
     async (request, reply) => {
       if (!requireOwner(request, reply, request.params.tgId)) return;
       const body = ShareBody.safeParse(request.body);
