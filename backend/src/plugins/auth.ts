@@ -4,6 +4,14 @@ import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import { config, isDev } from '../config.js';
 import type { TgInitUser } from '../types.js';
 
+/** Сравнение строк за константное время (защита от timing-атак). */
+function safeEqual(a: string, b: string): boolean {
+  const ba = Buffer.from(a, 'utf8');
+  const bb = Buffer.from(b, 'utf8');
+  if (ba.length !== bb.length) return false;
+  return crypto.timingSafeEqual(ba, bb);
+}
+
 // ─── Authorization helpers ────────────────────────────────────────────────────
 
 /**
@@ -59,7 +67,7 @@ function verifyTelegramInitData(initData: string): TgInitUser | null {
     .update(dataCheckString)
     .digest('hex');
 
-  if (expectedHash !== hash) return null;
+  if (!safeEqual(expectedHash, hash)) return null;
 
   // Свежесть как защита от replay. Telegram не обновляет initData, пока приложение
   // открыто, поэтому короткое окно (1ч) давало 401 на долгих сессиях. Берём 7 суток —
@@ -115,7 +123,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
 
     // 2. Bot → Backend: X-Bot-Secret: <secret>
     if (botSecret) {
-      if (botSecret !== config.tg.botSecret) {
+      if (typeof botSecret !== 'string' || !safeEqual(botSecret, config.tg.botSecret)) {
         return reply.status(401).send({ error: 'Invalid bot secret' });
       }
       request.authCtx = { caller: 'bot', tgUser: null };

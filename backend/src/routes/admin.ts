@@ -25,7 +25,7 @@ const adminRoutes: FastifyPluginAsync = async (fastify) => {
     );
     // Minimal seed: one test user
     await pool.query(`
-      INSERT INTO users (tg_id, first_name, username, lang, onboarding_completed)
+      INSERT INTO users (tg_id, tg_first_name, tg_username, lang, onboarding_completed)
       VALUES (123456789, 'Dev', 'dev_user', 'ru', true)
       ON CONFLICT (tg_id) DO NOTHING
     `);
