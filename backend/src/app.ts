@@ -8,6 +8,7 @@ import peopleRoutes from './routes/people.js';
 import chartsRoutes from './routes/charts.js';
 import adminRoutes from './routes/admin.js';
 import notificationsRoutes from './routes/notifications.js';
+import shareRoutes from './routes/share.js';
 import { registerWebhookRoute } from './bot/bot.js';
 
 export async function buildApp() {
@@ -27,6 +28,7 @@ export async function buildApp() {
   await app.register(peopleRoutes, { prefix: '/api' });
   await app.register(chartsRoutes, { prefix: '/api' });
   await app.register(notificationsRoutes, { prefix: '/api' });
+  await app.register(shareRoutes, { prefix: '/api' });
   await app.register(adminRoutes);
 
   // ─── Telegram webhook (если задан публичный URL) ───────────────────────────

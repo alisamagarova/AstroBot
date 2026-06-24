@@ -807,6 +807,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [milestoneTheme, setMilestoneTheme] = useState(null);
   const [helpItem, setHelpItem] = useState(null); // объяснение услуги (bottom-sheet)
   const [onb, setOnb] = useState('loading'); // 'loading' | 'needed' | 'done'
+  const [otherBirth, setOtherBirth] = useState(null); // натал для другого человека (НЕ сохраняется в БД)
+  const [editingOther, setEditingOther] = useState(false);
+  const [sharingPdf, setSharingPdf] = useState(false);
 
   useEffect(()=>{ try{ localStorage.setItem(BIRTH_KEY, JSON.stringify(birth)); }catch(e){} }, [birth]);
   useEffect(()=>{ try{ localStorage.setItem(PARTNERS_KEY, JSON.stringify(partners)); }catch(e){} }, [partners]);
@@ -932,6 +935,33 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     }
   };
   const cancelPartner = () => setEditPartnerIdx(null);
+
+  // ── Натал для другого человека (данные НЕ сохраняем) ──
+  const saveOther = (b) => { setOtherBirth(b); setEditingOther(false); go('natal_other_chart'); };
+  const shareNatal = async () => {
+    if (sharingPdf) return;
+    const en = lang === 'en';
+    const node = document.getElementById('natal-report');
+    if (!node || !window.exportNodeToPdfBase64) {
+      try { window.Telegram.WebApp.showAlert(en ? 'PDF tool not ready.' : 'Не удалось подготовить PDF.'); } catch(_){}
+      return;
+    }
+    setSharingPdf(true);
+    try {
+      const b64 = await window.exportNodeToPdfBase64(node, { background: '#0a0812' });
+      const api = window.AstroAPI;
+      let r = { ok: false, error: 'no api' };
+      if (api && api.isConfigured() && api.inTelegram()) r = await api.shareNatalPdf(b64, otherBirth && otherBirth.name);
+      let msg = null;
+      if (!r.ok) msg = (en ? 'Failed: ' : 'Не получилось: ') + (r.error || '');
+      else if (r.relayed) msg = en ? 'Sent to your chat — forward it to the person.' : 'Отправлено тебе в чат — перешли его нужному человеку.';
+      else if (r.shared) msg = en ? 'Sent! ✨' : 'Отправлено! ✨';
+      // r.shared === false → пользователь закрыл выбор чата, без алерта
+      if (msg) { try { window.Telegram.WebApp.showAlert(msg); } catch(_){ alert(msg); } }
+    } catch (e) {
+      try { window.Telegram.WebApp.showAlert((en?'PDF error: ':'Ошибка PDF: ') + (e && e.message)); } catch(_){}
+    } finally { setSharingPdf(false); }
+  };
   const deletePartner = (idx) => {
     const api = window.AstroAPI;
     const target = partners[idx];
@@ -981,7 +1011,51 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem}/>;
   } else if (screen === 'natal') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
-    mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>{}}/>;
+    mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>go('natal_other')}/>;
+  } else if (screen === 'natal_other') {
+    title = lang==='ru' ? 'Другой человек' : 'Another person';
+    mainContent = (
+      <div style={{padding:'8px 18px 28px',position:'relative',zIndex:1}}>
+        <div style={{display:'flex',gap:10,alignItems:'flex-start',padding:'14px 16px',borderRadius:16,background:`${th.accent}14`,border:`1px solid ${th.accent}33`,marginBottom:16}}>
+          <span style={{flexShrink:0,fontSize:15,lineHeight:1.3,color:th.glyphClr}}>✦</span>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12.5,lineHeight:1.5,color:th.inkSoft,textWrap:'pretty'}}>
+            {lang==='en'
+              ? 'We don\'t store this person\'s data — it lives only in this session. You\'ll build the chart and can send the finished PDF straight to them in Telegram.'
+              : 'Данные этого человека мы не храним — они существуют только в этой сессии. Ты построишь карту и сможешь отправить готовый PDF прямо ему в Telegram.'}
+          </div>
+        </div>
+        <button onClick={()=>setEditingOther(true)} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:8,height:50,borderRadius:999,border:'none',cursor:'pointer',background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,boxShadow:`0 8px 26px ${th.accentGlow}`}}>
+          {otherBirth ? (lang==='en'?'Change data':'Изменить данные') : (lang==='en'?'Enter birth data':'Ввести данные')}
+        </button>
+        {otherBirth && (
+          <button onClick={()=>go('natal_other_chart')} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:7,height:46,marginTop:10,borderRadius:999,cursor:'pointer',background:'none',border:`1px solid ${th.glassBorder}`,color:th.inkSoft,fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5}}>
+            {lang==='en'?'Open the chart':'Открыть готовую карту'}
+          </button>
+        )}
+      </div>
+    );
+  } else if (screen === 'natal_other_chart') {
+    title = otherBirth ? (otherBirth.name || (lang==='ru'?'Карта':'Chart')) : (lang==='ru'?'Карта':'Chart');
+    mainContent = otherBirth ? (
+      <React.Fragment>
+        <div id="natal-report">
+          <NatalChartScreen th={th} lang={lang} birth={otherBirth} onExpand={setBigChart}/>
+        </div>
+        <div style={{padding:'4px 18px 30px',position:'relative',zIndex:1}}>
+          <button onClick={shareNatal} disabled={sharingPdf} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:8,height:50,borderRadius:999,border:'none',cursor:sharingPdf?'default':'pointer',background:sharingPdf?th.muted:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,boxShadow:`0 8px 26px ${th.accentGlow}`}}>
+            {sharingPdf ? (lang==='en'?'Preparing PDF…':'Готовим PDF…') : (lang==='en'?'Share chart (PDF)':'Поделиться картой (PDF)')}
+          </button>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,textAlign:'center',marginTop:9,lineHeight:1.45}}>
+            {lang==='en'?'Data isn\'t saved. The file goes to the recipient in Telegram.':'Данные не сохраняются. Файл уходит получателю в Telegram.'}
+          </div>
+        </div>
+      </React.Fragment>
+    ) : (
+      <div style={{padding:'50px 24px',textAlign:'center',position:'relative',zIndex:1}}>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontSize:13,color:th.muted,marginBottom:16}}>{lang==='en'?'No data yet.':'Данные ещё не введены.'}</div>
+        <button onClick={()=>go('natal_other')} style={{padding:'10px 20px',borderRadius:999,border:`1px solid ${th.glassBorder}`,background:th.chip,color:th.ink,cursor:'pointer',fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13}}>{lang==='en'?'Enter data':'Ввести данные'}</button>
+      </div>
+    );
   } else if (screen === 'natal_me') {
     title = lang==='ru' ? 'Данные рождения' : 'Birth data';
     mainContent = <NatalConfirmScreen th={th} lang={lang} birth={birth} userName={userName} onConfirm={()=>go('natal_chart')} onEdit={openEdit}/>;
@@ -1058,6 +1132,19 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
             <Sky th={th}/>
             <div style={{position:'relative',zIndex:1,height:'100%'}}>
               <BirthDataEditor th={th} lang={lang} initial={birth} onSave={saveBirth} onCancel={cancelEdit}/>
+            </div>
+          </div>
+        )}
+
+        {/* ── Natal-for-other editor overlay (данные НЕ сохраняются) ── */}
+        {editingOther && (
+          <div className="astro-in-f" style={{position:'absolute',inset:0,zIndex:72,overflow:'hidden'}}>
+            <Sky th={th}/>
+            <div style={{position:'relative',zIndex:1,height:'100%'}}>
+              <BirthDataEditor th={th} lang={lang}
+                initial={otherBirth || DEFAULT_PARTNER}
+                onSave={saveOther} onCancel={()=>setEditingOther(false)}
+                showName title={lang==='en'?'Their birth data':'Данные человека'}/>
             </div>
           </div>
         )}

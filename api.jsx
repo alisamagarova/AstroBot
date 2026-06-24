@@ -167,6 +167,29 @@ const AstroAPI = {
     return data.person;
   },
 
+  /** Отправляет готовый PDF натальной карты в Telegram (нативный шэр или relay). НЕ сохраняет данные. */
+  async shareNatalPdf(base64, targetName) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return { ok: false, error: 'not configured' };
+    const canShare = !!(tg() && typeof tg().shareMessage === 'function');
+    try {
+      const res = await apiFetch(`/api/users/${id}/share/natal`, {
+        method: 'POST',
+        body: JSON.stringify({ pdf_base64: base64, target_name: targetName || '', mode: canShare ? 'share' : 'relay' }),
+      });
+      if (!res.ok) { let d=''; try{ d=(await res.json()).detail||''; }catch(_){} return { ok:false, error:'HTTP '+res.status+(d?': '+d:'') }; }
+      const data = await res.json();
+      if (data.prepared_message_id && canShare) {
+        return await new Promise((resolve) => {
+          try { tg().shareMessage(data.prepared_message_id, (sent) => resolve({ ok:true, shared: !!sent })); }
+          catch (e) { resolve({ ok:true, shared:false }); }
+        });
+      }
+      if (data.relayed) return { ok:true, relayed:true };
+      return { ok:true };
+    } catch (e) { return { ok:false, error:String(e) }; }
+  },
+
   /** Список партнёров (не-self профили) в форме birth, каждый с backend id. */
   async listPartners() {
     const id = tgUserId();

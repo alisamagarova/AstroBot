@@ -579,7 +579,7 @@ function NatalChoiceScreen({ th, lang, onChooseMe, onChooseOther }) {
         {l?'Choose a chart':'Выберите карту'}
       </div>
       {card(l?'My natal chart':'Моя натальная карта',l?'Based on your birth data — full reading':'Анализ на основе ваших данных рождения',l?'READY':'ДАННЫЕ ЕСТЬ',onChooseMe,false)}
-      {card(l?'For another person':'Для другого человека',l?'Coming soon':'Скоро будет доступно',l?'SOON':'СКОРО',null,true)}
+      {card(l?'For another person':'Для другого человека',l?'Enter their birth data — we don\'t store it':'Введите данные рождения — мы их не храним',l?'NEW':'НОВОЕ',onChooseOther,false)}
     </div>
   );
 }
