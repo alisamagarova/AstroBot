@@ -36,9 +36,6 @@ CREATE TABLE users (
   onboarding_step       TEXT         CHECK (onboarding_step IN
                           ('name','birth_date','birth_time','city','consent','done')),
   onboarding_completed  BOOLEAN      NOT NULL DEFAULT false,
-  -- Черновик ответов онбординга (имя, дата, время, город) до создания профиля.
-  -- Хранится в БД, чтобы диалог переживал перезапуск/остановку бота.
-  onboarding_draft      JSONB        NOT NULL DEFAULT '{}'::jsonb,
   -- Настройки уведомлений (бот шлёт сообщения)
   notify_solar          BOOLEAN      NOT NULL DEFAULT false,  -- приближается новый солярный год
   notify_aspects        BOOLEAN      NOT NULL DEFAULT false,  -- наступил новый месяц аспектов
