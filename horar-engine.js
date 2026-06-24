@@ -74,7 +74,8 @@
     const moonLon = lonAt('Moon', whenUtc);
     const moonSpeed = Math.abs(speedOf('Moon', whenUtc)) || 13;
     const degToSignEnd = norm360((Math.floor(moonLon / 30) + 1) * 30 - moonLon);
-    let next = null;
+    const toH = d => (d / moonSpeed) * 24;
+    let next = null, last = null;
     for (const pl of SEVEN) {
       if (pl === 'moon') continue;
       const plLon = lonAt(BODY[pl], whenUtc);
@@ -83,13 +84,20 @@
         for (const a of angs) {
           const fwd = norm360(norm360(plLon + a) - moonLon); // сколько Луне пройти вперёд
           if (fwd > 0.0001 && fwd <= degToSignEnd) {
-            if (!next || fwd < next.deg) next = { pl, aspect: asp.key, deg: fwd };
+            if (!next || fwd < next.deg) next = { pl, aspect: asp.key, deg: fwd, hours: toH(fwd) };
+            if (!last || fwd > last.deg) last = { pl, aspect: asp.key, deg: fwd, hours: toH(fwd) };
           }
         }
       }
     }
-    const hoursToSignEnd = (degToSignEnd / moonSpeed) * 24;
-    return { voc: next === null, nextAspect: next, degToSignEnd, hoursToSignEnd, moonLon };
+    const moonSign = Math.floor(moonLon / 30);
+    return {
+      voc: next === null,
+      nextAspect: next, lastAspect: last,
+      moonSign, nextSign: (moonSign + 1) % 12, moonDeg: moonLon % 30, moonLon,
+      degToSignEnd, hoursToSignEnd: toH(degToSignEnd),
+      hoursToVoid: last ? last.hours : 0, // когда Луна станет без курса (после последнего аспекта)
+    };
   }
 
   function angHouse(h) { return [1, 4, 7, 10].includes(h) ? 'angular' : [2, 5, 8, 11].includes(h) ? 'succedent' : 'cadent'; }

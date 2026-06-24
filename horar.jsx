@@ -87,6 +87,37 @@ function HorarScreen({ th, lang, city }) {
         </ul>
       </div>
 
+      {/* Расписание Луны */}
+      {voc && !voc.error && (
+        <div style={{ ...card, marginBottom: 14 }}>
+          <div style={label}>{en ? 'Moon schedule' : 'Расписание Луны'}</div>
+          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12.5, lineHeight: 1.6, color: th.inkSoft, textWrap: 'pretty' }}>
+            <div style={{ marginBottom: 6 }}>
+              <span style={{ color: th.muted }}>{en ? 'Moon: ' : 'Луна: '}</span>
+              <b style={{ color: th.ink }}>{hzSign(voc.moonSign, en)} {Math.floor(voc.moonDeg)}°</b>
+            </div>
+            {voc.voc ? (
+              <div>{en ? 'Void of course now. Enters ' : 'Сейчас без курса. Войдёт в '}<b style={{ color: th.ink }}>{hzSign(voc.nextSign, en)}</b>{en ? ' in ' : ' через '}<b style={{ color: th.ink }}>{fmtHours(voc.hoursToSignEnd, en)}</b>{en ? ' — then you can ask.' : ' — тогда можно задавать.'}</div>
+            ) : (
+              <React.Fragment>
+                {voc.nextAspect && (
+                  <div style={{ marginBottom: 4 }}>
+                    {en ? 'Next aspect: ' : 'Ближайший аспект: '}
+                    <b style={{ color: th.ink }}>{HZ_ASP[voc.nextAspect.aspect].sym} {hzPl(voc.nextAspect.pl, en)}</b>
+                    {en ? ' in ' : ' через '}{fmtHours(voc.nextAspect.hours, en)}
+                  </div>
+                )}
+                <div>
+                  {en ? 'On course for ' : 'По курсу ещё '}<b style={{ color: th.ink }}>{fmtHours(voc.hoursToVoid, en)}</b>
+                  {en ? ', then void until it enters ' : ', затем без курса до входа в '}<b style={{ color: th.ink }}>{hzSign(voc.nextSign, en)}</b>
+                  {en ? ' (in ' : ' (через '}{fmtHours(voc.hoursToSignEnd, en)}{')'}
+                </div>
+              </React.Fragment>
+            )}
+          </div>
+        </div>
+      )}
+
       {noCity && (
         <div style={{ ...card, marginBottom: 14, borderColor: `${th.gold}55` }}>
           <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12.5, color: th.inkSoft, lineHeight: 1.5 }}>
@@ -177,6 +208,12 @@ function fmtLeft(ms, en) {
   const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
   if (h > 0) return en ? `${h} h ${m} min` : `${h} ч ${m} мин`;
   return en ? `${m} min` : `${m} мин`;
+}
+
+function fmtHours(h, en) {
+  if (h >= 24) { const d = Math.floor(h / 24), hh = Math.round(h % 24); return en ? `${d}d ${hh}h` : `${d} д ${hh} ч`; }
+  if (h >= 1) return en ? `${Math.round(h)}h` : `${Math.round(h)} ч`;
+  return en ? `${Math.round(h * 60)} min` : `${Math.round(h * 60)} мин`;
 }
 
 function HorarResult({ th, lang, r, onBack }) {
