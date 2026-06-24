@@ -249,6 +249,19 @@ function HorarResult({ th, lang, r, onBack }) {
         )}
       </div>
 
+      {/* Карта вопроса */}
+      {r.wheel && window.NatalChartSVG && (() => {
+        const Wheel = window.NatalChartSVG;
+        return (
+          <div style={{ ...card }}>
+            <div style={label}>{en ? 'Chart of the question' : 'Карта вопроса'}</div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <Wheel th={th} planets={r.wheel.planets} asc={r.wheel.asc} mc={r.wheel.mc} houseCusps={r.wheel.cusps} size={300} showHouses={r.wheel.showHouses}/>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Значимые */}
       <div style={{ ...card }}>
         <div style={label}>{en ? 'Significators' : 'Значимые планеты'}</div>

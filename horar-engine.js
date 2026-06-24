@@ -177,10 +177,18 @@
     else if (sameRuler) verdict = 'yes';
     else verdict = 'no';
 
+    // Данные колеса карты для отрисовки (NatalChartSVG)
+    const ALL = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+    const wheelPlanets = ALL.map(id => ({ id, ...chart.planets[id], ...(window.PL_META ? window.PL_META[id] : {}) }));
+    const wheel = {
+      planets: wheelPlanets, asc: chart.asc, mc: chart.mc, cusps: chart.cusps,
+      showHouses: chart.housesValid === true || chart.housesValid === 'approx',
+    };
+
     return {
       whenUtc, asc: chart.asc, ascDeg, ascSign,
       quesitedHouse, querentSig, quesitedSig, moon, sameRuler,
-      perfection, separating, timing, strictures, verdict,
+      perfection, separating, timing, strictures, verdict, wheel,
     };
   }
 
