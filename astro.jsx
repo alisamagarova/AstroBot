@@ -1089,7 +1089,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     mainContent = <MilestonesResultScreen th={th} lang={lang} birth={birth} themeId={milestoneTheme}/>;
   } else if (screen === 'pinpoint') {
     title = lang==='ru' ? 'Хорар' : 'Horary';
-    mainContent = <HorarScreen th={th} lang={lang} city={residenceCity(birth)}/>;
+    mainContent = <HorarScreen th={th} lang={lang} city={residenceCity(birth)} onExpand={setBigChart}/>;
   } else if (screen === 'aspects') {
     title = lang==='ru' ? 'Аспекты на месяц' : 'Aspects this month';
     mainContent = <AspectsMonthScreen th={th} lang={lang} birth={birth}/>;

@@ -30,7 +30,7 @@ function hzUnit(kind, en) {
   return kind === 'days' ? 'дн.' : kind === 'weeks' ? 'нед.' : 'мес.';
 }
 
-function HorarScreen({ th, lang, city }) {
+function HorarScreen({ th, lang, city, onExpand }) {
   const en = lang === 'en';
   const [voc, setVoc] = useStateHz(null);     // null=loading, {voc, ...}
   const [q, setQ] = useStateHz('');
@@ -73,7 +73,7 @@ function HorarScreen({ th, lang, city }) {
   const label = { fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 10.5, letterSpacing: 1.6, textTransform: 'uppercase', color: th.muted, marginBottom: 8 };
 
   // ── РЕЗУЛЬТАТ ──
-  if (result) return <HorarResult th={th} lang={lang} r={result} onBack={() => setResult(null)} cool={cool} now={now}/>;
+  if (result) return <HorarResult th={th} lang={lang} r={result} onBack={() => setResult(null)} onExpand={onExpand} cool={cool} now={now}/>;
 
   return (
     <div style={pad}>
@@ -233,7 +233,7 @@ function fmtHours(h, en) {
   return en ? `${Math.round(h * 60)} min` : `${Math.round(h * 60)} мин`;
 }
 
-function HorarResult({ th, lang, r, onBack }) {
+function HorarResult({ th, lang, r, onBack, onExpand }) {
   const en = lang === 'en';
   if (r.error) return (
     <div style={{ padding: '40px 18px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
@@ -323,12 +323,21 @@ function HorarResult({ th, lang, r, onBack }) {
       {/* Карта вопроса */}
       {r.wheel && window.NatalChartSVG && (() => {
         const Wheel = window.NatalChartSVG;
+        const expandData = { planetsArr: r.wheel.planets, asc: r.wheel.asc, mc: r.wheel.mc, cusps: r.wheel.cusps, showHouses: r.wheel.showHouses };
+        const doExpand = onExpand ? () => onExpand(expandData) : undefined;
         return (
           <div style={{ ...card }}>
             <div style={label}>{en ? 'Chart of the question' : 'Карта вопроса'}</div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <Wheel th={th} planets={r.wheel.planets} asc={r.wheel.asc} mc={r.wheel.mc} houseCusps={r.wheel.cusps} size={300} showHouses={r.wheel.showHouses}/>
-            </div>
+            <button onClick={doExpand} style={{ display: 'block', width: '100%', padding: 0, margin: 0, border: 'none', background: 'none', cursor: doExpand ? 'zoom-in' : 'default' }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <Wheel th={th} planets={r.wheel.planets} asc={r.wheel.asc} mc={r.wheel.mc} houseCusps={r.wheel.cusps} size={300} showHouses={r.wheel.showHouses}/>
+              </div>
+            </button>
+            {doExpand && (
+              <button onClick={doExpand} style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'center', gap: 7, height: 42, marginTop: 10, borderRadius: 999, cursor: 'pointer', background: th.chip, border: `1px solid ${th.glassBorder}`, color: th.inkSoft, fontFamily: '"Manrope",sans-serif', fontWeight: 600, fontSize: 13 }}>
+                {en ? 'Expand chart' : 'Развернуть карту'}
+              </button>
+            )}
           </div>
         );
       })()}
