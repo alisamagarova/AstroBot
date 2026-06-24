@@ -21,8 +21,10 @@
 
   // ── Темы → дом квесит (дом вопроса) ──
   const TOPICS = [
-    { id: 'love',     house: 7,                  ru: 'Любовь и отношения',           en: 'Love & relationships' },
-    { id: 'marriage', house: 7,                  ru: 'Брак / партнёр',               en: 'Marriage / partner' },
+    // Любовь: партнёр (7) + романтика/влечение (5).
+    { id: 'love',     house: 7,  secondary: [5],  ru: 'Любовь и отношения',           en: 'Love & relationships' },
+    // Брак: партнёр (7) + положение/сам брак (10).
+    { id: 'marriage', house: 7,  secondary: [10], ru: 'Брак / партнёр',               en: 'Marriage / partner' },
     { id: 'money',    house: 2,                  ru: 'Деньги и имущество',           en: 'Money & possessions' },
     // Работа: основной квезит — 10 дом (работа/должность/работодатель);
     // дополнительно 6 дом (условия труда) и 2 дом (заработок).

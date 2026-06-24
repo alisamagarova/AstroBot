@@ -16,7 +16,12 @@ function hzPl(id, en) { return (window.PL_META && window.PL_META[id]) ? window.P
 function hzSign(i, en) { return (en ? HZ_SIGN_EN : HZ_SIGN_RU)[i] || ''; }
 function hzHouseOrd(h, en) { return en ? `house ${h}` : `${h}-й дом`; }
 function hzAddLabel(h, en) {
-  const m = { 2: { ru: 'Деньги', en: 'Money' }, 5: { ru: 'Дети/роман', en: 'Children/romance' }, 6: { ru: 'Условия труда', en: 'Conditions' } };
+  const m = {
+    2:  { ru: 'Деньги',        en: 'Money' },
+    5:  { ru: 'Романтика',     en: 'Romance' },
+    6:  { ru: 'Условия труда', en: 'Conditions' },
+    10: { ru: 'Положение/брак',en: 'Standing/marriage' },
+  };
   const b = m[h]; const ho = hzHouseOrd(h, en);
   return b ? `${en ? b.en : b.ru} (${ho})` : ho;
 }
