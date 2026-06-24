@@ -1037,19 +1037,19 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   } else if (screen === 'natal_other_chart') {
     title = otherBirth ? (otherBirth.name || (lang==='ru'?'Карта':'Chart')) : (lang==='ru'?'Карта':'Chart');
     mainContent = otherBirth ? (
-      <React.Fragment>
-        <div id="natal-report">
-          <NatalChartScreen th={th} lang={lang} birth={otherBirth} onExpand={setBigChart}/>
-        </div>
-        <div style={{padding:'4px 18px 30px',position:'relative',zIndex:1}}>
-          <button onClick={shareNatal} disabled={sharingPdf} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:8,height:50,borderRadius:999,border:'none',cursor:sharingPdf?'default':'pointer',background:sharingPdf?th.muted:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,boxShadow:`0 8px 26px ${th.accentGlow}`}}>
-            {sharingPdf ? (lang==='en'?'Preparing PDF…':'Готовим PDF…') : (lang==='en'?'Share chart (PDF)':'Поделиться картой (PDF)')}
-          </button>
-          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,textAlign:'center',marginTop:9,lineHeight:1.45}}>
-            {lang==='en'?'Data isn\'t saved. The file goes to the recipient in Telegram.':'Данные не сохраняются. Файл уходит получателю в Telegram.'}
-          </div>
-        </div>
-      </React.Fragment>
+      <div id="natal-report">
+        <NatalChartScreen th={th} lang={lang} birth={otherBirth} onExpand={setBigChart}
+          shareSlot={
+            <div data-html2canvas-ignore="true" style={{marginBottom:18}}>
+              <button onClick={shareNatal} disabled={sharingPdf} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:8,height:48,borderRadius:999,border:'none',cursor:sharingPdf?'default':'pointer',background:sharingPdf?th.muted:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:14.5,boxShadow:`0 8px 26px ${th.accentGlow}`}}>
+                {sharingPdf ? (lang==='en'?'Preparing PDF…':'Готовим PDF…') : (lang==='en'?'Share chart (PDF)':'Поделиться картой (PDF)')}
+              </button>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,textAlign:'center',marginTop:8,lineHeight:1.45}}>
+                {lang==='en'?'Data isn\'t saved. The file goes to the recipient in Telegram.':'Данные не сохраняются. Файл уходит получателю в Telegram.'}
+              </div>
+            </div>
+          }/>
+      </div>
     ) : (
       <div style={{padding:'50px 24px',textAlign:'center',position:'relative',zIndex:1}}>
         <div style={{fontFamily:'"Manrope",sans-serif',fontSize:13,color:th.muted,marginBottom:16}}>{lang==='en'?'No data yet.':'Данные ещё не введены.'}</div>

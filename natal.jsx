@@ -629,7 +629,7 @@ function NatalConfirmScreen({ th, lang, birth, userName, onConfirm, onEdit }) {
 }
 
 // ── Full chart screen ──────────────────────────────────
-function NatalChartScreen({ th, lang, birth, onExpand }) {
+function NatalChartScreen({ th, lang, birth, onExpand, shareSlot }) {
   const [chartData, setChartData] = useState(null);
   const [error,     setError]     = useState(null);
   const [openP, setOpenP] = useState(null);
@@ -753,6 +753,8 @@ function NatalChartScreen({ th, lang, birth, onExpand }) {
         <ExpandGlyph size={15} color={th.inkSoft} sw={1.6}/>
         {l?'Expand chart':'Развернуть карту'}
       </button>
+
+      {shareSlot}
 
       {caveat}
 
