@@ -437,8 +437,8 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
         })}
       </div>
 
-      {/* ── MILESTONES — скоро ───────────────────────── */}
-      <GlassCard th={th} strong style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden',opacity:0.62,cursor:'default'}}>
+      {/* ── MILESTONES ───────────────────────────────── */}
+      <GlassCard th={th} strong onClick={()=>onOpen('milestones')} style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden'}}>
         <WheelWatermark color={th.effDark?'#fff':th.ink} opacity={th.effDark?0.09:0.06}/>
         {helpBtn(milestone, {top:9, right:9})}
         <div style={{width:50,height:50,borderRadius:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}25`,border:`1px solid ${th.accent}50`,position:'relative'}}>
@@ -449,10 +449,7 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
           <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,lineHeight:1.08,color:th.ink,marginBottom:4}}>{milestone.title[lang]}</div>
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{milestone.desc[lang]}</div>
         </div>
-        <div style={{background:th.gold,color:th.effDark?'#1a1230':'#fff',fontFamily:'"Manrope",sans-serif',
-          fontWeight:700,fontSize:9,letterSpacing:1,borderRadius:99,padding:'3px 9px',flexShrink:0,marginRight:26}}>
-          {lang==='en'?'SOON':'СКОРО'}
-        </div>
+        <span style={{flexShrink:0,marginRight:24,position:'relative'}}><AstroGlyph name="arrow-right" size={18} color={th.inkSoft} sw={1.9}/></span>
       </GlassCard>
 
     </div>
