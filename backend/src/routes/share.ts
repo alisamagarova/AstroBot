@@ -4,24 +4,9 @@ import { InputFile } from 'grammy';
 import { requireOwner } from '../plugins/auth.js';
 import { bot } from '../bot/bot.js';
 
-// ─── Транзитное хранилище файлов (НЕ БД) ──────────────────────────────────────
-// PDF держим в памяти ~15 минут только для доставки через нативный шэр Telegram.
-// Никакой записи в базу — данные другого человека нигде не сохраняются.
-interface Transient { buf: Buffer; name: string; exp: number; }
-const FILES = new Map<string, Transient>();
-const TTL_MS = 15 * 60 * 1000;
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, v] of FILES) if (v.exp < now) FILES.delete(k);
-}, 60 * 1000).unref?.();
-
-function putFile(buf: Buffer, name: string): string {
-  const token = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
-  FILES.set(token, { buf, name, exp: Date.now() + TTL_MS });
-  return token;
-}
-
+// Натальная карта для другого человека: PDF приходит с клиента, мы НЕ сохраняем
+// его в БД — только доставляем в Telegram. Для надёжного нативного шэра загружаем
+// документ боту (получаем file_id) и шарим уже закэшированный документ.
 const ShareBody = z.object({
   pdf_base64:  z.string().min(1),
   target_name: z.string().max(80).optional(),
@@ -29,21 +14,6 @@ const ShareBody = z.object({
 });
 
 const shareRoutes: FastifyPluginAsync = async (fastify) => {
-
-  /** Публичная отдача транзитного файла (Telegram скачивает при шэре). */
-  fastify.get<{ Params: { token: string } }>(
-    '/share/file/:token',
-    { config: { skipAuth: true } },
-    async (request, reply) => {
-      const f = FILES.get(request.params.token);
-      if (!f || f.exp < Date.now()) return reply.status(404).send({ error: 'expired' });
-      reply.header('Content-Type', 'application/pdf');
-      reply.header('Content-Disposition', `inline; filename="${f.name}"`);
-      return reply.send(f.buf);
-    },
-  );
-
-  /** POST /api/share/natal — принять PDF и доставить в Telegram (без сохранения). */
   fastify.post<{ Params: { tgId: string } }>(
     '/users/:tgId/share/natal',
     async (request, reply) => {
@@ -52,26 +22,41 @@ const shareRoutes: FastifyPluginAsync = async (fastify) => {
       if (!body.success) return reply.status(400).send({ error: body.error.flatten() });
 
       const buf = Buffer.from(body.data.pdf_base64, 'base64');
-      if (buf.length === 0 || buf.length > 8 * 1024 * 1024) {
+      if (buf.length < 100 || buf.length > 8 * 1024 * 1024) {
         return reply.status(400).send({ error: 'bad_size' });
       }
-      const name = `natal_${(body.data.target_name || 'chart').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40)}.pdf`;
-      const caption = body.data.target_name
-        ? `🔮 Натальная карта — ${body.data.target_name}`
-        : '🔮 Натальная карта';
+      const safe = (body.data.target_name || 'chart').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 40);
+      const name = `natal_${safe}.pdf`;
+      const title = body.data.target_name ? `🔮 Натальная карта — ${body.data.target_name}` : '🔮 Натальная карта';
 
-      // Нативный шэр: готовим inline-сообщение с документом по транзитной ссылке.
-      if (body.data.mode === 'share') {
+      // 1) Загружаем документ боту → получаем file_id (Telegram уже хранит файл).
+      let fileId: string | undefined;
+      let sentMsgId: number | undefined;
+      try {
+        const cap = body.data.mode === 'share'
+          ? title
+          : title + '\n\nПерешлите это сообщение тому, кому строили карту 💫';
+        const sent = await bot.api.sendDocument(
+          request.params.tgId,
+          new InputFile(buf, name),
+          { caption: cap, disable_notification: body.data.mode === 'share' },
+        );
+        fileId = (sent as any).document?.file_id;
+        sentMsgId = sent.message_id;
+      } catch (e: any) {
+        return reply.status(502).send({ error: 'send_failed', detail: String(e?.description ?? e) });
+      }
+
+      // 2) Нативный шэр: убираем копию из чата (file_id остаётся валидным) и готовим
+      //    inline-сообщение с закэшированным документом — пользователь выберет получателя.
+      if (body.data.mode === 'share' && fileId) {
         try {
-          const token = putFile(buf, name);
-          const host = (request.headers['x-forwarded-host'] as string) || request.headers.host;
-          const url = `https://${host}/api/share/file/${token}`;
+          if (sentMsgId) { try { await bot.api.deleteMessage(request.params.tgId, sentMsgId); } catch {} }
           const result: any = {
             type: 'document',
-            id: token,
-            title: caption,
-            document_url: url,
-            mime_type: 'application/pdf',
+            id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+            title,
+            document_file_id: fileId,
             description: 'Полная натальная карта · AstroBot',
           };
           const prep: any = await (bot.api as any).savePreparedInlineMessage(
@@ -81,22 +66,19 @@ const shareRoutes: FastifyPluginAsync = async (fastify) => {
           );
           return { prepared_message_id: prep.id };
         } catch (e: any) {
-          // не получилось — падаем в relay ниже
           console.error('savePreparedInlineMessage failed, fallback to relay:', e?.description ?? e);
+          // Не вышло — возвращаем файл пользователю в чат (мы его удалили), пусть перешлёт.
+          try {
+            await bot.api.sendDocument(request.params.tgId, fileId, {
+              caption: title + '\n\nПерешлите это сообщение тому, кому строили карту 💫',
+            });
+          } catch {}
+          return { relayed: true };
         }
       }
 
-      // Relay: присылаем документ пользователю в чат — он перешлёт нужному человеку.
-      try {
-        await bot.api.sendDocument(
-          request.params.tgId,
-          new InputFile(buf, name),
-          { caption: caption + '\n\nПерешлите это сообщение тому, кому строили карту 💫' },
-        );
-        return { relayed: true };
-      } catch (e: any) {
-        return reply.status(502).send({ error: 'send_failed', detail: String(e?.description ?? e) });
-      }
+      // Relay-режим: документ уже в чате пользователя — добавим подсказку.
+      return { relayed: true };
     },
   );
 };
