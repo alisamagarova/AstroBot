@@ -873,6 +873,7 @@ function NatalPdfReport({ th, lang, birth, name }) {
   const aspects = computeAspects(Object.fromEntries(PL_IDS.map(id => [id, data.planets[id]])));
   const { asc, mc, cusps, housesValid } = data;
   const showHouses = housesValid === true || housesValid === 'approx';
+  const approxHouse = housesValid === 'approx';
 
   const ink = th.ink, soft = th.inkSoft, muted = th.muted;
   const pageBg = th.effDark ? '#0a0812' : '#f6f3ff';
@@ -880,6 +881,16 @@ function NatalPdfReport({ th, lang, birth, name }) {
   const border = th.glassBorder;
   const sec = { background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: '14px 18px', marginBottom: 12 };
   const head = { fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: muted, margin: '18px 0 10px' };
+
+  // Теги (как в приложении): темы натальных домов
+  const tagChip = (k, key) => {
+    const d = TAG_DEF[k]; if (!d) return null;
+    const p = tagPalette(d.cat, th);
+    return <span key={key} style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 8.5, letterSpacing: 0.7, color: p.c, background: p.b, border: `1px solid ${p.o}`, borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', display: 'inline-block', marginRight: 5, marginTop: 5 }}>{approxHouse ? '≈ ' : ''}{l ? d.en : d.ru}</span>;
+  };
+  const planetTagEls = (house) => (showHouses && house != null) ? (HOUSE_TAGS[house] || []).map((k, i) => tagChip(k, 'p' + i)) : null;
+  const aspectTagEls = (h1, h2) => (showHouses && h1 != null && h2 != null)
+    ? [...new Set([...(HOUSE_TAGS[h1] || []), ...(HOUSE_TAGS[h2] || [])])].slice(0, 3).map((k, i) => tagChip(k, 'a' + i)) : null;
 
   return (
     <div style={{ width: 680, background: pageBg, color: ink, fontFamily: '"Manrope",sans-serif', padding: 26, boxSizing: 'border-box' }}>
@@ -898,12 +909,13 @@ function NatalPdfReport({ th, lang, birth, name }) {
       </div>
 
       {/* ── Planets ── */}
-      <div style={head}>{showHouses ? (l ? 'Planets & houses' : 'Планеты и дома') : (l ? 'Planets in signs' : 'Планеты в знаках')}</div>
+      <div className="pdf-section" style={{ ...head, background: 'transparent' }}>{showHouses ? (l ? 'Planets & houses' : 'Планеты и дома') : (l ? 'Planets in signs' : 'Планеты в знаках')}</div>
       {planetsArr.map(p => (
         <div key={p.id} className="pdf-section" style={sec}>
-          <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 17, color: ink, marginBottom: 6 }}>
+          <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 17, color: ink, marginBottom: 4 }}>
             {(l ? p.en : p.ru)} — {SIGN_NOM_RU[p.signIdx]}{showHouses && p.house ? ` · ${p.house} дом` : ''}{p.ret ? ' · R' : ''}
           </div>
+          {planetTagEls(p.house) && <div style={{ marginBottom: 8 }}>{planetTagEls(p.house)}</div>}
           {lookupPlanetParas(lang, p.id, p.signIdx, p.house, showHouses, p.ret).map((para, i) => (
             <div key={i} style={{ fontSize: 13, lineHeight: 1.6, color: soft, marginBottom: 8 }}>{para}</div>
           ))}
@@ -911,17 +923,18 @@ function NatalPdfReport({ th, lang, birth, name }) {
       ))}
 
       {/* ── Aspects ── */}
-      {aspects.length > 0 && <div style={head}>{l ? 'Aspects' : 'Аспекты'}</div>}
+      {aspects.length > 0 && <div className="pdf-section" style={{ ...head, background: 'transparent' }}>{l ? 'Aspects' : 'Аспекты'}</div>}
       {aspects.map((asp, i) => {
         const pl1 = planetsArr.find(p => p.id === asp.p1);
         const pl2 = planetsArr.find(p => p.id === asp.p2);
         if (!pl1 || !pl2) return null;
         return (
           <div key={i} className="pdf-section" style={sec}>
-            <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 15, color: ink, marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 15, color: ink, marginBottom: 4 }}>
               {pl1.ru} <span style={{ color: asp.col }}>{asp.sym}</span> {pl2.ru}
               <span style={{ color: muted, fontWeight: 600, fontSize: 12, fontFamily: '"Manrope",sans-serif' }}> · {asp.type_ru} · орб {asp.orb.toFixed(1)}°</span>
             </div>
+            {aspectTagEls(pl1.house, pl2.house) && <div style={{ marginBottom: 8 }}>{aspectTagEls(pl1.house, pl2.house)}</div>}
             <div style={{ fontSize: 13, lineHeight: 1.6, color: soft }}>
               {lookupAspectText(lang, asp.p1, asp.p2, asp.aspKey, genAspectDesc(asp.p1, asp.p2, asp.type_ru, showHouses ? pl1.house : null, showHouses ? pl2.house : null, pl1.signIdx, pl2.signIdx))}
             </div>

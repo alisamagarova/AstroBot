@@ -1037,9 +1037,12 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     title = otherBirth ? (otherBirth.name || (lang==='ru'?'Карта':'Chart')) : (lang==='ru'?'Карта':'Chart');
     mainContent = otherBirth ? (
       <React.Fragment>
-        {/* Скрытый печатный отчёт (все расшифровки развёрнуты) — источник для PDF */}
-        <div id="natal-pdf" aria-hidden="true" style={{position:'absolute',left:'-99999px',top:0,width:680,zIndex:-1}}>
-          <NatalPdfReport th={th} lang={lang} birth={otherBirth} name={otherBirth.name}/>
+        {/* Скрытый печатный отчёт (все расшифровки развёрнуты) — источник для PDF.
+            Обёртка 0×0 overflow:hidden, чтобы высокий отчёт не растягивал прокрутку. */}
+        <div aria-hidden="true" style={{position:'absolute',width:0,height:0,overflow:'hidden',left:0,top:0}}>
+          <div id="natal-pdf" style={{position:'absolute',left:0,top:0,width:680}}>
+            <NatalPdfReport th={th} lang={lang} birth={otherBirth} name={otherBirth.name}/>
+          </div>
         </div>
         <NatalChartScreen th={th} lang={lang} birth={otherBirth} onExpand={setBigChart}
           shareSlot={
