@@ -180,6 +180,11 @@ function HorarScreen({ th, lang, city }) {
                 {en ? 'You asked recently. Let the sky shift — next question in ' : 'Ты недавно задавал вопрос. Дай небу сдвинуться — следующий через '}
                 <b style={{ color: th.inkSoft }}>{fmtLeft(cool.nextMs - now, en)}</b>.
               </div>
+              {/* ВРЕМЕННО: сброс таймера для тестов */}
+              <button onClick={() => { try { localStorage.removeItem('astro_horar_last'); } catch (e) {} setCool(null); }}
+                style={{ marginTop: 10, padding: '7px 12px', borderRadius: 999, border: `1px solid ${th.glassBorder}`, background: 'transparent', color: th.muted, cursor: 'pointer', fontFamily: '"Manrope",sans-serif', fontWeight: 600, fontSize: 11.5 }}>
+                🧪 {en ? 'Reset timer (test)' : 'Сбросить таймер (тест)'}
+              </button>
             </div>
           )}
 
@@ -234,8 +239,14 @@ function HorarResult({ th, lang, r, onBack }) {
     yes:      { ru: 'Скорее да', en: 'Likely yes', col: '#3FB07A' },
     yes_hard: { ru: 'Да, но через напряжение', en: 'Yes, but through tension', col: '#D4901A' },
     no:       { ru: 'Скорее нет', en: 'Likely no', col: '#C0506A' },
+    unreliable: { ru: 'Карта нерадикальна', en: 'Chart not radical', col: '#D4901A' },
   };
   const v = verdictMap[r.verdict] || verdictMap.no;
+  const base = verdictMap[r.baseVerdict] || verdictMap.no;
+  const radTxt = {
+    early: en ? 'Too early to judge: Ascendant under 3° — the question may be premature, not yet ripe.' : 'Судить рано: Асцендент в первых градусах (< 3°) — вопрос, возможно, преждевременен и ещё не созрел.',
+    late:  en ? 'Too late to judge: Ascendant over 27° — the matter may already be decided or beyond changing.' : 'Судить поздно: Асцендент в последних градусах (> 27°) — дело, возможно, уже решено или менять поздно.',
+  };
 
   const sigLine = (who, sig) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '9px 0', borderBottom: `1px solid ${th.glassBorder}` }}>
@@ -277,9 +288,19 @@ function HorarResult({ th, lang, r, onBack }) {
 
       {/* Вердикт */}
       <div style={{ ...card, textAlign: 'center', borderColor: `${v.col}66` }}>
-        <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 26, color: v.col, marginBottom: r.timing ? 6 : 0 }}>{en ? v.en : v.ru}</div>
-        {r.timing && (
-          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, color: th.inkSoft }}>
+        <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 26, color: v.col, marginBottom: 4 }}>{en ? v.en : v.ru}</div>
+
+        {/* Нерадикальная карта — объясняем и даём ориентир по значимым */}
+        {r.radical !== 'ok' ? (
+          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12.5, color: th.inkSoft, lineHeight: 1.5, marginTop: 4 }}>
+            {radTxt[r.radical]}
+            <div style={{ marginTop: 8, color: th.muted }}>
+              {en ? 'Tentatively by the significators: ' : 'Ориентировочно по значимым: '}
+              <b style={{ color: base.col }}>{en ? base.en : base.ru}</b>
+            </div>
+          </div>
+        ) : r.timing && (
+          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, color: th.inkSoft, marginTop: 2 }}>
             {en ? 'Likely in about ' : 'Ориентировочно через '}<b>{r.timing.units} {hzUnit(r.timing.kind, en)}</b>
             <div style={{ fontSize: 11, color: th.muted, marginTop: 3 }}>
               {en ? `by ${hzPl(r.timing.fast, en)} (${r.timing.units}° to exact, ${r.timing.kind})` : `по ${hzPl(r.timing.fast, en)} (${r.timing.units}° до точного, единица — ${hzUnit(r.timing.kind, en)})`}

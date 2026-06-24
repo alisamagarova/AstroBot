@@ -179,11 +179,15 @@
     const ml = pos.moon;
     if (ml >= 195 && ml <= 225) strictures.push('via_combusta'); // 15°♎–15°♏
 
-    // Вердикт
-    let verdict;
-    if (perfection) verdict = perfection.harmonious ? 'yes' : 'yes_hard';
-    else if (sameRuler) verdict = 'yes';
-    else verdict = 'no';
+    // Главная проверка радикальности: ранний/поздний Асцендент делает карту
+    // «нерадикальной» — судить рано/поздно, ответ ориентировочный.
+    // (Луна без курса отсекается ещё ДО вопроса — форма блокируется.)
+    const radical = ascDeg < 3 ? 'early' : ascDeg > 27 ? 'late' : 'ok';
+
+    // Вердикт по перфекции значимых
+    const baseVerdict = perfection ? (perfection.harmonious ? 'yes' : 'yes_hard') : (sameRuler ? 'yes' : 'no');
+    // Если карта нерадикальна — вердикт ненадёжный (квалифицируем).
+    const verdict = radical === 'ok' ? baseVerdict : 'unreliable';
 
     // Данные колеса карты для отрисовки (NatalChartSVG)
     const ALL = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
@@ -196,7 +200,7 @@
     return {
       whenUtc, asc: chart.asc, ascDeg, ascSign,
       quesitedHouse, querentSig, quesitedSig, moon, sameRuler,
-      perfection, separating, timing, strictures, verdict, wheel,
+      perfection, separating, timing, strictures, radical, baseVerdict, verdict, wheel,
     };
   }
 
