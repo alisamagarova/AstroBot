@@ -859,10 +859,84 @@ function ChartExpandOverlay({ th, lang, data, onClose }) {
 }
 
 // ═══════════════════════════════════════════════════════
+// PDF REPORT — все расшифровки развёрнуты, колесо на 1-й «странице».
+// Рендерится скрыто (offscreen) и снимается поблочно генератором PDF.
+// ═══════════════════════════════════════════════════════
+function NatalPdfReport({ th, lang, birth, name }) {
+  const l = lang === 'en';
+  const data = React.useMemo(() => {
+    try { return computeRealChart(resolveBirthForChart(birth)); } catch (e) { return null; }
+  }, [birth]);
+  if (!data) return null;
+
+  const planetsArr = PL_IDS.map(id => ({ id, ...data.planets[id], ...PL_META[id] }));
+  const aspects = computeAspects(Object.fromEntries(PL_IDS.map(id => [id, data.planets[id]])));
+  const { asc, mc, cusps, housesValid } = data;
+  const showHouses = housesValid === true || housesValid === 'approx';
+
+  const ink = th.ink, soft = th.inkSoft, muted = th.muted;
+  const pageBg = th.effDark ? '#0a0812' : '#f6f3ff';
+  const panel  = th.effDark ? '#15101f' : '#ffffff';
+  const border = th.glassBorder;
+  const sec = { background: panel, border: `1px solid ${border}`, borderRadius: 16, padding: '14px 18px', marginBottom: 12 };
+  const head = { fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: muted, margin: '18px 0 10px' };
+
+  return (
+    <div style={{ width: 680, background: pageBg, color: ink, fontFamily: '"Manrope",sans-serif', padding: 26, boxSizing: 'border-box' }}>
+      {/* ── Page 1: cover + wheel ── */}
+      <div className="pdf-wheel" style={{ background: pageBg, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '6px 0 18px' }}>
+        <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 32, color: ink, textAlign: 'center', marginBottom: 4 }}>
+          {name || (l ? 'Natal chart' : 'Натальная карта')}
+        </div>
+        <div style={{ fontSize: 12.5, color: muted, marginBottom: 18, textAlign: 'center' }}>
+          {[fmtBirthDate(birth), fmtBirthTime(birth, lang), fmtBirthCity(birth, lang)].filter(Boolean).join('  ·  ')}
+        </div>
+        <NatalChartSVG th={th} planets={planetsArr} asc={asc} mc={mc} houseCusps={cusps} size={560} showHouses={showHouses}/>
+        <div style={{ fontSize: 10.5, color: muted, marginTop: 16, letterSpacing: 1.5, textTransform: 'uppercase' }}>
+          AstroBot · {l ? 'Natal chart' : 'Натальная карта'}
+        </div>
+      </div>
+
+      {/* ── Planets ── */}
+      <div style={head}>{showHouses ? (l ? 'Planets & houses' : 'Планеты и дома') : (l ? 'Planets in signs' : 'Планеты в знаках')}</div>
+      {planetsArr.map(p => (
+        <div key={p.id} className="pdf-section" style={sec}>
+          <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 17, color: ink, marginBottom: 6 }}>
+            {(l ? p.en : p.ru)} — {SIGN_NOM_RU[p.signIdx]}{showHouses && p.house ? ` · ${p.house} дом` : ''}{p.ret ? ' · R' : ''}
+          </div>
+          {lookupPlanetParas(lang, p.id, p.signIdx, p.house, showHouses, p.ret).map((para, i) => (
+            <div key={i} style={{ fontSize: 13, lineHeight: 1.6, color: soft, marginBottom: 8 }}>{para}</div>
+          ))}
+        </div>
+      ))}
+
+      {/* ── Aspects ── */}
+      {aspects.length > 0 && <div style={head}>{l ? 'Aspects' : 'Аспекты'}</div>}
+      {aspects.map((asp, i) => {
+        const pl1 = planetsArr.find(p => p.id === asp.p1);
+        const pl2 = planetsArr.find(p => p.id === asp.p2);
+        if (!pl1 || !pl2) return null;
+        return (
+          <div key={i} className="pdf-section" style={sec}>
+            <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 15, color: ink, marginBottom: 6 }}>
+              {pl1.ru} <span style={{ color: asp.col }}>{asp.sym}</span> {pl2.ru}
+              <span style={{ color: muted, fontWeight: 600, fontSize: 12, fontFamily: '"Manrope",sans-serif' }}> · {asp.type_ru} · орб {asp.orb.toFixed(1)}°</span>
+            </div>
+            <div style={{ fontSize: 13, lineHeight: 1.6, color: soft }}>
+              {lookupAspectText(lang, asp.p1, asp.p2, asp.aspKey, genAspectDesc(asp.p1, asp.p2, asp.type_ru, showHouses ? pl1.house : null, showHouses ? pl2.house : null, pl1.signIdx, pl2.signIdx))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
 // EXPORTS
 // ═══════════════════════════════════════════════════════
 Object.assign(window, {
-  NatalChoiceScreen, NatalConfirmScreen, NatalChartScreen, ChartExpandOverlay,
+  NatalChoiceScreen, NatalConfirmScreen, NatalChartScreen, NatalPdfReport, ChartExpandOverlay,
   NatalChartSVG,
   // engine + constants reused by the synastry / solar modules
   computeRealChart, computeAspects, getPlanetHouse,

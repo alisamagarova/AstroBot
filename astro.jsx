@@ -941,14 +941,13 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const shareNatal = async () => {
     if (sharingPdf) return;
     const en = lang === 'en';
-    const node = document.getElementById('natal-report');
-    if (!node || !window.exportNodeToPdfBase64) {
+    if (!document.getElementById('natal-pdf') || !window.exportNatalReportPdf) {
       try { window.Telegram.WebApp.showAlert(en ? 'PDF tool not ready.' : 'Не удалось подготовить PDF.'); } catch(_){}
       return;
     }
     setSharingPdf(true);
     try {
-      const b64 = await window.exportNodeToPdfBase64(node, { background: '#0a0812' });
+      const b64 = await window.exportNatalReportPdf('natal-pdf', { background: th.effDark ? '#0a0812' : '#f6f3ff' });
       const api = window.AstroAPI;
       let r = { ok: false, error: 'no api' };
       if (api && api.isConfigured() && api.inTelegram()) r = await api.shareNatalPdf(b64, otherBirth && otherBirth.name);
@@ -1037,7 +1036,11 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   } else if (screen === 'natal_other_chart') {
     title = otherBirth ? (otherBirth.name || (lang==='ru'?'Карта':'Chart')) : (lang==='ru'?'Карта':'Chart');
     mainContent = otherBirth ? (
-      <div id="natal-report">
+      <React.Fragment>
+        {/* Скрытый печатный отчёт (все расшифровки развёрнуты) — источник для PDF */}
+        <div id="natal-pdf" aria-hidden="true" style={{position:'absolute',left:'-99999px',top:0,width:680,zIndex:-1}}>
+          <NatalPdfReport th={th} lang={lang} birth={otherBirth} name={otherBirth.name}/>
+        </div>
         <NatalChartScreen th={th} lang={lang} birth={otherBirth} onExpand={setBigChart}
           shareSlot={
             <div data-html2canvas-ignore="true" style={{marginBottom:18}}>
@@ -1049,7 +1052,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
               </div>
             </div>
           }/>
-      </div>
+      </React.Fragment>
     ) : (
       <div style={{padding:'50px 24px',textAlign:'center',position:'relative',zIndex:1}}>
         <div style={{fontFamily:'"Manrope",sans-serif',fontSize:13,color:th.muted,marginBottom:16}}>{lang==='en'?'No data yet.':'Данные ещё не введены.'}</div>
