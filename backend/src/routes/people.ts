@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
-import { getUserByTgId, getUserById } from '../db/queries/users.js';
+import { getUserByTgId, getUserById, setOnboardingStep } from '../db/queries/users.js';
 import {
   createPerson,
   getSelfPerson,
@@ -233,6 +233,9 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
         birth_utc_offset: data.birth_utc_offset,
         birth_timezone:   data.birth_timezone,
       });
+
+      // Создан self-профиль = онбординг завершён — отражаем это в users.
+      try { await setOnboardingStep(request.params.tgId, 'done'); } catch { /* не критично */ }
 
       return reply.status(201).send({ person });
     },
