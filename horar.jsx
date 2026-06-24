@@ -15,6 +15,11 @@ const HZ_COOLDOWN_MS = 8 * 3600 * 1000; // пауза между хорарны�
 function hzPl(id, en) { return (window.PL_META && window.PL_META[id]) ? window.PL_META[id][en ? 'en' : 'ru'] : id; }
 function hzSign(i, en) { return (en ? HZ_SIGN_EN : HZ_SIGN_RU)[i] || ''; }
 function hzHouseOrd(h, en) { return en ? `house ${h}` : `${h}-й дом`; }
+function hzAddLabel(h, en) {
+  const m = { 2: { ru: 'Деньги', en: 'Money' }, 5: { ru: 'Дети/роман', en: 'Children/romance' }, 6: { ru: 'Условия труда', en: 'Conditions' } };
+  const b = m[h]; const ho = hzHouseOrd(h, en);
+  return b ? `${en ? b.en : b.ru} (${ho})` : ho;
+}
 function hzUnit(kind, en) {
   if (en) return kind === 'days' ? 'days' : kind === 'weeks' ? 'weeks' : 'months';
   return kind === 'days' ? 'дн.' : kind === 'weeks' ? 'нед.' : 'мес.';
@@ -51,7 +56,7 @@ function HorarScreen({ th, lang, city }) {
   const doAsk = () => {
     if (!canAsk) return;
     try {
-      const r = window.HORAR.ask(city, topicObj.house);
+      const r = window.HORAR.ask(city, topicObj);
       setResult({ ...r, question: q.trim(), topicLabel: en ? topicObj.en : topicObj.ru });
       try { localStorage.setItem('astro_horar_last', String(Date.now())); } catch (e) {}
       setCool({ nextMs: Date.now() + HZ_COOLDOWN_MS });
@@ -268,7 +273,8 @@ function HorarResult({ th, lang, r, onBack }) {
   let aspectLine;
   if (r.perfection) {
     const ap = HZ_ASP[r.perfection.aspect];
-    aspectLine = `${hzPl(r.perfection.a, en)} ${ap.sym} ${hzPl(r.perfection.b, en)} — ${en ? 'applying' : 'приближается'} (${r.perfection.orb.toFixed(1)}° ${en ? 'to exact' : 'до точного'})`;
+    const toH = r.perfection.toHouse ? (en ? ` → ruler of house ${r.perfection.toHouse}` : ` → к управителю ${r.perfection.toHouse} дома`) : '';
+    aspectLine = `${hzPl(r.perfection.a, en)} ${ap.sym} ${hzPl(r.perfection.b, en)}${toH} — ${en ? 'applying' : 'приближается'} (${r.perfection.orb.toFixed(1)}° ${en ? 'to exact' : 'до точного'})`;
   } else if (r.separating) {
     const ap = HZ_ASP[r.separating.aspect];
     aspectLine = `${hzPl(r.separating.a, en)} ${ap.sym} ${hzPl(r.separating.b, en)} — ${en ? 'separating (already past)' : 'расходится (уже позади)'}`;
@@ -327,6 +333,7 @@ function HorarResult({ th, lang, r, onBack }) {
         <div style={label}>{en ? 'Significators' : 'Значимые планеты'}</div>
         {sigLine(en ? 'You (1st)' : 'Ты (1 дом)', r.querentSig)}
         {sigLine((en ? 'Question (' : 'Вопрос (') + hzHouseOrd(r.quesitedHouse, en) + ')', r.quesitedSig)}
+        {r.additional && r.additional.map((s, i) => <React.Fragment key={i}>{sigLine(hzAddLabel(s.topicHouse, en), s)}</React.Fragment>)}
         {sigLine(en ? 'Moon (flow)' : 'Луна (ход дела)', r.moon)}
         <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12.5, color: th.inkSoft, lineHeight: 1.55, paddingTop: 12, textWrap: 'pretty' }}>{aspectLine}</div>
       </div>

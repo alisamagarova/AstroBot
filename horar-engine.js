@@ -21,18 +21,20 @@
 
   // ── Темы → дом квесит (дом вопроса) ──
   const TOPICS = [
-    { id: 'love',     house: 7,  ru: 'Любовь и отношения',           en: 'Love & relationships' },
-    { id: 'marriage', house: 7,  ru: 'Брак / партнёр',               en: 'Marriage / partner' },
-    { id: 'money',    house: 2,  ru: 'Деньги и имущество',           en: 'Money & possessions' },
-    { id: 'job',      house: 10, ru: 'Карьера и статус',             en: 'Career & status' },
-    { id: 'work',     house: 6,  ru: 'Работа / наём / здоровье',     en: 'Work / hiring / health' },
-    { id: 'travel',   house: 9,  ru: 'Дальняя поездка / учёба / суд',en: 'Travel / study / law' },
-    { id: 'home',     house: 4,  ru: 'Дом / недвижимость / семья',   en: 'Home / property / family' },
-    { id: 'children', house: 5,  ru: 'Дети / беременность / роман',  en: 'Children / pregnancy / romance' },
-    { id: 'friends',  house: 11, ru: 'Друзья / надежды / выигрыш',   en: 'Friends / hopes / gains' },
-    { id: 'enemies',  house: 12, ru: 'Скрытое / тайные враги',       en: 'Hidden / secret enemies' },
-    { id: 'lost',     house: 2,  ru: 'Потерянная вещь',              en: 'Lost object' },
-    { id: 'other',    house: 7,  ru: 'Другой человек / оппонент',    en: 'Another person / opponent' },
+    { id: 'love',     house: 7,                  ru: 'Любовь и отношения',           en: 'Love & relationships' },
+    { id: 'marriage', house: 7,                  ru: 'Брак / партнёр',               en: 'Marriage / partner' },
+    { id: 'money',    house: 2,                  ru: 'Деньги и имущество',           en: 'Money & possessions' },
+    // Работа: основной квезит — 10 дом (работа/должность/работодатель);
+    // дополнительно 6 дом (условия труда) и 2 дом (заработок).
+    { id: 'work',     house: 10, secondary: [6, 2], ru: 'Работа / карьера',          en: 'Work / career' },
+    { id: 'health',   house: 6,                  ru: 'Здоровье / болезнь',           en: 'Health / illness' },
+    { id: 'travel',   house: 9,                  ru: 'Дальняя поездка / учёба / суд',en: 'Travel / study / law' },
+    { id: 'home',     house: 4,                  ru: 'Дом / недвижимость / семья',   en: 'Home / property / family' },
+    { id: 'children', house: 5,                  ru: 'Дети / беременность / роман',  en: 'Children / pregnancy / romance' },
+    { id: 'friends',  house: 11,                 ru: 'Друзья / надежды / выигрыш',   en: 'Friends / hopes / gains' },
+    { id: 'enemies',  house: 12,                 ru: 'Скрытое / тайные враги',       en: 'Hidden / secret enemies' },
+    { id: 'lost',     house: 2,                  ru: 'Потерянная вещь',              en: 'Lost object' },
+    { id: 'other',    house: 7,                  ru: 'Другой человек / оппонент',    en: 'Another person / opponent' },
   ];
 
   const lonAt = (body, jsDate) => norm360(Astronomy.Ecliptic(Astronomy.GeoVector(body, Astronomy.MakeTime(jsDate), false)).elon);
@@ -120,7 +122,12 @@
   }
 
   // ── Главная функция: построить и рассудить хорарную карту ──
-  function ask(city, quesitedHouse) {
+  // topic: { house: основной дом, secondary?: [доп. дома] } (или просто число — основной дом)
+  function ask(city, topic) {
+    const primaryHouse = typeof topic === 'number' ? topic : topic.house;
+    const secondaryHouses = (typeof topic === 'object' && topic.secondary) ? topic.secondary : [];
+    const quesitedHouse = primaryHouse;
+
     const { whenUtc, input } = nowInput(city);
     const chart = window.computeRealChart(input);
     const pos = {}, spd = {};
@@ -129,9 +136,8 @@
     const ascSign = Math.floor(chart.asc / 30);
     const ascDeg = chart.asc % 30;
     const querentPlanet = SIGN_RULER[ascSign];
-    const cusp = chart.cusps[quesitedHouse - 1];
-    const quesitedSign = Math.floor(cusp / 30);
-    const quesitedPlanet = SIGN_RULER[quesitedSign];
+    const houseRuler = (h) => SIGN_RULER[Math.floor(chart.cusps[h - 1] / 30)];
+    const quesitedPlanet = houseRuler(primaryHouse);
 
     const meta = (pl) => ({
       planet: pl,
@@ -145,19 +151,30 @@
     const quesitedSig = meta(quesitedPlanet);
     const moon = { ...meta('moon') };
     const sameRuler = querentPlanet === quesitedPlanet;
+    // Дополнительные значимые (управители доп. домов): условия труда, деньги и т.п.
+    const additional = secondaryHouses.map(h => ({ topicHouse: h, ...meta(houseRuler(h)) }));
 
-    // Кандидаты перфекции: управитель спрашивающего ↔ квеситора, и Луна ↔ квеситор
+    // Перфекция: аспект от управителя 1 дома ИЛИ Луны к управителю любого
+    // из квезит-домов (основной + дополнительные). Приоритет — основной дом.
+    const quesitedHouses = [primaryHouse, ...secondaryHouses];
     const candidates = [];
-    if (!sameRuler) {
-      const a = aspectBetween(querentPlanet, quesitedPlanet, pos, spd);
-      if (a) candidates.push({ ...a, via: 'rulers', a: querentPlanet, b: quesitedPlanet });
+    const seen = new Set();
+    for (const h of quesitedHouses) {
+      const qp = houseRuler(h);
+      const key = qp + '|' + h;
+      if (seen.has(qp)) continue; seen.add(qp); // одну планету учитываем один раз
+      if (qp !== querentPlanet) {
+        const a = aspectBetween(querentPlanet, qp, pos, spd);
+        if (a) candidates.push({ ...a, via: 'rulers', a: querentPlanet, b: qp, toHouse: h });
+      }
+      if (qp !== 'moon') {
+        const m = aspectBetween('moon', qp, pos, spd);
+        if (m) candidates.push({ ...m, via: 'moon', a: 'moon', b: qp, toHouse: h });
+      }
     }
-    if (quesitedPlanet !== 'moon') {
-      const m = aspectBetween('moon', quesitedPlanet, pos, spd);
-      if (m) candidates.push({ ...m, via: 'moon', a: 'moon', b: quesitedPlanet });
-    }
-    // Лучшая ПРИБЛИЖАЮЩАЯСЯ перфекция (минимальный орб); иначе — лучший расходящийся
-    const applyingC = candidates.filter(c => c.applying).sort((x, y) => x.orb - y.orb);
+    // Приближающиеся — сначала к основному дому, затем по орбу
+    const applyingC = candidates.filter(c => c.applying)
+      .sort((x, y) => (x.toHouse === primaryHouse ? 0 : 1) - (y.toHouse === primaryHouse ? 0 : 1) || x.orb - y.orb);
     const perfection = applyingC[0] || null;
     const separating = (!perfection && candidates.length) ? candidates.sort((x, y) => x.orb - y.orb)[0] : null;
 
@@ -199,7 +216,7 @@
 
     return {
       whenUtc, asc: chart.asc, ascDeg, ascSign,
-      quesitedHouse, querentSig, quesitedSig, moon, sameRuler,
+      quesitedHouse, querentSig, quesitedSig, additional, moon, sameRuler,
       perfection, separating, timing, strictures, radical, baseVerdict, verdict, wheel,
     };
   }
