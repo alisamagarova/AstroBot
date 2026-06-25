@@ -12,6 +12,7 @@ function AstroGlyph({ name, size = 24, color = 'currentColor', sw = 1.6, style }
     case 'solar':      return (<svg {...c}><circle cx="12" cy="12" r="3.1"/><path d="M18.6 8.2A8 8 0 1 0 19.7 13"/><path d="M19.9 7.4 18.9 11.1 15.3 9.9"/></svg>);
     case 'pinpoint':   return (<svg {...c}><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill={color} stroke="none"/><path d="M12 1.6v3M12 19.4v3M1.6 12h3M19.4 12h3"/></svg>);
     case 'milestones': return (<svg {...c}><circle cx="12" cy="12" r="2.6" fill={color} stroke="none" opacity="0.9"/><path d="M4 4.5 12 12M20 4.5 12 12M12 12v7.5"/><circle cx="4" cy="4.5" r="1.5" fill={color} stroke="none"/><circle cx="20" cy="4.5" r="1.5" fill={color} stroke="none"/><circle cx="12" cy="19.5" r="1.5" fill={color} stroke="none"/></svg>);
+    case 'tarot':      return (<svg {...c}><rect x="6.4" y="3.6" width="11.2" height="16.8" rx="2" transform="rotate(-9 12 12)"/><path d="M12 8.2l1 3 3.1.1-2.5 1.9.9 3-2.5-1.8-2.5 1.8.9-3L8.9 11.3l3.1-.1 1-3Z" fill={color} stroke="none"/></svg>);
     case 'aspects':    return (<svg {...c}><circle cx="12" cy="12" r="9"/><path d="M12 5.5 18.2 16H5.8Z"/></svg>);
     case 'arrow-right':return (<svg {...c}><path d="M4 12h15M13 6l6 6-6 6"/></svg>);
     case 'back':       return (<svg {...c}><path d="M15 5l-7 7 7 7"/></svg>);
@@ -147,6 +148,8 @@ const POSSIBILITIES = [
     help:{ru:'Хорар отвечает на один конкретный вопрос по карте, построенной на момент, когда ты его задал. Например: «получу ли я эту работу?» или «стоит ли соглашаться?». Точный ответ здесь и сейчас.', en:'Horary answers one specific question using a chart cast for the moment you ask it — like "will I get this job?" A precise answer, here and now.'}},
   {id:'milestones',glyph:'milestones', title:{ru:'Жизненные вехи',   en:'Life Milestones'},     kicker:{ru:'ЦИКЛЫ СУДЬБЫ',   en:'LIFE CYCLES'},   desc:{ru:'Когда ждать переломов в карьере, союзах и судьбе — по планетарным циклам', en:'When to expect turning points in career, partnerships and fate'},
     help:{ru:'Жизненные вехи показывают периоды, когда вероятны крупные перемены — в карьере, отношениях, переездах. Они рассчитываются по циклам медленных планет и помогают подготовиться к важным поворотам судьбы.', en:'Life Milestones reveal the periods when major changes are likely — in career, relationships or relocation — based on the cycles of the slow planets, so you can prepare for the turning points.'}},
+  {id:'tarot',     glyph:'tarot',      title:{ru:'Таро',             en:'Tarot'},               kicker:{ru:'РАСКЛАД КАРТ',   en:'CARD SPREAD'},   desc:{ru:'Задай вопрос и получи ответ раскладом из трёх карт', en:'Ask a question and get a three-card answer'},
+    help:{ru:'Таро — это расклад из трёх карт на твой вопрос: Ситуация, Совет и Итог. Сформулируй один вопрос, вытяни карты — и получишь подсказку для размышления. Это не предсказание, а зеркало, помогающее увидеть ситуацию под новым углом.', en:'Tarot is a three-card spread for your question: Situation, Advice and Outcome. Ask one question, draw the cards and get a prompt for reflection — a mirror, not a prophecy.'}},
 ];
 
 // ════════════════════════════════════════════════════════════
@@ -326,6 +329,7 @@ function BottomNav({ th, lang, activeTab, onTab }) {
 function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
   const first4    = POSSIBILITIES.slice(0,4);
   const milestone = POSSIBILITIES[4];
+  const tarot     = POSSIBILITIES[5];
   const signLine  = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
 
   // Маленькая круглая кнопка «?» — открывает объяснение услуги (оверлей рисует AstroPhone)
@@ -448,6 +452,20 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
           <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9.5,letterSpacing:1.4,color:th.gold,marginBottom:5}}>{milestone.kicker[lang]}</div>
           <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,lineHeight:1.08,color:th.ink,marginBottom:4}}>{milestone.title[lang]}</div>
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{milestone.desc[lang]}</div>
+        </div>
+      </GlassCard>
+
+      {/* ── TAROT ────────────────────────────────────── */}
+      <GlassCard th={th} strong onClick={()=>onOpen('tarot')} style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden'}}>
+        <WheelWatermark color={th.effDark?'#fff':th.ink} opacity={th.effDark?0.09:0.06}/>
+        {helpBtn(tarot, {top:9, right:9})}
+        <div style={{width:50,height:50,borderRadius:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}25`,border:`1px solid ${th.accent}50`,position:'relative'}}>
+          <AstroGlyph name="tarot" size={26} color={th.glyphClr} sw={1.4}/>
+        </div>
+        <div style={{flex:1,minWidth:0,position:'relative'}}>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9.5,letterSpacing:1.4,color:th.gold,marginBottom:5}}>{tarot.kicker[lang]}</div>
+          <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,lineHeight:1.08,color:th.ink,marginBottom:4}}>{tarot.title[lang]}</div>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{tarot.desc[lang]}</div>
         </div>
       </GlassCard>
 
@@ -1089,6 +1107,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   } else if (screen === 'aspects') {
     title = lang==='ru' ? 'Аспекты на месяц' : 'Aspects this month';
     mainContent = <AspectsMonthScreen th={th} lang={lang} birth={birth}/>;
+  } else if (screen === 'tarot') {
+    title = lang==='ru' ? 'Таро' : 'Tarot';
+    mainContent = <TarotScreen th={th} lang={lang}/>;
   } else {
     const item = screen==='aspects' ? aspectsItem : POSSIBILITIES.find(p=>p.id===screen);
     title = item.title[lang];
