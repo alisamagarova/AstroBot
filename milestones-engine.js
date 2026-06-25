@@ -19,6 +19,18 @@
   const norm180 = (x) => ((x % 360) + 540) % 360 - 180;
   const DAY = 86400000;
 
+  // Ступенчатый горизонт прогноза: база 2038, шаг +5 лет.
+  // Сдвигается, когда до построенного предела остаётся ≤5 лет.
+  // 2026 → 2038; в 2033 → 2043; в 2038 → 2048 …
+  // ВАЖНО: должен совпадать с backend (scheduler.ts), иначе год в рассылке разойдётся с UI.
+  const MS_HORIZON_BASE = 2038;
+  function milestonesHorizon(now) {
+    const y = (now || new Date()).getFullYear();
+    let h = MS_HORIZON_BASE;
+    while (y >= h - 5) h += 5;
+    return h;
+  }
+
   // Classical rulerships (so a cusp's ruler is always one of the 10 bodies we have)
   const SIGN_RULER = ['mars', 'venus', 'mercury', 'moon', 'sun', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'saturn', 'jupiter'];
   const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
@@ -548,9 +560,8 @@
 
     const targets = resolveTargets(theme, chart, housesOK);
 
-    const nowY = new Date().getFullYear();
     let startY = birth.year + 16;
-    let endY = nowY + 12;
+    let endY = milestonesHorizon();
     if (endY - startY > 60) startY = endY - 60;
     if (startY >= endY) startY = endY - 20;
     const startMs = Date.UTC(startY, birth.month - 1, birth.day);
@@ -633,6 +644,6 @@
 
   window.MILESTONES = {
     THEMES, CATEGORIES, ROMAN,
-    scanMilestones, interpFor, aspMeta,
+    scanMilestones, interpFor, aspMeta, milestonesHorizon,
   };
 })();

@@ -65,7 +65,7 @@ export async function hasAspectView(userId: string, year: number, month: number)
 // ─── Журнал отправленных уведомлений (антидубль) ──────────────────────────────
 
 /** Пытается зафиксировать отправку. true = можно слать (ещё не слали), false = уже отправляли. */
-export async function claimNotification(userId: string, kind: 'solar' | 'aspects', ref: string): Promise<boolean> {
+export async function claimNotification(userId: string, kind: 'solar' | 'aspects' | 'milestones', ref: string): Promise<boolean> {
   const { rows } = await pool.query(
     `INSERT INTO notifications_sent (user_id, kind, ref) VALUES ($1, $2, $3)
      ON CONFLICT (user_id, kind, ref) DO NOTHING
@@ -76,7 +76,7 @@ export async function claimNotification(userId: string, kind: 'solar' | 'aspects
 }
 
 /** Снимает пометку (если отправка не удалась по временной причине — чтобы повторить позже). */
-export async function unclaimNotification(userId: string, kind: 'solar' | 'aspects', ref: string): Promise<void> {
+export async function unclaimNotification(userId: string, kind: 'solar' | 'aspects' | 'milestones', ref: string): Promise<void> {
   await pool.query(
     'DELETE FROM notifications_sent WHERE user_id = $1 AND kind = $2 AND ref = $3',
     [userId, kind, ref],

@@ -79,3 +79,11 @@ export async function setLang(tgId: string, lang: LangCode): Promise<void> {
   );
 }
 
+/** Все незаблокировавшие бота пользователи — для массовых рассылок. */
+export async function allActiveUsers(): Promise<{ id: string; tg_id: string; lang: string }[]> {
+  const { rows } = await pool.query<{ id: string; tg_id: string; lang: string }>(
+    'SELECT id, tg_id, lang FROM users WHERE is_blocked = false',
+  );
+  return rows;
+}
+
