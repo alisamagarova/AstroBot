@@ -449,7 +449,6 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
           <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,lineHeight:1.08,color:th.ink,marginBottom:4}}>{milestone.title[lang]}</div>
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{milestone.desc[lang]}</div>
         </div>
-        <span style={{flexShrink:0,marginRight:24,position:'relative'}}><AstroGlyph name="arrow-right" size={18} color={th.inkSoft} sw={1.9}/></span>
       </GlassCard>
 
     </div>
