@@ -129,10 +129,90 @@
 
   const DECK = MAJOR.concat(MINOR);
 
+  // ── «Заряд» карты: тег [прямое, перевёрнутое] + числовая благоприятность ──────
+  // Теги: start success gain union growth harmony power wait inner change caution conflict ending loss block
+  const TAG_VAL = {
+    success: 2, gain: 2, union: 2, start: 1, growth: 1, harmony: 1, power: 1,
+    wait: 0, inner: 0, change: 0,
+    caution: -1, conflict: -1, ending: -1, loss: -2, block: -2,
+  };
+  const TAGS = {
+    maj0: ['start', 'caution'], maj1: ['power', 'caution'], maj2: ['inner', 'caution'],
+    maj3: ['gain', 'block'], maj4: ['power', 'caution'], maj5: ['harmony', 'change'],
+    maj6: ['union', 'conflict'], maj7: ['success', 'block'], maj8: ['power', 'caution'],
+    maj9: ['inner', 'caution'], maj10: ['success', 'loss'], maj11: ['harmony', 'conflict'],
+    maj12: ['wait', 'block'], maj13: ['ending', 'block'], maj14: ['harmony', 'caution'],
+    maj15: ['block', 'growth'], maj16: ['conflict', 'caution'], maj17: ['success', 'loss'],
+    maj18: ['caution', 'harmony'], maj19: ['success', 'caution'], maj20: ['growth', 'caution'],
+    maj21: ['success', 'wait'],
+    wands1: ['start', 'caution'], wands2: ['wait', 'caution'], wands3: ['growth', 'caution'],
+    wands4: ['success', 'caution'], wands5: ['conflict', 'harmony'], wands6: ['success', 'caution'],
+    wands7: ['power', 'caution'], wands8: ['change', 'caution'], wands9: ['power', 'block'],
+    wands10: ['block', 'harmony'], wands11: ['start', 'caution'], wands12: ['power', 'conflict'],
+    wands13: ['power', 'conflict'], wands14: ['power', 'conflict'],
+    cups1: ['union', 'block'], cups2: ['union', 'conflict'], cups3: ['success', 'caution'],
+    cups4: ['caution', 'growth'], cups5: ['loss', 'harmony'], cups6: ['harmony', 'block'],
+    cups7: ['caution', 'harmony'], cups8: ['ending', 'block'], cups9: ['success', 'caution'],
+    cups10: ['success', 'conflict'], cups11: ['union', 'caution'], cups12: ['union', 'caution'],
+    cups13: ['union', 'block'], cups14: ['harmony', 'caution'],
+    swords1: ['start', 'caution'], swords2: ['block', 'harmony'], swords3: ['loss', 'harmony'],
+    swords4: ['harmony', 'caution'], swords5: ['conflict', 'harmony'], swords6: ['growth', 'block'],
+    swords7: ['caution', 'harmony'], swords8: ['block', 'growth'], swords9: ['caution', 'harmony'],
+    swords10: ['loss', 'growth'], swords11: ['caution', 'conflict'], swords12: ['power', 'conflict'],
+    swords13: ['harmony', 'caution'], swords14: ['power', 'conflict'],
+    pentacles1: ['gain', 'loss'], pentacles2: ['wait', 'caution'], pentacles3: ['growth', 'conflict'],
+    pentacles4: ['power', 'caution'], pentacles5: ['loss', 'harmony'], pentacles6: ['gain', 'conflict'],
+    pentacles7: ['wait', 'caution'], pentacles8: ['growth', 'caution'], pentacles9: ['success', 'caution'],
+    pentacles10: ['success', 'conflict'], pentacles11: ['growth', 'caution'], pentacles12: ['wait', 'block'],
+    pentacles13: ['gain', 'caution'], pentacles14: ['success', 'caution'],
+  };
+  for (const c of DECK) {
+    const t = TAGS[c.id] || ['change', 'caution'];
+    c.up.tag = t[0]; c.up.val = TAG_VAL[t[0]];
+    c.rev.tag = t[1]; c.rev.val = TAG_VAL[t[1]];
+  }
+
+  // Похоже ли на вопрос «да/нет» (получу ли, стоит ли, будет ли…).
+  // ВНИМАНИЕ: \b в JS не работает с кириллицей — используем подстроки и \s.
+  function isYesNo(q) {
+    const s = ' ' + (q || '').toLowerCase().replace(/ё/g, 'е') + ' ';
+    if (/\sли[\s,.?!]/.test(s)) return true;
+    return /(стоит|получу|получ|будет|удастся|удас|смогу|сможем|выйдет|сложит|сбудет|вернет|поможет|купл|пройду|сдам|возьмут|примут|стану|получится|получитс)/.test(s);
+  }
+
+  // Толкование расклада «Прошлое · Настоящее · Будущее» под вопрос.
+  // Без тем: значение каждой карты + общее склонение ответа по «заряду» карт
+  // (будущее весомее, как итог линии времени).
+  function interpret(spread, question) {
+    const W = [0.6, 1.0, 1.5]; // прошлое · настоящее · будущее
+    let score = 0;
+    const positions = spread.map((entry, i) => {
+      const m = entry.reversed ? entry.card.rev : entry.card.up;
+      score += (m.val || 0) * W[i];
+      return { pos: POSITIONS[i], card: entry.card, reversed: entry.reversed, kw: m.kw, core: m.t, val: m.val || 0 };
+    });
+
+    const yesno = isYesNo(question);
+    let answer;
+    if (score >= 2.4) answer = { label: yesno ? 'Да' : 'Благоприятно', tone: 'good', t: 'Линия времени складывается тебе навстречу — знаки в твою пользу.' };
+    else if (score >= 0.8) answer = { label: yesno ? 'Скорее да' : 'Скорее благоприятно', tone: 'good', t: 'Перевес в положительную сторону, но многое зависит от твоих действий.' };
+    else if (score > -0.8) answer = { label: 'Неоднозначно', tone: 'neutral', t: 'Чаша весов почти ровная — исход решат твой выбор и усилия.' };
+    else if (score > -2.4) answer = { label: yesno ? 'Скорее нет' : 'Скорее трудно', tone: 'hard', t: 'Перевес в сторону трудностей — без перемен в подходе вряд ли сложится.' };
+    else answer = { label: yesno ? 'Нет' : 'Неблагоприятно', tone: 'hard', t: 'Карты предупреждают: сейчас обстоятельства против. Лучше переждать или пересмотреть план.' };
+
+    // «Свод» согласован с ответом (по заряду карт), плюс заметка о перевёрнутых.
+    const rev = spread.filter((s) => s.reversed).length;
+    let synth = answer.t;
+    if (rev >= 2) synth += ' Много перевёрнутых карт — путь потребует внутренней работы и терпения.';
+    else if (rev === 1) synth += ' Одна перевёрнутая карта отмечает место, где нужна осторожность.';
+
+    return { positions, yesno, answer, score, synth };
+  }
+
   const POSITIONS = [
-    { id: 'situation', ru: 'Ситуация', hint: 'что происходит сейчас', lead: 'Суть момента:' },
-    { id: 'advice',    ru: 'Совет',    hint: 'что стоит сделать',     lead: 'Карта советует:' },
-    { id: 'outcome',   ru: 'Итог',     hint: 'к чему всё идёт',       lead: 'Итог разворачивается так:' },
+    { id: 'past',    ru: 'Прошлое',    hint: 'что привело к этому',  lead: 'В прошлом:' },
+    { id: 'present', ru: 'Настоящее',  hint: 'как обстоят дела',     lead: 'Сейчас:' },
+    { id: 'future',  ru: 'Будущее',    hint: 'к чему всё идёт',      lead: 'Впереди:' },
   ];
 
   // Тянем 3 разные карты со случайной ориентацией.
@@ -164,5 +244,5 @@
     return tone + elHint;
   }
 
-  window.TAROT = { DECK, MAJOR, MINOR, SUITS, RANKS, POSITIONS, draw, synthesize };
+  window.TAROT = { DECK, MAJOR, MINOR, SUITS, RANKS, POSITIONS, draw, synthesize, interpret, isYesNo };
 })();

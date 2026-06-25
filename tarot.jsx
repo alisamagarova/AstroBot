@@ -127,7 +127,7 @@ function TarotScreen({ th, lang }) {
             </div>
             <h2 style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 22, color: ink, margin: '0 0 6px' }}>Расклад на вопрос</h2>
             <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.5, color: inkSoft, margin: '0 auto', maxWidth: 300 }}>
-              Сформулируй один вопрос — карты ответят раскладом <b>Ситуация · Совет · Итог</b>. Сосредоточься на нём, пока тянешь карты.
+              Сформулируй один вопрос — карты ответят раскладом <b>Прошлое · Настоящее · Будущее</b>. Сосредоточься на нём, пока тянешь карты.
             </p>
           </div>
 
@@ -208,39 +208,50 @@ function TarotScreen({ th, lang }) {
             ))}
           </div>
 
-          {/* толкования по позициям */}
-          {reveal >= 3 && (
+          {/* толкования по позициям + ответ */}
+          {reveal >= 3 && (() => {
+            const reading = T.interpret(spread, question.trim());
+            const a = reading.answer;
+            const toneClr = { good: '#15803d', neutral: gold, hard: '#c2410c' };
+            const clr = toneClr[a.tone];
+            return (
             <div style={{ animation: 'ta_in .5s ease both' }}>
-              {spread.map((entry, i) => {
-                const pos = T.POSITIONS[i];
-                const m = entry.reversed ? entry.card.rev : entry.card.up;
-                return (
-                  <div key={i} style={{ marginBottom: 16, paddingLeft: 4 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontFamily: 'var(--ds-serif)', fontSize: 16, fontWeight: 600, color: ink }}>{pos.ru}</span>
-                      <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11, color: muted }}>· {pos.hint}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-                      <span style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 13, color: th.accent }}>{entry.card.name}</span>
-                      <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 8,
-                        color: entry.reversed ? '#c2410c' : '#15803d',
-                        background: entry.reversed ? 'rgba(234,88,12,0.13)' : 'rgba(34,160,80,0.13)' }}>
-                        {entry.reversed ? 'перевёрнута' : 'прямая'}
-                      </span>
-                    </div>
-                    <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11.5, color: muted, marginBottom: 4, fontStyle: 'italic' }}>{m.kw}</div>
-                    <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.55, color: inkSoft, margin: 0, textWrap: 'pretty' }}>
-                      <b style={{ color: ink }}>{pos.lead}</b> {m.t}
-                    </p>
+              {/* ОТВЕТ на вопрос */}
+              <div style={{ marginBottom: 18, padding: '15px 16px', borderRadius: 16,
+                background: th.effDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.62)', border: `1.5px solid ${clr}66` }}>
+                <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 9.5, letterSpacing: 1, textTransform: 'uppercase', color: muted, marginBottom: 5 }}>
+                  {reading.yesno ? 'Ответ на вопрос' : 'Склонение расклада'}
+                </div>
+                <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 23, color: clr, marginBottom: 6, lineHeight: 1.05 }}>{a.label}</div>
+                <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.55, color: ink, margin: 0, textWrap: 'pretty' }}>{a.t}</p>
+              </div>
+
+              {reading.positions.map((p, i) => (
+                <div key={i} style={{ marginBottom: 16, paddingLeft: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontFamily: 'var(--ds-serif)', fontSize: 16, fontWeight: 600, color: ink }}>{p.pos.ru}</span>
+                    <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11, color: muted }}>· {p.pos.hint}</span>
                   </div>
-                );
-              })}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                    <span style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 13, color: th.accent }}>{p.card.name}</span>
+                    <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 8,
+                      color: p.reversed ? '#c2410c' : '#15803d',
+                      background: p.reversed ? 'rgba(234,88,12,0.13)' : 'rgba(34,160,80,0.13)' }}>
+                      {p.reversed ? 'перевёрнута' : 'прямая'}
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11.5, color: muted, marginBottom: 4, fontStyle: 'italic' }}>{p.kw}</div>
+                  <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.55, color: inkSoft, margin: 0, textWrap: 'pretty' }}>
+                    <b style={{ color: ink }}>{p.pos.lead}</b> {p.core}
+                  </p>
+                </div>
+              ))}
 
               {/* свод */}
               <div style={{ marginTop: 8, padding: '14px 16px', borderRadius: 16,
                 background: th.effDark ? 'rgba(212,175,90,0.1)' : 'rgba(212,175,90,0.14)', border: `1px solid ${gold}55` }}>
                 <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 9.5, letterSpacing: 1, textTransform: 'uppercase', color: gold, marginBottom: 6 }}>✦ Свод расклада</div>
-                <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.55, color: ink, margin: 0, textWrap: 'pretty' }}>{T.synthesize(spread)}</p>
+                <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.55, color: ink, margin: 0, textWrap: 'pretty' }}>{reading.synth}</p>
               </div>
 
               <button onClick={reset} style={{ width: '100%', marginTop: 20, padding: '13px', borderRadius: 14, cursor: 'pointer',
@@ -249,7 +260,8 @@ function TarotScreen({ th, lang }) {
                 Новый расклад
               </button>
             </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </div>
