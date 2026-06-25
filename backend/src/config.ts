@@ -17,6 +17,10 @@ export const config = {
     botToken: required('BOT_TOKEN'),
     botSecret: required('BOT_SECRET'),
   },
+  // Telegram ID администраторов (через запятую) — кому можно слать рассылки от бота.
+  // Пример: ADMIN_TG_IDS="123456789,987654321". Свой ID можно узнать командой /id.
+  adminIds: (process.env.ADMIN_TG_IDS ?? '')
+    .split(',').map((s) => s.trim()).filter(Boolean),
   // URL веб-приложения (GitHub Pages) — для кнопки «Открыть» в боте.
   miniAppUrl: process.env.MINI_APP_URL ?? '',
   // Публичный URL бэкенда для вебхуков бота. На Render автоматически в RENDER_EXTERNAL_URL.
