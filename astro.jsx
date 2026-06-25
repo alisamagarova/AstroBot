@@ -214,7 +214,10 @@ function Header({ th, lang, screen, title, onBack, activeTab }) {
   }
 
   return (
-    <div style={{position:'sticky',top:0,zIndex:30,paddingTop:STATUS_PAD}}>
+    <div style={{position:'sticky',top:0,zIndex:30,paddingTop:STATUS_PAD,
+      background:th.effDark?'rgba(16,11,34,0.82)':'rgba(248,244,255,0.85)',
+      backdropFilter:'blur(14px)',WebkitBackdropFilter:'blur(14px)',
+      borderBottom:`1px solid ${th.glassBorder}55`}}>
       <div style={{height:50,display:'flex',alignItems:'center',gap:10,padding:'0 16px'}}>
         {isProfile ? (
           <React.Fragment>
@@ -327,9 +330,6 @@ function BottomNav({ th, lang, activeTab, onTab }) {
 // MAIN SCREEN
 // ════════════════════════════════════════════════════════════
 function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
-  const first4    = POSSIBILITIES.slice(0,4);
-  const milestone = POSSIBILITIES[4];
-  const tarot     = POSSIBILITIES[5];
   const signLine  = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
 
   // Маленькая круглая кнопка «?» — открывает объяснение услуги (оверлей рисует AstroPhone)
@@ -416,7 +416,7 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-        {first4.map(p=>{
+        {POSSIBILITIES.map(p=>{
           const soon = false; // все услуги доступны
           return (
             <GlassCard key={p.id} th={th} onClick={soon ? undefined : ()=>onOpen(p.id)}
@@ -440,34 +440,6 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
           );
         })}
       </div>
-
-      {/* ── MILESTONES ───────────────────────────────── */}
-      <GlassCard th={th} strong onClick={()=>onOpen('milestones')} style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden'}}>
-        <WheelWatermark color={th.effDark?'#fff':th.ink} opacity={th.effDark?0.09:0.06}/>
-        {helpBtn(milestone, {top:9, right:9})}
-        <div style={{width:50,height:50,borderRadius:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}25`,border:`1px solid ${th.accent}50`,position:'relative'}}>
-          <AstroGlyph name="milestones" size={26} color={th.glyphClr} sw={1.4}/>
-        </div>
-        <div style={{flex:1,minWidth:0,position:'relative'}}>
-          <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9.5,letterSpacing:1.4,color:th.gold,marginBottom:5}}>{milestone.kicker[lang]}</div>
-          <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,lineHeight:1.08,color:th.ink,marginBottom:4}}>{milestone.title[lang]}</div>
-          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{milestone.desc[lang]}</div>
-        </div>
-      </GlassCard>
-
-      {/* ── TAROT ────────────────────────────────────── */}
-      <GlassCard th={th} strong onClick={()=>onOpen('tarot')} style={{padding:'16px 16px 15px',display:'flex',alignItems:'center',gap:14,position:'relative',overflow:'hidden'}}>
-        <WheelWatermark color={th.effDark?'#fff':th.ink} opacity={th.effDark?0.09:0.06}/>
-        {helpBtn(tarot, {top:9, right:9})}
-        <div style={{width:50,height:50,borderRadius:16,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}25`,border:`1px solid ${th.accent}50`,position:'relative'}}>
-          <AstroGlyph name="tarot" size={26} color={th.glyphClr} sw={1.4}/>
-        </div>
-        <div style={{flex:1,minWidth:0,position:'relative'}}>
-          <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9.5,letterSpacing:1.4,color:th.gold,marginBottom:5}}>{tarot.kicker[lang]}</div>
-          <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,lineHeight:1.08,color:th.ink,marginBottom:4}}>{tarot.title[lang]}</div>
-          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft,textWrap:'pretty'}}>{tarot.desc[lang]}</div>
-        </div>
-      </GlassCard>
 
     </div>
   );

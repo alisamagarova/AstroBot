@@ -28,45 +28,48 @@ function roman(n) {
   return n === 0 ? '0' : s;
 }
 
-// ── Одна карта ──────────────────────────────────────────────────────────────
-function TarotCard({ entry, th, faceDown, w = 96 }) {
-  const h = Math.round(w * 1.62);
+// Рубашка карты (декоративная)
+function CardBack({ th, w }) {
+  const h = Math.round(w * 1.66);
   const gold = th.gold;
-  const dark = th.effDark;
-  const faceBg = dark
-    ? 'linear-gradient(160deg,#241a44 0%,#1a1336 60%,#130d28 100%)'
-    : 'linear-gradient(160deg,#fbf6ee 0%,#f3ead9 60%,#efe3cf 100%)';
-  const backBg = dark
-    ? 'linear-gradient(160deg,#2a2050 0%,#1a1336 100%)'
-    : 'linear-gradient(160deg,#3a2f6e 0%,#241a52 100%)';
-  const ink = dark ? '#efe9ff' : '#3a2d5c';
+  return (
+    <div style={{ width: w, height: h, borderRadius: 12, background: th.effDark ? 'linear-gradient(160deg,#2a2050,#160f30)' : 'linear-gradient(160deg,#3a2f6e,#221a4e)', border: `2px solid ${gold}aa`, boxShadow: '0 10px 24px rgba(20,10,40,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: 6, borderRadius: 8, border: `1px solid ${gold}66` }}/>
+      <TarotGlyph arcana="major" size={Math.round(w * 0.44)} color={gold}/>
+    </div>
+  );
+}
 
-  const corner = { position: 'absolute', fontFamily: 'var(--ds-serif)', fontSize: 11, fontWeight: 600, color: gold, letterSpacing: 0.5 };
+// ── Одна карта (реальный рисунок Райдера-Уэйта) ──────────────────────────────
+function TarotCard({ entry, th, faceDown, w = 98 }) {
+  const h = Math.round(w * 1.66);
+  const gold = th.gold;
+  const [err, setErr] = useStateTa(false);
 
-  if (faceDown) {
-    return (
-      <div style={{ width: w, height: h, borderRadius: 13, background: backBg, border: `1.5px solid ${gold}88`, boxShadow: '0 8px 22px rgba(20,10,40,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', inset: 6, borderRadius: 9, border: `1px solid ${gold}55` }}/>
-        <div style={{ opacity: 0.9 }}><TarotGlyph arcana="major" size={Math.round(w * 0.42)} color={gold}/></div>
-      </div>
-    );
-  }
+  if (faceDown) return <CardBack th={th} w={w}/>;
 
   const card = entry.card;
   const rev = entry.reversed;
-  const label = card.arcana === 'major' ? roman(card.num) : card.rankRu;
+
   return (
-    <div style={{ width: w, height: h, borderRadius: 13, background: faceBg, border: `1.5px solid ${gold}99`, boxShadow: '0 8px 22px rgba(20,10,40,0.3)', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 5, borderRadius: 9, border: `1px solid ${gold}66`, pointerEvents: 'none' }}/>
-      {/* содержимое (переворачиваем при rev) */}
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, transform: rev ? 'rotate(180deg)' : 'none' }}>
-        <span style={{ ...corner, top: 7, left: 9 }}>{label}</span>
-        <span style={{ ...corner, bottom: 7, right: 9 }}>{label}</span>
-        <TarotGlyph arcana={card.arcana} size={Math.round(w * 0.46)} color={ink}/>
-        <div style={{ fontFamily: 'var(--ds-serif)', fontSize: w < 90 ? 10.5 : 12, fontWeight: 600, color: ink, textAlign: 'center', lineHeight: 1.12, padding: '0 8px', maxWidth: w - 8 }}>{card.name}</div>
-      </div>
+    <div style={{ width: w, height: h, borderRadius: 12, position: 'relative', overflow: 'hidden',
+      border: `2px solid ${gold}bb`, boxShadow: '0 10px 24px rgba(20,10,40,0.4)',
+      background: th.effDark ? '#1a1336' : '#efe7d8' }}>
+      {!err ? (
+        <img src={`cards/${card.id}.jpg`} alt={card.name} draggable={false}
+          onError={() => setErr(true)}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transform: rev ? 'rotate(180deg)' : 'none' }}/>
+      ) : (
+        // запасной вид, если картинка не загрузилась
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, transform: rev ? 'rotate(180deg)' : 'none', padding: 6 }}>
+          <TarotGlyph arcana={card.arcana} size={Math.round(w * 0.42)} color={gold}/>
+          <div style={{ fontFamily: 'var(--ds-serif)', fontSize: 11, fontWeight: 600, color: th.ink, textAlign: 'center', lineHeight: 1.1 }}>{card.name}</div>
+        </div>
+      )}
+      {/* мягкая золотая виньетка */}
+      <div style={{ position: 'absolute', inset: 0, borderRadius: 10, boxShadow: `inset 0 0 0 1px ${gold}55`, pointerEvents: 'none' }}/>
       {rev && (
-        <div style={{ position: 'absolute', top: 6, right: 8, fontSize: 12, color: gold }}>⤼</div>
+        <div style={{ position: 'absolute', top: 5, right: 5, background: 'rgba(150,45,15,0.92)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 6, fontFamily: '"Manrope",sans-serif' }}>⤼</div>
       )}
     </div>
   );
@@ -154,7 +157,7 @@ function TarotScreen({ th, lang }) {
           </button>
 
           <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11, lineHeight: 1.5, color: muted, textAlign: 'center', margin: '14px auto 0', maxWidth: 290 }}>
-            Колода из 78 карт. Толкование — общее значение карт; относись к нему как к подсказке для размышления, а не предсказанию.
+            Колода из 78 карт Райдера–Уэйта. Толкование — общее значение карт; относись к нему как к подсказке для размышления, а не предсказанию.
           </p>
         </div>
       )}
@@ -190,12 +193,17 @@ function TarotScreen({ th, lang }) {
           </div>
 
           {/* три карты в ряд */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginBottom: 22 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', gap: 9, marginBottom: 22 }}>
             {spread.map((entry, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7,
-                opacity: reveal > i ? 1 : 0, animation: reveal > i ? 'ta_in .5s ease both' : 'none' }}>
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, width: 100 }}>
                 <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 9.5, letterSpacing: 0.8, textTransform: 'uppercase', color: gold }}>{T.POSITIONS[i].ru}</div>
-                <TarotCard entry={entry} th={th} w={98}/>
+                <div style={{ animation: reveal > i ? 'ta_in .55s ease both' : 'none' }}>
+                  {reveal > i ? <TarotCard entry={entry} th={th} w={98}/> : <CardBack th={th} w={98}/>}
+                </div>
+                <div style={{ fontFamily: 'var(--ds-serif)', fontSize: 11.5, fontWeight: 600, color: th.ink, textAlign: 'center', lineHeight: 1.15, minHeight: 28,
+                  opacity: reveal > i ? 1 : 0, transition: 'opacity .4s' }}>
+                  {entry.card.name}{entry.reversed ? <span style={{ display: 'block', fontFamily: '"Manrope",sans-serif', fontSize: 9, fontWeight: 700, color: '#c2410c' }}>перевёрнута</span> : null}
+                </div>
               </div>
             ))}
           </div>
