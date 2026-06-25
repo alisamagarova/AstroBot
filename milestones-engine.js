@@ -41,7 +41,7 @@
   // Дирекции (solar arc): вес попадания и ширина окна; вес промиссора.
   const DIR_W = 0.95;       // базовый вес дирекционного попадания
   const DIR_HALF = 200;     // дн., ощущаемая полуширина окна дирекции
-  const PROM_W = { venus: 1, sun: 0.85, moon: 0.7, dc: 1, mc: 0.8, asc: 0.9, rulerVII: 0.95, rulerX: 0.9 };
+  const PROM_W = { venus: 1, sun: 0.85, moon: 0.85, dc: 1, mc: 0.85, ic: 0.95, asc: 0.9, mars: 0.75, jupiter: 0.7, saturn: 0.7, rulerVII: 0.95, rulerX: 0.9 };
 
   // ═══════════════════════════════════════════════════════════════════════
   // THEMES — significators + which slow planets activate them
@@ -151,35 +151,48 @@
       id: 'relocation', cat: 'place', glyph: 'move', polarity: 'change',
       title: { ru: 'Переезд', en: 'Relocation' },
       blurb: { ru: 'Смена места жительства', en: 'Change of where you live' },
-      transiters: ['uranus', 'jupiter', 'saturn', 'pluto'],
+      transiters: ['uranus', 'jupiter', 'saturn', 'pluto', 'neptune'],
       targets: [
         { angle: 'ic', lbl: { ru: 'IC · IV дом', en: 'IC · 4th' }, w: 1, needsHouses: true },
         { rulerOf: 4, lbl: { ru: 'управитель IV', en: 'ruler of 4th' }, w: 0.9, needsHouses: true },
-        { planet: 'moon', lbl: { ru: 'Луна', en: 'Moon' }, w: 0.8 },
+        { planet: 'moon', lbl: { ru: 'Луна · дом', en: 'Moon · home' }, w: 0.8 },
+        { planet: 'jupiter', lbl: { ru: 'Юпитер', en: 'Jupiter' }, w: 0.5 },
       ],
+      directions: { promissors: ['moon', 'sun', 'mars', 'ic', 'asc', 'mc'] },
+      selective: true,
+      coreTargets: ['a_ic', 'r_4', 'p_moon'],
     },
     {
       id: 'property', cat: 'place', glyph: 'key', polarity: 'growth',
       title: { ru: 'Недвижимость', en: 'Property' },
       blurb: { ru: 'Покупка или продажа жилья', en: 'Buying or selling property' },
-      transiters: ['jupiter', 'saturn', 'uranus'],
+      transiters: ['jupiter', 'saturn', 'uranus', 'pluto', 'neptune'],
       targets: [
         { cusp: 4, lbl: { ru: 'куспид IV · дом', en: '4th cusp · home' }, w: 1, needsHouses: true },
         { rulerOf: 4, lbl: { ru: 'управитель IV', en: 'ruler of 4th' }, w: 0.9, needsHouses: true },
-        { cusp: 2, lbl: { ru: 'куспид II · ресурсы', en: '2nd cusp · resources' }, w: 0.7, needsHouses: true },
-        { planet: 'jupiter', lbl: { ru: 'Юпитер', en: 'Jupiter' }, w: 0.6 },
+        { planet: 'venus', lbl: { ru: 'Венера · ценность', en: 'Venus · value' }, w: 0.7 },
+        { cusp: 2, lbl: { ru: 'куспид II · ресурсы', en: '2nd cusp · resources' }, w: 0.6, needsHouses: true },
+        { planet: 'moon', lbl: { ru: 'Луна · дом', en: 'Moon · home' }, w: 0.6 },
+        { planet: 'jupiter', lbl: { ru: 'Юпитер', en: 'Jupiter' }, w: 0.55 },
       ],
+      directions: { promissors: ['moon', 'venus', 'mc', 'ic', 'sun', 'jupiter'] },
+      selective: true,
+      coreTargets: ['c_4', 'r_4'],
     },
     {
       id: 'travel', cat: 'place', glyph: 'travel', polarity: 'growth',
       title: { ru: 'Путешествия', en: 'Travel' },
-      blurb: { ru: 'Дальние поездки, жизнь за границей', en: 'Long journeys, life abroad' },
-      transiters: ['jupiter', 'uranus', 'saturn'],
+      blurb: { ru: 'Крупные поездки, жизнь за границей', en: 'Major journeys, life abroad' },
+      transiters: ['jupiter', 'uranus', 'saturn', 'pluto'],
       targets: [
         { cusp: 9, lbl: { ru: 'куспид IX', en: '9th cusp' }, w: 1, needsHouses: true },
         { rulerOf: 9, lbl: { ru: 'управитель IX', en: 'ruler of 9th' }, w: 0.9, needsHouses: true },
         { planet: 'jupiter', lbl: { ru: 'Юпитер', en: 'Jupiter' }, w: 0.8 },
       ],
+      // Только крупные/значимые поездки (медленные планеты по IX оси), не отпуска.
+      directions: { promissors: ['jupiter', 'sun', 'mc', 'asc'] },
+      selective: true,
+      coreTargets: ['c_9', 'r_9'],
     },
     {
       id: 'injury', cat: 'body', glyph: 'injury', polarity: 'body',
