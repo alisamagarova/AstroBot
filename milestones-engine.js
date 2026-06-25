@@ -38,6 +38,11 @@
   // Half-width of the felt window (days) by transiting planet — slower = longer
   const HALF = { jupiter: 55, saturn: 75, uranus: 150, neptune: 230, pluto: 270 };
 
+  // Дирекции (solar arc): вес попадания и ширина окна; вес промиссора.
+  const DIR_W = 0.95;       // базовый вес дирекционного попадания
+  const DIR_HALF = 200;     // дн., ощущаемая полуширина окна дирекции
+  const PROM_W = { venus: 1, sun: 0.85, moon: 0.7, dc: 1, mc: 0.8, asc: 0.9, rulerVII: 0.95, rulerX: 0.9 };
+
   // ═══════════════════════════════════════════════════════════════════════
   // THEMES — significators + which slow planets activate them
   //   targets: {planet|angle|cusp|rulerOf, lbl:{ru,en}, w, needsHouses?}
@@ -48,13 +53,19 @@
       id: 'marriage', cat: 'union', glyph: 'rings', polarity: 'growth',
       title: { ru: 'Брак', en: 'Marriage' },
       blurb: { ru: 'Помолвка, свадьба, новый виток союза', en: 'Engagement, wedding, a new level of union' },
-      transiters: ['jupiter', 'saturn', 'uranus'],
+      transiters: ['jupiter', 'saturn', 'uranus', 'neptune'],
       targets: [
         { planet: 'venus', lbl: { ru: 'Венера', en: 'Venus' }, w: 1 },
         { angle: 'dc', lbl: { ru: 'Десцендент · VII', en: 'Descendant · 7th' }, w: 1, needsHouses: true },
         { rulerOf: 7, lbl: { ru: 'управитель VII', en: 'ruler of 7th' }, w: 0.9, needsHouses: true },
-        { planet: 'jupiter', lbl: { ru: 'Юпитер', en: 'Jupiter' }, w: 0.55 },
+        { angle: 'mc', lbl: { ru: 'MC · X дом', en: 'MC · 10th' }, w: 0.75, needsHouses: true },
+        { planet: 'sun', lbl: { ru: 'Солнце (супруг)', en: 'Sun (spouse)' }, w: 0.6 },
+        { planet: 'moon', lbl: { ru: 'Луна (супруг)', en: 'Moon (spouse)' }, w: 0.5 },
       ],
+      // Дирекции (solar arc) задают период; селективный отбор — окна редкие.
+      directions: { promissors: ['venus', 'sun', 'moon', 'dc', 'mc', 'rulerVII'] },
+      selective: true,
+      coreTargets: ['p_venus', 'a_dc', 'r_7'], // окно засчитывается только если задействована ось отношений/Венера
     },
     {
       id: 'divorce', cat: 'union', glyph: 'split', polarity: 'rupture',
@@ -353,6 +364,56 @@
     return out;
   }
 
+  // ── Solar arc directions ───────────────────────────────────────────────────
+  // Долгота натальной точки-промиссора (планета / угол / управитель дома).
+  function symbolLon(sym, chart) {
+    if (sym === 'dc') return chart.dc;
+    if (sym === 'mc') return chart.mc;
+    if (sym === 'asc') return chart.asc;
+    if (sym === 'ic') return chart.ic;
+    if (sym === 'rulerVII') { const rid = SIGN_RULER[Math.floor(norm360(chart.cusps[6]) / 30)]; return chart.planets[rid].ecl; }
+    if (sym === 'rulerX')   { const rid = SIGN_RULER[Math.floor(norm360(chart.cusps[9]) / 30)]; return chart.planets[rid].ecl; }
+    return chart.planets[sym] ? chart.planets[sym].ecl : null;
+  }
+  // Дуга solar arc на момент ms (истинная: движение прогрессивного Солнца).
+  function solarArcAt(ms, natalMs, natalSunLon) {
+    const ageYears = (ms - natalMs) / (365.2422 * DAY);
+    const progMs = natalMs + ageYears * DAY; // 1 день прогрессии = 1 год жизни
+    return norm360(eclLonAt('Sun', progMs) - natalSunLon);
+  }
+  // Точные дирекционные аспекты: дир. промиссор (натал + дуга) → натальные цели.
+  function scanDirections(chart, promissors, targets, natalMs, natalSunLon, startMs, endMs) {
+    const promLon = {};
+    for (const P of promissors) { const l = symbolLon(P, chart); if (l != null) promLon[P] = norm360(l); }
+    const stepMs = 30 * DAY;
+    const hits = [];
+    let prev = null;
+    for (let ms = startMs; ms <= endMs; ms += stepMs) {
+      const arc = solarArcAt(ms, natalMs, natalSunLon);
+      const cur = {};
+      for (const P of Object.keys(promLon)) {
+        const dl = norm360(promLon[P] + arc);
+        for (const tg of targets) {
+          const delta = norm180(dl - tg.lon);
+          for (const asp of ASPS) {
+            const angs = asp.angle === 0 ? [0] : asp.angle === 180 ? [180] : [asp.angle, -asp.angle];
+            for (const a of angs) {
+              const k = P + '|' + tg.key + '|' + asp.key + '|' + a;
+              const signed = norm180(delta - a);
+              cur[k] = signed;
+              if (prev && prev[k] != null && Math.sign(signed) !== Math.sign(prev[k]) && Math.abs(signed - prev[k]) < 4) {
+                const f = prev[k] / (prev[k] - signed);
+                hits.push({ P, tg, asp, ms: ms - stepMs + f * stepMs });
+              }
+            }
+          }
+        }
+      }
+      prev = cur;
+    }
+    return hits;
+  }
+
   // Raw exact-aspect crossings of transiters → targets over [startMs, endMs].
   function scanCrossings(targets, transiters, startMs, endMs, stepDays) {
     const stepMs = stepDays * DAY;
@@ -442,7 +503,8 @@
     const theme = THEMES.find((t) => t.id === themeId);
     if (!theme) throw new Error('Unknown theme ' + themeId);
 
-    const chart = window.computeRealChart(window.resolveBirthForChart(birth));
+    const input = window.resolveBirthForChart(birth);
+    const chart = window.computeRealChart(input);
     const housesOK = chart.housesValid === true || chart.housesValid === 'approx';
     const approxHouses = chart.housesValid === 'approx';
 
@@ -456,12 +518,45 @@
     const startMs = Date.UTC(startY, birth.month - 1, birth.day);
     const endMs = Date.UTC(endY, birth.month - 1, birth.day);
 
-    const hits = scanCrossings(targets, theme.transiters, startMs, endMs, 4);
-    let windows = mergeWindows(clusterEvents(hits));
+    // Транзитные события
+    let events = clusterEvents(scanCrossings(targets, theme.transiters, startMs, endMs, 4))
+      .map((e) => ({ ...e, source: 'transit' }));
 
-    // keep the strongest, then chronological
-    windows.sort((a, b) => b.score - a.score);
-    windows = windows.slice(0, 14).sort((a, b) => a.peakMs - b.peakMs);
+    // Дирекционные события (solar arc) — только если есть тема directions и дома
+    if (theme.directions && housesOK) {
+      const natalMs = Date.UTC(input.year, input.month - 1, input.day)
+        + (input.localHour * 60 + input.localMin) * 60000 - input.utcOffset * 3600000;
+      const dirHits = scanDirections(chart, theme.directions.promissors, targets, natalMs, chart.planets.sun.ecl, startMs, endMs);
+      for (const h of dirHits) {
+        events.push({
+          source: 'dir', T: 'dir:' + h.P, tg: h.tg, asp: h.asp, passes: 1,
+          peakMs: h.ms, startMs: h.ms - DIR_HALF * DAY, endMs: h.ms + DIR_HALF * DAY,
+          score: DIR_W * AW[h.asp.key] * h.tg.w * (PROM_W[h.P] || 0.7),
+        });
+      }
+    }
+
+    let windows = mergeWindows(events);
+
+    // Связка транзит+дирекция в одном окне = сильное, редкое событие → буст
+    windows.forEach((w) => {
+      const hasT = w.triggers.some((t) => t.source === 'transit');
+      const hasD = w.triggers.some((t) => t.source === 'dir');
+      w.confluence = hasT && hasD;
+      if (w.confluence) w.score *= 1.6;
+    });
+
+    if (theme.selective) {
+      // окно засчитывается только если задействована ось отношений/ядро темы
+      const core = theme.coreTargets || [];
+      windows = windows.filter((w) => w.triggers.some((t) => core.some((ck) => t.tg.key.indexOf(ck) === 0)));
+      windows.sort((a, b) => b.score - a.score);
+      const mx = windows.length ? windows[0].score : 1;
+      windows = windows.filter((w) => w.score >= 0.42 * mx).slice(0, 6).sort((a, b) => a.peakMs - b.peakMs);
+    } else {
+      windows.sort((a, b) => b.score - a.score);
+      windows = windows.slice(0, 14).sort((a, b) => a.peakMs - b.peakMs);
+    }
 
     const maxScore = windows.reduce((m, w) => Math.max(m, w.score), 0.0001);
     const nowMs = Date.now();

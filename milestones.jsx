@@ -4,6 +4,13 @@
 
 const { useState: useStateMs, useEffect: useEffectMs, useRef: useRefMs } = React;
 
+// Метки промиссоров-углов для дирекций (нет в PL_META)
+const MS_PROM_LBL = {
+  dc: { ru: 'Десцендент', en: 'Descendant' }, mc: { ru: 'MC', en: 'MC' },
+  asc: { ru: 'Асцендент', en: 'Ascendant' }, ic: { ru: 'IC', en: 'IC' },
+  rulerVII: { ru: 'упр. VII', en: 'ruler VII' }, rulerX: { ru: 'упр. X', en: 'ruler X' },
+};
+
 // ═══════════════════════════════════════════════════════
 // ICONS
 // ═══════════════════════════════════════════════════════
@@ -273,12 +280,17 @@ function MsWindowCard({ th, lang, result, w, refEl, highlight }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 11, paddingLeft: 6 }}>
         {w.triggers.slice(0, 3).map((tr, i) => {
           const asp = M.aspMeta(tr.asp.key);
+          const isDir = String(tr.T).indexOf('dir:') === 0;
+          const pid = isDir ? tr.T.slice(4) : tr.T;
+          const promLbl = MS_PROM_LBL[pid];
+          const pmeta = window.PL_META[pid];
+          const pname = promLbl ? (en ? promLbl.en : promLbl.ru) : (pmeta ? pmeta[en ? 'en' : 'ru'] : pid);
           return (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <PlGlyph id={tr.T} size={15}/>
+              {pmeta ? <PlGlyph id={pid} size={15}/> : <span style={{ width: 15, textAlign: 'center', color: th.glyphClr, fontSize: 12 }}>✦</span>}
               <span style={{ fontFamily: 'serif', fontSize: 13, color: th.muted, minWidth: 14, textAlign: 'center' }}>{asp.sym}</span>
               <span style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 600, fontSize: 11.5, color: i === 0 ? th.ink : th.inkSoft }}>
-                {window.PL_META[tr.T][en ? 'en' : 'ru']} {en ? asp.en : asp.ru}
+                {isDir ? (en ? 'dir. ' : 'дир. ') : ''}{pname} {en ? asp.en : asp.ru}
               </span>
               <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11, color: th.muted }}>· {tr.tg.lbl[lang]}</span>
               {tr.passes > 1 && <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 9, fontWeight: 700, color: th.gold, marginLeft: 'auto' }}>×{tr.passes}</span>}
