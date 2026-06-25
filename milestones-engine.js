@@ -100,6 +100,7 @@
       directions: { promissors: ['jupiter', 'moon', 'venus', 'sun', 'mars', 'mc', 'asc'] },
       selective: true,
       coreTargets: ['c_5', 'r_5', 'p_jupiter'],
+      maxWindows: 4,
     },
     {
       id: 'promotion', cat: 'career', glyph: 'rise', polarity: 'growth',
@@ -594,7 +595,9 @@
       windows = windows.filter((w) => w.triggers.some((t) => core.some((ck) => t.tg.key.indexOf(ck) === 0)));
       windows.sort((a, b) => b.score - a.score);
       const mx = windows.length ? windows[0].score : 1;
-      windows = windows.filter((w) => w.score >= 0.42 * mx).slice(0, 6).sort((a, b) => a.peakMs - b.peakMs);
+      // только заметно сильные окна (≥ половины пика) + жёсткий лимит — это редкие события
+      const cap = theme.maxWindows || 5;
+      windows = windows.filter((w) => w.score >= 0.5 * mx).slice(0, cap).sort((a, b) => a.peakMs - b.peakMs);
     } else {
       windows.sort((a, b) => b.score - a.score);
       windows = windows.slice(0, 14).sort((a, b) => a.peakMs - b.peakMs);
