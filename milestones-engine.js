@@ -77,7 +77,13 @@
         { rulerOf: 7, lbl: { ru: 'управитель VII', en: 'ruler of 7th' }, w: 0.9, needsHouses: true },
         { planet: 'venus', lbl: { ru: 'Венера', en: 'Venus' }, w: 0.8 },
         { planet: 'mars', lbl: { ru: 'Марс', en: 'Mars' }, w: 0.65 },
+        { angle: 'asc', lbl: { ru: 'Асцендент · I', en: 'Ascendant · 1st' }, w: 0.6, needsHouses: true },
       ],
+      // Только напряжённые контакты (соед/квадрат/оппозиция) + дирекции + ось VII.
+      hardOnly: true,
+      directions: { promissors: ['mars', 'saturn', 'uranus', 'venus', 'dc', 'rulerVII'] },
+      selective: true,
+      coreTargets: ['p_venus', 'a_dc', 'r_7'],
     },
     {
       id: 'children', cat: 'union', glyph: 'child', polarity: 'growth',
@@ -382,7 +388,8 @@
     return norm360(eclLonAt('Sun', progMs) - natalSunLon);
   }
   // Точные дирекционные аспекты: дир. промиссор (натал + дуга) → натальные цели.
-  function scanDirections(chart, promissors, targets, natalMs, natalSunLon, startMs, endMs) {
+  function scanDirections(chart, promissors, targets, natalMs, natalSunLon, startMs, endMs, aspList) {
+    const asps = aspList || ASPS;
     const promLon = {};
     for (const P of promissors) { const l = symbolLon(P, chart); if (l != null) promLon[P] = norm360(l); }
     const stepMs = 30 * DAY;
@@ -395,7 +402,7 @@
         const dl = norm360(promLon[P] + arc);
         for (const tg of targets) {
           const delta = norm180(dl - tg.lon);
-          for (const asp of ASPS) {
+          for (const asp of asps) {
             const angs = asp.angle === 0 ? [0] : asp.angle === 180 ? [180] : [asp.angle, -asp.angle];
             for (const a of angs) {
               const k = P + '|' + tg.key + '|' + asp.key + '|' + a;
@@ -415,7 +422,8 @@
   }
 
   // Raw exact-aspect crossings of transiters → targets over [startMs, endMs].
-  function scanCrossings(targets, transiters, startMs, endMs, stepDays) {
+  function scanCrossings(targets, transiters, startMs, endMs, stepDays, aspList) {
+    const asps = aspList || ASPS;
     const stepMs = stepDays * DAY;
     const hits = [];
     let prev = null;
@@ -426,7 +434,7 @@
       for (const T of transiters) {
         for (const tg of targets) {
           const delta = norm180(tlon[T] - tg.lon);
-          for (const asp of ASPS) {
+          for (const asp of asps) {
             const angs = asp.angle === 0 ? [0] : asp.angle === 180 ? [180] : [asp.angle, -asp.angle];
             for (const a of angs) {
               const k = T + '|' + tg.key + '|' + asp.key + '|' + a;
@@ -518,15 +526,20 @@
     const startMs = Date.UTC(startY, birth.month - 1, birth.day);
     const endMs = Date.UTC(endY, birth.month - 1, birth.day);
 
+    // Жёсткие аспекты (соединение/квадрат/оппозиция) — для тем с hardOnly (развод и т.п.)
+    const aspList = theme.hardOnly
+      ? ASPS.filter((a) => a.key === 'conjunction' || a.key === 'square' || a.key === 'opposition')
+      : ASPS;
+
     // Транзитные события
-    let events = clusterEvents(scanCrossings(targets, theme.transiters, startMs, endMs, 4))
+    let events = clusterEvents(scanCrossings(targets, theme.transiters, startMs, endMs, 4, aspList))
       .map((e) => ({ ...e, source: 'transit' }));
 
     // Дирекционные события (solar arc) — только если есть тема directions и дома
     if (theme.directions && housesOK) {
       const natalMs = Date.UTC(input.year, input.month - 1, input.day)
         + (input.localHour * 60 + input.localMin) * 60000 - input.utcOffset * 3600000;
-      const dirHits = scanDirections(chart, theme.directions.promissors, targets, natalMs, chart.planets.sun.ecl, startMs, endMs);
+      const dirHits = scanDirections(chart, theme.directions.promissors, targets, natalMs, chart.planets.sun.ecl, startMs, endMs, aspList);
       for (const h of dirHits) {
         events.push({
           source: 'dir', T: 'dir:' + h.P, tg: h.tg, asp: h.asp, passes: 1,
