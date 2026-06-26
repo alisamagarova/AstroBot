@@ -407,9 +407,6 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYe
       {/* ── КАРТА ДНЯ (ежедневный виджет) ─────────────── */}
       <TarotDailyCard th={th} lang={lang} onReveal={onRevealDay}/>
 
-      {/* ── ДА / НЕТ (оракул одной картой) ────────────── */}
-      <TarotYesNoButton th={th} lang={lang} onOpen={onYesNo}/>
-
       {/* ── POSSIBILITIES GRID ───────────────────────── */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:11}}>
         <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:10.5,letterSpacing:2,textTransform:'uppercase',color:th.muted}}>
@@ -422,10 +419,11 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYe
       </div>
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
-        {POSSIBILITIES.map(p=>{
+        {POSSIBILITIES.map((p,idx)=>{
           const soon = p.id === 'tarot'; // таро — позже, с ИИ-интерпретацией (под платных)
           return (
-            <GlassCard key={p.id} th={th} onClick={soon ? undefined : ()=>onOpen(p.id)}
+            <React.Fragment key={p.id}>
+            <GlassCard th={th} onClick={soon ? undefined : ()=>onOpen(p.id)}
               style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130,
                       opacity:soon?0.62:1,cursor:soon?'default':'pointer',position:'relative',overflow:'hidden'}}>
               {soon && (
@@ -443,6 +441,19 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYe
               <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:17,lineHeight:1.1,color:th.ink,marginBottom:5}}>{p.title[lang]}</div>
               <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.35,color:th.inkSoft}}>{p.desc[lang]}</div>
             </GlassCard>
+            {/* Плитка «Да/Нет» сразу после натальной карты — стоит рядом с ней */}
+            {idx===0 && (
+              <GlassCard th={th} onClick={onYesNo}
+                style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130,cursor:'pointer',position:'relative',overflow:'hidden'}}>
+                <div style={{width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`,marginBottom:10,flexShrink:0}}>
+                  <span style={{fontFamily:'var(--ds-serif)',fontSize:21,fontWeight:700,color:th.glyphClr}}>?</span>
+                </div>
+                <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9,letterSpacing:1.3,color:th.gold,marginBottom:5}}>{lang==='en'?'ORACLE':'ОРАКУЛ'}</div>
+                <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:17,lineHeight:1.1,color:th.ink,marginBottom:5}}>{lang==='en'?'Yes or No':'Да или нет'}</div>
+                <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.35,color:th.inkSoft}}>{lang==='en'?'A yes/no answer in one card':'Ответ на вопрос одной картой'}</div>
+              </GlassCard>
+            )}
+            </React.Fragment>
           );
         })}
       </div>

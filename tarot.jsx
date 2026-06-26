@@ -431,7 +431,37 @@ function yesNoVerdict(card, reversed, en) {
     : { label: en ? 'Rather no' : 'Скорее нет', tone: 'hard', why: en ? 'A Minor Arcana reversed — leaning no.' : 'Младший аркан перевёрнут — «скорее нет».' };
 }
 
-// Виджет-баннер на главной.
+// Грубая проверка «это вообще вопрос, а не белиберда» (без ИИ).
+const KB_ROWS = ['йцукенгшщзхъ', 'фывапролджэё', 'ячсмитьбю', 'qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+function hasKeyboardRun(compact) {
+  for (const row of KB_ROWS) {
+    const rev = row.split('').reverse().join('');
+    for (let i = 0; i + 5 <= compact.length; i++) {
+      const seg = compact.slice(i, i + 5);             // 5 символов подряд по ряду = мэш
+      if (row.indexOf(seg) >= 0 || rev.indexOf(seg) >= 0) return true;
+    }
+  }
+  return false;
+}
+function looksLikeQuestion(s) {
+  const t = (s || '').trim().toLowerCase();
+  if (t.length < 5) return false;
+  const letters = t.match(/[а-яёa-z]/g) || [];
+  if (letters.length < 4) return false;
+  const nonSpace = t.replace(/\s/g, '').length;
+  if (letters.length / nonSpace < 0.5) return false;            // мало букв (символы/цифры)
+  const vowels = (t.match(/[аеёиоуыэюяaeiouy]/g) || []).length;
+  const vr = vowels / letters.length;
+  if (vr < 0.2 || vr > 0.8) return false;                       // нет нормального соотношения гласных
+  if (/(.)\1{3,}/.test(t)) return false;                        // «ааааа», «!!!!»
+  if (/[бвгджзйклмнпрстфхцчшщъьbcdfghjklmnpqrstvwxz]{6,}/.test(t)) return false; // мэш из согласных
+  if (hasKeyboardRun(t.replace(/[^а-яёa-z]/g, ''))) return false; // qwerty / фывапролд
+  const words = t.split(/\s+/).filter((w) => /[а-яёa-z]{2,}/.test(w));
+  if (words.length < 2) return false;                           // вопрос — это хотя бы пара слов
+  return true;
+}
+
+// Виджет-баннер на главной (оставлен для совместимости; на главной используется плитка).
 function TarotYesNoButton({ th, lang, onOpen }) {
   const en = lang === 'en';
   const gold = th.gold;
@@ -463,13 +493,19 @@ function TarotYesNoReveal({ th, lang, onClose }) {
   const [phase, setPhase] = useStateTa('ask'); // ask | reveal
   const [q, setQ] = useStateTa('');
   const [entry, setEntry] = useStateTa(null);
+  const [err, setErr] = useStateTa('');
 
   function draw() {
+    if (!looksLikeQuestion(q)) {
+      setErr(en ? "Hmm, that doesn't look like a question. Try to phrase it clearly." : 'Хм, это не похоже на вопрос. Сформулируй яснее.');
+      return;
+    }
+    setErr('');
     const card = T.DECK[Math.floor(Math.random() * T.DECK.length)];
     setEntry({ card, reversed: Math.random() < 0.5 }); // 50/50 — честная монета
     setPhase('reveal');
   }
-  function again() { setEntry(null); setPhase('ask'); }
+  function again() { setEntry(null); setErr(''); setPhase('ask'); }
 
   const v = entry ? yesNoVerdict(entry.card, entry.reversed, en) : null;
   const clr = v ? (v.tone === 'good' ? '#86efac' : '#fca5a5') : '#fff';
@@ -498,11 +534,12 @@ function TarotYesNoReveal({ th, lang, onClose }) {
               {en ? 'Think of a yes/no question and pull a card.' : 'Задумай вопрос, на который можно ответить «да» или «нет», и вытяни карту.'}
             </p>
           </div>
-          <textarea value={q} onChange={(e) => setQ(e.target.value)} maxLength={160} rows={2}
+          <textarea value={q} onChange={(e) => { setQ(e.target.value); if (err) setErr(''); }} maxLength={160} rows={2}
             placeholder={en ? 'e.g. Should I text them first?' : 'Например: стоит ли написать первой?'}
             style={{ width: '100%', boxSizing: 'border-box', resize: 'none', borderRadius: 14, padding: '12px 14px',
               fontFamily: '"Manrope",sans-serif', fontSize: 14, lineHeight: 1.4, color: '#fff',
-              background: 'rgba(255,255,255,0.1)', border: `1px solid ${th.glassBorder}`, outline: 'none', marginBottom: 14 }}/>
+              background: 'rgba(255,255,255,0.1)', border: `1px solid ${err ? '#fca5a5' : th.glassBorder}`, outline: 'none', marginBottom: err ? 6 : 14 }}/>
+          {err && <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, color: '#fca5a5', marginBottom: 12, lineHeight: 1.4 }}>{err}</div>}
           <button onClick={draw} style={{ width: '100%', padding: '14px', borderRadius: 16, border: 'none', cursor: 'pointer',
             fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 15, color: '#fff',
             background: `linear-gradient(135deg, ${th.accent}, ${gold} 150%)`, boxShadow: '0 8px 24px rgba(40,20,70,0.4)' }}>
