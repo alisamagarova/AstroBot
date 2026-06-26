@@ -274,45 +274,50 @@ window.TarotScreen = TarotScreen;
 function tarotDayKey() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
 function tarotHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 
-function TarotDailyCard({ th, lang }) {
+// Детерминированная карта на сегодня (одна на день для пользователя).
+function tarotDayEntry() {
   const T = window.TAROT;
-  const en = lang === 'en';
   const dayKey = tarotDayKey();
   const uid = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe
     && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) || 'guest';
   const seed = tarotHash(dayKey + ':' + uid);
   const entry = { card: T.DECK[seed % T.DECK.length], reversed: ((seed >> 9) & 7) < 3 }; // ~37% перевёрнута
-  const m = entry.reversed ? entry.card.rev : entry.card.up;
+  return { entry, dayKey };
+}
+window.tarotDayEntry = tarotDayEntry;
 
-  const [flipped, setFlipped] = useStateTa(false);
-  useEffectTa(() => {
-    try { const raw = JSON.parse(localStorage.getItem('astro_tarot_day') || '{}'); if (raw.date === dayKey && raw.flipped) setFlipped(true); } catch (e) {}
-  }, [dayKey]);
-  function flip() {
-    setFlipped(true);
-    try { localStorage.setItem('astro_tarot_day', JSON.stringify({ date: dayKey, flipped: true })); } catch (e) {}
-  }
+function tarotDaySeen(dayKey) {
+  try { const r = JSON.parse(localStorage.getItem('astro_tarot_day') || '{}'); return r.date === dayKey && r.flipped; } catch (e) { return false; }
+}
+
+// Виджет-баннер на главной: рубашка → по тапу открывает мистический оверлей.
+function TarotDailyCard({ th, lang, onReveal }) {
+  const en = lang === 'en';
+  const { entry, dayKey } = tarotDayEntry();
+  const m = entry.reversed ? entry.card.rev : entry.card.up;
+  const [seen, setSeen] = useStateTa(false);
+  useEffectTa(() => { setSeen(tarotDaySeen(dayKey)); }, [dayKey]);
 
   const gold = th.gold;
   return (
-    <button onClick={flipped ? undefined : flip} style={{
-      display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', cursor: flipped ? 'default' : 'pointer',
+    <button onClick={() => { setSeen(true); onReveal && onReveal(); }} style={{
+      display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', cursor: 'pointer',
       background: th.glassStrong, border: `1px solid ${th.glassBorder}`, backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
       borderRadius: 22, padding: '13px 16px', marginBottom: 22, boxSizing: 'border-box',
     }}>
       <div style={{ flexShrink: 0 }}>
-        {flipped ? <TarotCard entry={entry} th={th} w={48}/> : <CardBack th={th} w={48}/>}
+        {seen ? <TarotCard entry={entry} th={th} w={48}/> : <CardBack th={th} w={48}/>}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 9.5, letterSpacing: 1.4, color: gold, marginBottom: 4 }}>
           {en ? 'CARD OF THE DAY' : 'КАРТА ДНЯ'}
         </div>
-        {flipped ? (
+        {seen ? (
           <React.Fragment>
             <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 16, lineHeight: 1.1, color: th.ink, marginBottom: 3 }}>
               {entry.card.name}{entry.reversed ? <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 10, fontWeight: 700, color: '#c2410c' }}>{'  · перевёрнута'}</span> : null}
             </div>
-            <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, lineHeight: 1.4, color: th.inkSoft, textWrap: 'pretty' }}>{m.t}</div>
+            <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, lineHeight: 1.4, color: th.inkSoft }}>{en ? 'Tap to look again ✦' : 'Нажми, чтобы взглянуть снова ✦'}</div>
           </React.Fragment>
         ) : (
           <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.35, color: th.inkSoft }}>
@@ -323,5 +328,86 @@ function TarotDailyCard({ th, lang }) {
     </button>
   );
 }
-
 window.TarotDailyCard = TarotDailyCard;
+
+// ── Мистический оверлей: карта выпадает сверху и переворачивается ─────────────
+function TarotDayReveal({ th, lang, onClose }) {
+  const en = lang === 'en';
+  const { entry, dayKey } = tarotDayEntry();
+  const m = entry.reversed ? entry.card.rev : entry.card.up;
+  const gold = th.gold;
+  const W = 156;
+
+  useEffectTa(() => {
+    try { localStorage.setItem('astro_tarot_day', JSON.stringify({ date: dayKey, flipped: true })); } catch (e) {}
+  }, [dayKey]);
+
+  const dateStr = (() => { try { return new Date().toLocaleDateString(en ? 'en-US' : 'ru-RU', { day: 'numeric', month: 'long' }); } catch (e) { return ''; } })();
+
+  return (
+    <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '0 24px', overflow: 'hidden',
+      background: th.effDark ? 'radial-gradient(120% 80% at 50% 22%, rgba(60,40,110,0.6), rgba(8,6,18,0.93))' : 'radial-gradient(120% 80% at 50% 22%, rgba(150,120,210,0.45), rgba(20,14,40,0.9))',
+      backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+      <style>{`
+        @keyframes tdr_drop { 0%{ transform:translateY(-135%) rotate(-16deg) scale(.78); opacity:0; } 60%{ opacity:1; } 100%{ transform:translateY(0) rotate(0) scale(1); opacity:1; } }
+        @keyframes tdr_flip { from{ transform:rotateY(180deg); } to{ transform:rotateY(0deg); } }
+        @keyframes tdr_glow { 0%,100%{ opacity:.35; transform:scale(.92);} 50%{ opacity:.8; transform:scale(1.08);} }
+        @keyframes tdr_text { from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
+        @keyframes tdr_spark { 0%,100%{ opacity:.15; transform:scale(.7);} 50%{ opacity:1; transform:scale(1.2);} }
+      `}</style>
+
+      {/* искры по фону */}
+      {[...Array(10)].map((_, i) => (
+        <span key={i} style={{ position: 'absolute', left: `${8 + (i * 9) % 86}%`, top: `${12 + (i * 37) % 74}%`,
+          color: gold, fontSize: 9 + (i % 3) * 5, animation: `tdr_spark ${1.4 + (i % 4) * 0.4}s ease-in-out ${i * 0.18}s infinite`, pointerEvents: 'none' }}>✦</span>
+      ))}
+
+      {/* закрыть */}
+      <button onClick={onClose} style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', right: 16, width: 34, height: 34, borderRadius: 999,
+        border: `1px solid ${th.glassBorder}`, background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 17, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>✕</button>
+
+      <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 340 }}>
+        <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: gold, marginBottom: 2 }}>
+          {en ? 'Card of the day' : 'Карта дня'}
+        </div>
+        <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11, color: 'rgba(255,255,255,0.65)', marginBottom: 18 }}>{dateStr}</div>
+
+        {/* карта: выпадение + 3D-переворот */}
+        <div style={{ perspective: 1000, marginBottom: 16, position: 'relative' }}>
+          <div style={{ position: 'absolute', inset: -18, borderRadius: '50%', background: `radial-gradient(circle, ${gold}55, transparent 70%)`, animation: 'tdr_glow 2.4s ease-in-out infinite', pointerEvents: 'none' }}/>
+          <div style={{ animation: 'tdr_drop .8s cubic-bezier(.18,.8,.26,1.06) both' }}>
+            <div style={{ width: W, height: Math.round(W * 1.66), position: 'relative', transformStyle: 'preserve-3d', animation: 'tdr_flip 1.05s ease .5s both' }}>
+              <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                <TarotCard entry={entry} th={th} w={W}/>
+              </div>
+              <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                <CardBack th={th} w={W}/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* толкование появляется после приземления */}
+        <div style={{ animation: 'tdr_text .6s ease 1.5s both', textAlign: 'center' }}>
+          <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 22, color: '#fff', marginBottom: 4, lineHeight: 1.1 }}>{entry.card.name}</div>
+          <div style={{ marginBottom: 10 }}>
+            <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 10.5, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
+              color: entry.reversed ? '#fca5a5' : '#86efac', background: entry.reversed ? 'rgba(220,60,30,0.22)' : 'rgba(40,180,90,0.22)' }}>
+              {entry.reversed ? (en ? 'reversed' : 'перевёрнута') : (en ? 'upright' : 'прямая')}
+            </span>
+          </div>
+          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, fontStyle: 'italic', color: gold, marginBottom: 8 }}>{m.kw}</div>
+          <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.92)', margin: 0, textWrap: 'pretty' }}>{m.t}</p>
+        </div>
+
+        <button onClick={onClose} style={{ animation: 'tdr_text .6s ease 1.7s both', marginTop: 22, padding: '11px 26px', borderRadius: 999, cursor: 'pointer',
+          fontFamily: '"Manrope",sans-serif', fontWeight: 600, fontSize: 13, color: '#fff',
+          background: `linear-gradient(135deg, ${th.accent}, ${gold} 150%)`, border: 'none', boxShadow: '0 8px 24px rgba(40,20,70,0.4)' }}>
+          {en ? 'Thank you ✦' : 'Принять ✦'}
+        </button>
+      </div>
+    </div>
+  );
+}
+window.TarotDayReveal = TarotDayReveal;
