@@ -329,7 +329,7 @@ function BottomNav({ th, lang, activeTab, onTab }) {
 // ════════════════════════════════════════════════════════════
 // MAIN SCREEN
 // ════════════════════════════════════════════════════════════
-function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay }) {
+function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYesNo }) {
   const signLine  = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
 
   // Маленькая круглая кнопка «?» — открывает объяснение услуги (оверлей рисует AstroPhone)
@@ -406,6 +406,9 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay }) {
 
       {/* ── КАРТА ДНЯ (ежедневный виджет) ─────────────── */}
       <TarotDailyCard th={th} lang={lang} onReveal={onRevealDay}/>
+
+      {/* ── ДА / НЕТ (оракул одной картой) ────────────── */}
+      <TarotYesNoButton th={th} lang={lang} onOpen={onYesNo}/>
 
       {/* ── POSSIBILITIES GRID ───────────────────────── */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:11}}>
@@ -796,6 +799,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [milestoneTheme, setMilestoneTheme] = useState(null);
   const [helpItem, setHelpItem] = useState(null); // объяснение услуги (bottom-sheet)
   const [dayReveal, setDayReveal] = useState(false); // оверлей «Карта дня»
+  const [yesNo, setYesNo] = useState(false); // оверлей «Да / Нет»
   const [onb, setOnb] = useState('loading'); // 'loading' | 'needed' | 'done'
   const [otherBirth, setOtherBirth] = useState(null); // натал для другого человека (НЕ сохраняется в БД)
   const [editingOther, setEditingOther] = useState(false);
@@ -997,7 +1001,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   if (activeTab === 'profile') {
     mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key}/>;
   } else if (screen === 'home') {
-    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={()=>setDayReveal(true)}/>;
+    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={()=>setDayReveal(true)} onYesNo={()=>setYesNo(true)}/>;
   } else if (screen === 'natal') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>go('natal_other')}/>;
@@ -1113,6 +1117,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
 
         {/* ── Оверлей «Карта дня» (мистический разворот) ── */}
         {dayReveal && <TarotDayReveal th={th} lang={lang} onClose={()=>setDayReveal(false)}/>}
+
+        {/* ── Оверлей «Да / Нет» ── */}
+        {yesNo && <TarotYesNoReveal th={th} lang={lang} onClose={()=>setYesNo(false)}/>}
 
         {/* ── Онбординг: проверка профиля / форма приветствия ── */}
         {onb === 'loading' && (

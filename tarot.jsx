@@ -416,3 +416,135 @@ function TarotDayReveal({ th, lang, onClose }) {
   );
 }
 window.TarotDayReveal = TarotDayReveal;
+
+// ── Оракул «Да / Нет» (одна карта) ───────────────────────────────────────────
+// Прямая = да, перевёрнутая = нет. Старший аркан — уверенно, младший — «скорее».
+function yesNoVerdict(card, reversed, en) {
+  const major = card.arcana === 'major';
+  if (!reversed) {
+    return major
+      ? { label: en ? 'Yes' : 'Да', tone: 'good', why: en ? 'A Major Arcana upright — a clear yes.' : 'Старший аркан в прямом положении — уверенное «да».' }
+      : { label: en ? 'Rather yes' : 'Скорее да', tone: 'good', why: en ? 'A Minor Arcana upright — leaning yes.' : 'Младший аркан в прямом положении — «скорее да».' };
+  }
+  return major
+    ? { label: en ? 'No' : 'Нет', tone: 'hard', why: en ? 'A Major Arcana reversed — a clear no.' : 'Старший аркан перевёрнут — уверенное «нет».' }
+    : { label: en ? 'Rather no' : 'Скорее нет', tone: 'hard', why: en ? 'A Minor Arcana reversed — leaning no.' : 'Младший аркан перевёрнут — «скорее нет».' };
+}
+
+// Виджет-баннер на главной.
+function TarotYesNoButton({ th, lang, onOpen }) {
+  const en = lang === 'en';
+  const gold = th.gold;
+  return (
+    <button onClick={onOpen} style={{
+      display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', cursor: 'pointer',
+      background: th.glassStrong, border: `1px solid ${th.glassBorder}`, backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+      borderRadius: 22, padding: '13px 16px', marginBottom: 22, boxSizing: 'border-box',
+    }}>
+      <div style={{ width: 48, height: 48, borderRadius: 14, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${th.accent}28`, border: `1px solid ${th.accent}44` }}>
+        <span style={{ fontFamily: 'var(--ds-serif)', fontSize: 23, fontWeight: 700, color: th.glyphClr }}>?</span>
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 9.5, letterSpacing: 1.4, color: gold, marginBottom: 4 }}>{en ? 'YES OR NO' : 'ДА ИЛИ НЕТ'}</div>
+        <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 16, lineHeight: 1.1, color: th.ink, marginBottom: 3 }}>{en ? 'Ask the deck' : 'Спроси колоду'}</div>
+        <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, lineHeight: 1.35, color: th.inkSoft }}>{en ? 'One card — a yes/no answer ✦' : 'Один вопрос — ответ одной картой ✦'}</div>
+      </div>
+    </button>
+  );
+}
+window.TarotYesNoButton = TarotYesNoButton;
+
+// Оверлей: вопрос → карта выпадает и переворачивается → вердикт.
+function TarotYesNoReveal({ th, lang, onClose }) {
+  const T = window.TAROT;
+  const en = lang === 'en';
+  const gold = th.gold;
+  const W = 150;
+  const [phase, setPhase] = useStateTa('ask'); // ask | reveal
+  const [q, setQ] = useStateTa('');
+  const [entry, setEntry] = useStateTa(null);
+
+  function draw() {
+    const card = T.DECK[Math.floor(Math.random() * T.DECK.length)];
+    setEntry({ card, reversed: Math.random() < 0.5 }); // 50/50 — честная монета
+    setPhase('reveal');
+  }
+  function again() { setEntry(null); setPhase('ask'); }
+
+  const v = entry ? yesNoVerdict(entry.card, entry.reversed, en) : null;
+  const clr = v ? (v.tone === 'good' ? '#86efac' : '#fca5a5') : '#fff';
+
+  return (
+    <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '0 24px', overflow: 'hidden',
+      background: th.effDark ? 'radial-gradient(120% 80% at 50% 22%, rgba(60,40,110,0.6), rgba(8,6,18,0.93))' : 'radial-gradient(120% 80% at 50% 22%, rgba(150,120,210,0.45), rgba(20,14,40,0.9))',
+      backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
+      <style>{`
+        @keyframes yn_drop { 0%{ transform:translateY(-135%) rotate(-16deg) scale(.78); opacity:0; } 60%{ opacity:1; } 100%{ transform:translateY(0) rotate(0) scale(1); opacity:1; } }
+        @keyframes yn_flip { from{ transform:rotateY(180deg); } to{ transform:rotateY(0deg); } }
+        @keyframes yn_glow { 0%,100%{ opacity:.35; transform:scale(.92);} 50%{ opacity:.8; transform:scale(1.08);} }
+        @keyframes yn_text { from{ opacity:0; transform:translateY(14px);} to{ opacity:1; transform:none;} }
+        @keyframes yn_spark { 0%,100%{ opacity:.15; transform:scale(.7);} 50%{ opacity:1; transform:scale(1.2);} }
+      `}</style>
+
+      <button onClick={onClose} style={{ position: 'absolute', top: 'calc(env(safe-area-inset-top, 0px) + 14px)', right: 16, width: 34, height: 34, borderRadius: 999,
+        border: `1px solid ${th.glassBorder}`, background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 17, cursor: 'pointer', backdropFilter: 'blur(8px)' }}>✕</button>
+
+      {phase === 'ask' && (
+        <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 340, animation: 'yn_text .4s ease both' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: gold, marginBottom: 6 }}>{en ? 'Yes or No' : 'Да или нет'}</div>
+            <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.5, color: 'rgba(255,255,255,0.85)', margin: '0 auto', maxWidth: 290 }}>
+              {en ? 'Think of a yes/no question and pull a card.' : 'Задумай вопрос, на который можно ответить «да» или «нет», и вытяни карту.'}
+            </p>
+          </div>
+          <textarea value={q} onChange={(e) => setQ(e.target.value)} maxLength={160} rows={2}
+            placeholder={en ? 'e.g. Should I text them first?' : 'Например: стоит ли написать первой?'}
+            style={{ width: '100%', boxSizing: 'border-box', resize: 'none', borderRadius: 14, padding: '12px 14px',
+              fontFamily: '"Manrope",sans-serif', fontSize: 14, lineHeight: 1.4, color: '#fff',
+              background: 'rgba(255,255,255,0.1)', border: `1px solid ${th.glassBorder}`, outline: 'none', marginBottom: 14 }}/>
+          <button onClick={draw} style={{ width: '100%', padding: '14px', borderRadius: 16, border: 'none', cursor: 'pointer',
+            fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 15, color: '#fff',
+            background: `linear-gradient(135deg, ${th.accent}, ${gold} 150%)`, boxShadow: '0 8px 24px rgba(40,20,70,0.4)' }}>
+            ✦ {en ? 'Pull a card' : 'Вытянуть карту'}
+          </button>
+        </div>
+      )}
+
+      {phase === 'reveal' && entry && (
+        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: 340 }}>
+          {q.trim() && <div style={{ fontFamily: 'var(--ds-serif)', fontSize: 15, color: 'rgba(255,255,255,0.9)', textAlign: 'center', marginBottom: 16, maxWidth: 300 }}>{q.trim()}</div>}
+
+          <div style={{ perspective: 1000, marginBottom: 16, position: 'relative' }}>
+            <div style={{ position: 'absolute', inset: -18, borderRadius: '50%', background: `radial-gradient(circle, ${clr}55, transparent 70%)`, animation: 'yn_glow 2.4s ease-in-out infinite', pointerEvents: 'none' }}/>
+            <div style={{ animation: 'yn_drop .8s cubic-bezier(.18,.8,.26,1.06) both' }}>
+              <div style={{ width: W, height: Math.round(W * 1.66), position: 'relative', transformStyle: 'preserve-3d', animation: 'yn_flip 1.05s ease .5s both' }}>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                  <TarotCard entry={entry} th={th} w={W}/>
+                </div>
+                <div style={{ position: 'absolute', inset: 0, backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                  <CardBack th={th} w={W}/>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ animation: 'yn_text .6s ease 1.5s both', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 700, fontSize: 34, color: clr, marginBottom: 6, lineHeight: 1, textShadow: '0 2px 14px rgba(10,6,24,0.6)' }}>{v.label}</div>
+            <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12.5, color: 'rgba(255,255,255,0.82)', marginBottom: 4 }}>
+              {entry.card.name} · {entry.reversed ? (en ? 'reversed' : 'перевёрнута') : (en ? 'upright' : 'прямая')}
+            </div>
+            <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.6)', maxWidth: 280, textShadow: '0 1px 8px rgba(15,8,32,0.6)' }}>{v.why}</div>
+          </div>
+
+          <button onClick={again} style={{ animation: 'yn_text .6s ease 1.7s both', marginTop: 22, padding: '11px 26px', borderRadius: 999, cursor: 'pointer',
+            fontFamily: '"Manrope",sans-serif', fontWeight: 600, fontSize: 13, color: '#fff',
+            background: 'rgba(255,255,255,0.12)', border: `1px solid ${th.glassBorder}`, backdropFilter: 'blur(8px)' }}>
+            {en ? 'Ask again' : 'Спросить ещё раз'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+window.TarotYesNoReveal = TarotYesNoReveal;
