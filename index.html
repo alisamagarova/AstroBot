@@ -27,9 +27,17 @@
     24%  { opacity: 0; }
     100% { transform: translate(-150px,60px) rotate(158deg); opacity: 0; }
   }
+  /* дневной слой: тёплые пылинки-огоньки плавно всплывают */
+  @keyframes astroDrift {
+    0%   { transform: translate(0,0); opacity: 0; }
+    18%  { opacity: var(--mo,.6); }
+    82%  { opacity: var(--mo,.6); }
+    100% { transform: translate(var(--dx,12px),-62px); opacity: 0; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .astro-in-f, .astro-in-b { animation: none; }
-    .astro-star, .astro-spark, .astro-shoot { animation: none !important; }
+    .astro-star, .astro-spark, .astro-shoot, .astro-mote { animation: none !important; }
+    .astro-mote { opacity: var(--mo,.5) !important; }
   }
   button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
   ::-webkit-scrollbar { display: none; }
@@ -97,6 +105,6 @@
 <script src="tarot-data.js?v=2"></script>
 <script src="tarot-day.js?v=1"></script>
 <script type="text/babel" src="tarot.jsx?v=10"></script>
-<script type="text/babel" src="astro.jsx?v=56"></script>
+<script type="text/babel" src="astro.jsx?v=57"></script>
 </body>
 </html>

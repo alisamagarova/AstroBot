@@ -64,6 +64,36 @@ function StarField({ tone='rgba(255,255,255,0.88)', density=42 }) {
   );
 }
 
+// Дневной магический слой для светлых тем: тёплые пылинки-огоньки + искры.
+function DayShimmer({ count=20 }) {
+  let seed=7; const rnd=()=>{seed=(seed*9301+49297)%233280; return seed/233280;};
+  const motes=[];
+  for(let i=0;i<count;i++){
+    const sz=4+rnd()*6;
+    const mo=(0.28+rnd()*0.4).toFixed(2);
+    const dx=(((rnd()*2-1)*22).toFixed(0))+'px';
+    motes.push(<div key={i} className="astro-mote" style={{position:'absolute',
+      left:(rnd()*100).toFixed(1)+'%', top:(rnd()*100).toFixed(1)+'%',
+      width:sz, height:sz, borderRadius:'50%',
+      background:'radial-gradient(circle, rgba(255,239,205,0.95), rgba(255,212,150,0) 70%)',
+      opacity:0, '--dx':dx, '--mo':mo,
+      animation:`astroDrift ${(8+rnd()*9).toFixed(1)}s ease-in-out ${(rnd()*10).toFixed(1)}s infinite`}}/>);
+  }
+  const spark=(left,top,size,dur,del)=>(
+    <div key={left+top} className="astro-spark" style={{position:'absolute',left,top,animation:`astroFloatY ${dur}s ease-in-out ${del}s infinite`}}>
+      <AstroGlyph name="spark" size={size} color="rgba(255,198,120,0.85)"/>
+    </div>
+  );
+  return (
+    <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>
+      {motes}
+      {spark('80%','15%',12,6,0)}
+      {spark('15%','58%',9,7.5,1.4)}
+      {spark('47%','30%',8,8.5,3)}
+    </div>
+  );
+}
+
 function WheelWatermark({ color='#fff', opacity=0.07 }) {
   return (
     <svg viewBox="0 0 100 100" style={{position:'absolute',bottom:'-8%',right:'-8%',width:'58%',height:'58%',pointerEvents:'none',opacity}}>
@@ -285,7 +315,7 @@ function Sky({ th }) {
     <div style={{position:'absolute',inset:0,zIndex:0,pointerEvents:'none',overflow:'hidden'}}>
       <div style={{position:'absolute',inset:0,background:th.sky}}/>
       {th.scrim!=='none'&&<div style={{position:'absolute',inset:0,background:th.scrim}}/>}
-      {th.stars&&<StarField density={44}/>}
+      {th.stars ? <StarField density={44}/> : <DayShimmer/>}
     </div>
   );
 }
