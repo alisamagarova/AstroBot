@@ -18,8 +18,18 @@
   .astro-in-f { animation: astroInF .34s cubic-bezier(.2,.7,.3,1); }
   .astro-in-b { animation: astroInB .34s cubic-bezier(.2,.7,.3,1); }
   @keyframes astroSpin { to { transform: rotate(360deg); } }
+  /* фоновая магия: мерцание звёзд, парение искр, редкие падающие звёзды */
+  @keyframes astroTwinkle { 0%,100% { opacity: var(--o0,.4); } 50% { opacity: var(--o1,1); } }
+  @keyframes astroFloatY  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+  @keyframes astroShoot {
+    0%   { transform: translate(0,0) rotate(158deg); opacity: 0; }
+    8%   { opacity: .85; }
+    24%  { opacity: 0; }
+    100% { transform: translate(-150px,60px) rotate(158deg); opacity: 0; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .astro-in-f, .astro-in-b { animation: none; }
+    .astro-star, .astro-spark, .astro-shoot { animation: none !important; }
   }
   button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
   ::-webkit-scrollbar { display: none; }
@@ -87,6 +97,6 @@
 <script src="tarot-data.js?v=2"></script>
 <script src="tarot-day.js?v=1"></script>
 <script type="text/babel" src="tarot.jsx?v=10"></script>
-<script type="text/babel" src="astro.jsx?v=55"></script>
+<script type="text/babel" src="astro.jsx?v=56"></script>
 </body>
 </html>
