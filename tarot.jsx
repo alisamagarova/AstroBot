@@ -282,21 +282,22 @@ function tarotDayEntry() {
     && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) || 'guest';
   const seed = tarotHash(dayKey + ':' + uid);
   const entry = { card: T.DECK[seed % T.DECK.length], reversed: ((seed >> 9) & 7) < 3 }; // ~37% перевёрнута
-  return { entry, dayKey };
+  return { entry, dayKey, uid: String(uid) };
 }
 window.tarotDayEntry = tarotDayEntry;
 
-function tarotDaySeen(dayKey) {
-  try { const r = JSON.parse(localStorage.getItem('astro_tarot_day') || '{}'); return r.date === dayKey && r.flipped; } catch (e) { return false; }
+// «Раскрыто» — только если совпадает И дата, И пользователь (localStorage в TG общий на устройстве).
+function tarotDaySeen(dayKey, uid) {
+  try { const r = JSON.parse(localStorage.getItem('astro_tarot_day') || '{}'); return r.date === dayKey && String(r.uid) === String(uid) && r.flipped; } catch (e) { return false; }
 }
 
 // Виджет-баннер на главной: рубашка → по тапу открывает мистический оверлей.
 function TarotDailyCard({ th, lang, onReveal }) {
   const en = lang === 'en';
-  const { entry, dayKey } = tarotDayEntry();
+  const { entry, dayKey, uid } = tarotDayEntry();
   const m = entry.reversed ? entry.card.rev : entry.card.up;
   const [seen, setSeen] = useStateTa(false);
-  useEffectTa(() => { setSeen(tarotDaySeen(dayKey)); }, [dayKey]);
+  useEffectTa(() => { setSeen(tarotDaySeen(dayKey, uid)); }, [dayKey, uid]);
 
   const gold = th.gold;
   return (
@@ -333,14 +334,14 @@ window.TarotDailyCard = TarotDailyCard;
 // ── Мистический оверлей: карта выпадает сверху и переворачивается ─────────────
 function TarotDayReveal({ th, lang, onClose }) {
   const en = lang === 'en';
-  const { entry, dayKey } = tarotDayEntry();
+  const { entry, dayKey, uid } = tarotDayEntry();
   const m = entry.reversed ? entry.card.rev : entry.card.up;
   const gold = th.gold;
   const W = 156;
 
   useEffectTa(() => {
-    try { localStorage.setItem('astro_tarot_day', JSON.stringify({ date: dayKey, flipped: true })); } catch (e) {}
-  }, [dayKey]);
+    try { localStorage.setItem('astro_tarot_day', JSON.stringify({ date: dayKey, uid, flipped: true })); } catch (e) {}
+  }, [dayKey, uid]);
 
   const dateStr = (() => { try { return new Date().toLocaleDateString(en ? 'en-US' : 'ru-RU', { day: 'numeric', month: 'long' }); } catch (e) { return ''; } })();
 
