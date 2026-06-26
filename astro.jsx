@@ -417,7 +417,7 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
         {POSSIBILITIES.map(p=>{
-          const soon = false; // все услуги доступны
+          const soon = p.id === 'tarot'; // таро — позже, с ИИ-интерпретацией (под платных)
           return (
             <GlassCard key={p.id} th={th} onClick={soon ? undefined : ()=>onOpen(p.id)}
               style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130,
