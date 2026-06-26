@@ -269,3 +269,59 @@ function TarotScreen({ th, lang }) {
 }
 
 window.TarotScreen = TarotScreen;
+
+// ── Карта дня (бесплатный ежедневный виджет на главной) ──────────────────────
+function tarotDayKey() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; }
+function tarotHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function TarotDailyCard({ th, lang }) {
+  const T = window.TAROT;
+  const en = lang === 'en';
+  const dayKey = tarotDayKey();
+  const uid = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe
+    && window.Telegram.WebApp.initDataUnsafe.user && window.Telegram.WebApp.initDataUnsafe.user.id) || 'guest';
+  const seed = tarotHash(dayKey + ':' + uid);
+  const entry = { card: T.DECK[seed % T.DECK.length], reversed: ((seed >> 9) & 7) < 3 }; // ~37% перевёрнута
+  const m = entry.reversed ? entry.card.rev : entry.card.up;
+
+  const [flipped, setFlipped] = useStateTa(false);
+  useEffectTa(() => {
+    try { const raw = JSON.parse(localStorage.getItem('astro_tarot_day') || '{}'); if (raw.date === dayKey && raw.flipped) setFlipped(true); } catch (e) {}
+  }, [dayKey]);
+  function flip() {
+    setFlipped(true);
+    try { localStorage.setItem('astro_tarot_day', JSON.stringify({ date: dayKey, flipped: true })); } catch (e) {}
+  }
+
+  const gold = th.gold;
+  return (
+    <button onClick={flipped ? undefined : flip} style={{
+      display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', cursor: flipped ? 'default' : 'pointer',
+      background: th.glassStrong, border: `1px solid ${th.glassBorder}`, backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+      borderRadius: 22, padding: '13px 16px', marginBottom: 22, boxSizing: 'border-box',
+    }}>
+      <div style={{ flexShrink: 0 }}>
+        {flipped ? <TarotCard entry={entry} th={th} w={48}/> : <CardBack th={th} w={48}/>}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 9.5, letterSpacing: 1.4, color: gold, marginBottom: 4 }}>
+          {en ? 'CARD OF THE DAY' : 'КАРТА ДНЯ'}
+        </div>
+        {flipped ? (
+          <React.Fragment>
+            <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 16, lineHeight: 1.1, color: th.ink, marginBottom: 3 }}>
+              {entry.card.name}{entry.reversed ? <span style={{ fontFamily: '"Manrope",sans-serif', fontSize: 10, fontWeight: 700, color: '#c2410c' }}>{'  · перевёрнута'}</span> : null}
+            </div>
+            <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, lineHeight: 1.4, color: th.inkSoft, textWrap: 'pretty' }}>{m.t}</div>
+          </React.Fragment>
+        ) : (
+          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, lineHeight: 1.35, color: th.inkSoft }}>
+            {en ? 'Tap to reveal your card for today ✦' : 'Нажми, чтобы открыть карту на сегодня ✦'}
+          </div>
+        )}
+      </div>
+    </button>
+  );
+}
+
+window.TarotDailyCard = TarotDailyCard;

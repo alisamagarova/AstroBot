@@ -392,7 +392,7 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
         display:'flex',alignItems:'center',gap:14,width:'100%',textAlign:'left',cursor:'pointer',
         background:th.glassStrong,border:`1px solid ${th.glassBorder}`,
         backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)',
-        borderRadius:22,padding:'14px 16px',marginBottom:22,boxSizing:'border-box',
+        borderRadius:22,padding:'14px 16px',marginBottom:11,boxSizing:'border-box',
       }}>
         <div style={{width:48,height:48,borderRadius:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}30`,border:`1px solid ${th.accent}50`}}>
           <AstroGlyph name="aspects" size={26} color={th.glyphClr} sw={1.5}/>
@@ -403,6 +403,9 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp }) {
         </div>
         <AstroGlyph name="arrow-right" size={18} color={th.ink} sw={1.8} style={{flexShrink:0}}/>
       </button>
+
+      {/* ── КАРТА ДНЯ (ежедневный виджет) ─────────────── */}
+      <TarotDailyCard th={th} lang={lang}/>
 
       {/* ── POSSIBILITIES GRID ───────────────────────── */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:11}}>
