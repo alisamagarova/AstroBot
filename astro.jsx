@@ -38,28 +38,31 @@ function StarField({ tone='rgba(255,255,255,0.88)', density=42 }) {
   const dots=[];
   for(let i=0;i<density;i++){
     const sz=0.9+rnd()*2.2;
+    const glow=`0 0 ${(sz*2.2).toFixed(1)}px ${(sz*0.9).toFixed(1)}px rgba(255,255,255,0.35)`;
     const base={position:'absolute',left:rnd()*100+'%',top:rnd()*100+'%',width:sz,height:sz,borderRadius:'50%',background:tone};
-    if(rnd()<0.6){ // ~60% звёзд мягко мерцают
-      const o0=0.18+rnd()*0.34, o1=Math.min(1,o0+0.4+rnd()*0.35);
-      dots.push(<div key={i} className="astro-star" style={{...base,opacity:o0,'--o0':o0,'--o1':o1,
-        animation:`astroTwinkle ${(2.6+rnd()*4).toFixed(1)}s ease-in-out ${(rnd()*6).toFixed(1)}s infinite`}}/>);
+    if(rnd()<0.78){ // большинство звёзд мерцают
+      const o0=0.2+rnd()*0.3, o1=Math.min(1,o0+0.55+rnd()*0.35);
+      dots.push(<div key={i} className="astro-star" style={{...base,opacity:o0,boxShadow:sz>2?glow:'none','--o0':o0,'--o1':o1,
+        animation:`astroTwinkle ${(2.2+rnd()*3.4).toFixed(1)}s ease-in-out ${(rnd()*5).toFixed(1)}s infinite`}}/>);
     } else {
-      dots.push(<div key={i} style={{...base,opacity:0.22+rnd()*0.7}}/>);
+      dots.push(<div key={i} style={{...base,opacity:0.3+rnd()*0.6}}/>);
     }
   }
-  // тонкая падающая звезда: яркая «голова» + хвост-градиент
+  // падающая звезда: яркая «голова» + хвост-градиент
   const shoot=(left,top,len,dur,delay)=>(
-    <div className="astro-shoot" style={{position:'absolute',left,top,width:len,height:1.4,borderRadius:2,
-      background:`linear-gradient(90deg, transparent, ${tone})`,opacity:0,
+    <div className="astro-shoot" style={{position:'absolute',left,top,width:len,height:1.6,borderRadius:2,
+      background:`linear-gradient(90deg, transparent, ${tone})`,boxShadow:`0 0 6px 1px rgba(255,255,255,0.5)`,opacity:0,
       animation:`astroShoot ${dur}s ease-in ${delay}s infinite`}}/>
   );
   return (
     <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>
       {dots}
-      {shoot('84%','8%',62,9,3.5)}
-      {shoot('66%','22%',46,14,9)}
-      <div className="astro-spark" style={{position:'absolute',left:'79%',top:'13%',animation:'astroFloatY 6s ease-in-out infinite'}}><AstroGlyph name="spark" size={12} color={tone}/></div>
-      <div className="astro-spark" style={{position:'absolute',left:'13%',top:'39%',animation:'astroFloatY 7.5s ease-in-out 1s infinite'}}><AstroGlyph name="spark" size={8} color={tone} style={{opacity:0.65}}/></div>
+      {shoot('86%','8%',66,7,2)}
+      {shoot('62%','18%',50,10.5,5.5)}
+      {shoot('33%','12%',44,13,10)}
+      <div className="astro-spark" style={{position:'absolute',left:'79%',top:'13%',animation:'astroFloatY 6s ease-in-out infinite'}}><AstroGlyph name="spark" size={13} color={tone}/></div>
+      <div className="astro-spark" style={{position:'absolute',left:'13%',top:'39%',animation:'astroFloatY 7.5s ease-in-out 1s infinite'}}><AstroGlyph name="spark" size={9} color={tone} style={{opacity:0.7}}/></div>
+      <div className="astro-spark" style={{position:'absolute',left:'40%',top:'8%',animation:'astroFloatY 8.5s ease-in-out 2.2s infinite'}}><AstroGlyph name="spark" size={8} color={tone} style={{opacity:0.6}}/></div>
     </div>
   );
 }
@@ -315,7 +318,7 @@ function Sky({ th }) {
     <div style={{position:'absolute',inset:0,zIndex:0,pointerEvents:'none',overflow:'hidden'}}>
       <div style={{position:'absolute',inset:0,background:th.sky}}/>
       {th.scrim!=='none'&&<div style={{position:'absolute',inset:0,background:th.scrim}}/>}
-      {th.stars ? <StarField density={44}/> : <DayShimmer/>}
+      {th.stars ? <StarField density={56}/> : <DayShimmer/>}
     </div>
   );
 }
