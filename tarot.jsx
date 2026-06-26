@@ -401,7 +401,7 @@ function TarotDayReveal({ th, lang, onClose }) {
               {entry.reversed ? (en ? 'reversed' : 'перевёрнута') : (en ? 'upright' : 'прямая')}
             </span>
           </div>
-          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, fontStyle: 'italic', color: gold, marginBottom: 8 }}>{m.kw}</div>
+          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, fontWeight: 600, fontStyle: 'italic', color: '#ffe1a3', marginBottom: 8, textShadow: '0 1px 8px rgba(15,8,32,0.75)' }}>{m.kw}</div>
           <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.92)', margin: 0, textWrap: 'pretty' }}>{dayText}</p>
         </div>
 
