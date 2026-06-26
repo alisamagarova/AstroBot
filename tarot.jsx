@@ -344,6 +344,10 @@ function TarotDayReveal({ th, lang, onClose }) {
 
   const dateStr = (() => { try { return new Date().toLocaleDateString(en ? 'en-US' : 'ru-RU', { day: 'numeric', month: 'long' }); } catch (e) { return ''; } })();
 
+  // Специальный текст «карты дня» (с откатом на общее значение карты).
+  const DT = (window.TAROT_DAY_TEXT || {})[entry.card.id] || {};
+  const dayText = (en ? (entry.reversed ? DT.enRev : DT.en) : (entry.reversed ? DT.ruRev : DT.ru)) || m.t;
+
   return (
     <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '0 24px', overflow: 'hidden',
@@ -398,7 +402,7 @@ function TarotDayReveal({ th, lang, onClose }) {
             </span>
           </div>
           <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, fontStyle: 'italic', color: gold, marginBottom: 8 }}>{m.kw}</div>
-          <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.92)', margin: 0, textWrap: 'pretty' }}>{m.t}</p>
+          <p style={{ fontFamily: '"Manrope",sans-serif', fontSize: 14, lineHeight: 1.6, color: 'rgba(255,255,255,0.92)', margin: 0, textWrap: 'pretty' }}>{dayText}</p>
         </div>
 
         <button onClick={onClose} style={{ animation: 'tdr_text .6s ease 1.7s both', marginTop: 22, padding: '11px 26px', borderRadius: 999, cursor: 'pointer',
