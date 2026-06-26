@@ -14,6 +14,7 @@ function AstroGlyph({ name, size = 24, color = 'currentColor', sw = 1.6, style }
     case 'milestones': return (<svg {...c}><circle cx="12" cy="12" r="2.6" fill={color} stroke="none" opacity="0.9"/><path d="M4 4.5 12 12M20 4.5 12 12M12 12v7.5"/><circle cx="4" cy="4.5" r="1.5" fill={color} stroke="none"/><circle cx="20" cy="4.5" r="1.5" fill={color} stroke="none"/><circle cx="12" cy="19.5" r="1.5" fill={color} stroke="none"/></svg>);
     case 'tarot':      return (<svg {...c}><rect x="6.4" y="3.6" width="11.2" height="16.8" rx="2" transform="rotate(-9 12 12)"/><path d="M12 8.2l1 3 3.1.1-2.5 1.9.9 3-2.5-1.8-2.5 1.8.9-3L8.9 11.3l3.1-.1 1-3Z" fill={color} stroke="none"/></svg>);
     case 'aspects':    return (<svg {...c}><circle cx="12" cy="12" r="9"/><path d="M12 5.5 18.2 16H5.8Z"/></svg>);
+    case 'chat':       return (<svg {...c}><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H9l-4 3.5V16.5H4A1.5 1.5 0 0 1 2.5 15V7A1.5 1.5 0 0 1 4 5.5Z"/><path d="M7.5 10h9M7.5 13h6" opacity="0.6"/></svg>);
     case 'arrow-right':return (<svg {...c}><path d="M4 12h15M13 6l6 6-6 6"/></svg>);
     case 'back':       return (<svg {...c}><path d="M15 5l-7 7 7 7"/></svg>);
     case 'close':      return (<svg {...c}><path d="M6 6l12 12M18 6 6 18"/></svg>);
@@ -540,6 +541,129 @@ function ServiceHelpSheet({ th, lang, item, onClose }) {
   );
 }
 
+// Сжимает картинку в dataURL (JPEG) — чтобы скрин не был гигантским.
+function compressImage(file, maxW = 1280, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+// Обратная связь / баг-репорт (нижняя шторка).
+function FeedbackSheet({ th, lang, onClose }) {
+  const en = lang === 'en';
+  const [kind, setKind] = useState('idea');     // idea | bug
+  const [msg, setMsg]   = useState('');
+  const [shot, setShot] = useState(null);        // dataURL скрина
+  const [phase, setPhase] = useState('form');    // form | sending | done
+  const [err, setErr]   = useState('');
+
+  async function pickImage(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try { setShot(await compressImage(f)); setErr(''); }
+    catch (_) { setErr(en ? 'Could not read the image' : 'Не удалось прочитать изображение'); }
+  }
+
+  async function submit() {
+    if (msg.trim().length < 3) { setErr(en ? 'Please describe it a little' : 'Опиши, пожалуйста, чуть подробнее'); return; }
+    setErr(''); setPhase('sending');
+    const r = await window.AstroAPI.sendFeedback({ kind, message: msg.trim(), screenshot: kind === 'bug' ? shot : null });
+    if (r && r.ok) setPhase('done');
+    else { setPhase('form'); setErr(en ? "Couldn't send, please try again" : 'Не удалось отправить, попробуй ещё раз'); }
+  }
+
+  const sheet = (children) => (
+    <div onClick={onClose} style={{position:'absolute',inset:0,zIndex:95,display:'flex',alignItems:'flex-end',background:'rgba(0,0,0,0.55)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)'}}>
+      <div onClick={(e)=>e.stopPropagation()} style={{width:'100%',maxHeight:'88%',overflowY:'auto',background:th.effDark?'#1a1430':'#fff',borderRadius:'24px 24px 0 0',padding:'22px 22px 32px',boxShadow:'0 -8px 40px rgba(0,0,0,0.3)'}}>
+        <div style={{width:40,height:4,borderRadius:99,background:th.glassBorder,margin:'0 auto 18px'}}/>
+        {children}
+      </div>
+    </div>
+  );
+
+  if (phase === 'done') {
+    return sheet(
+      <div style={{textAlign:'center',padding:'8px 4px 4px'}}>
+        <div style={{fontSize:40,marginBottom:10}}>✦</div>
+        <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,marginBottom:8}}>{en?'Thank you!':'Спасибо!'}</div>
+        <p style={{fontFamily:'"Manrope",sans-serif',fontSize:13.5,lineHeight:1.55,color:th.inkSoft,margin:'0 auto 22px',maxWidth:300,textWrap:'pretty'}}>
+          {en ? "We've got your message and will try to look into it within 72 hours." : 'Получили твоё сообщение — постараемся разобраться в течение 72 часов.'}
+        </p>
+        <button onClick={onClose} style={{width:'100%',height:50,borderRadius:999,border:'none',cursor:'pointer',background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,boxShadow:`0 8px 26px ${th.accentGlow}`}}>{en?'Close':'Закрыть'}</button>
+      </div>
+    );
+  }
+
+  const choice = (id, label) => (
+    <button onClick={()=>setKind(id)} style={{
+      flex:1,padding:'11px 8px',borderRadius:13,cursor:'pointer',
+      border:`1.5px solid ${kind===id?th.accent:th.glassBorder}`,
+      background: kind===id ? `${th.accent}22` : 'transparent',
+      color: kind===id ? th.ink : th.muted,
+      fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:13,
+    }}>{label}</button>
+  );
+
+  const sending = phase === 'sending';
+  return sheet(
+    <React.Fragment>
+      <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,marginBottom:4}}>{en?'Feedback':'Обратная связь'}</div>
+      <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12.5,color:th.muted,marginBottom:16,lineHeight:1.4}}>{en?'What would you like to tell us?':'Что хочешь рассказать?'}</div>
+
+      <div style={{display:'flex',gap:10,marginBottom:14}}>
+        {choice('idea', en?'💡 Suggest an idea':'💡 Предложить идею')}
+        {choice('bug',  en?'🐞 Report a bug':'🐞 Сообщить о баге')}
+      </div>
+
+      <textarea value={msg} onChange={(e)=>{setMsg(e.target.value); if(err) setErr('');}} maxLength={2000} rows={5}
+        placeholder={kind==='bug' ? (en?'What went wrong? What did you expect?':'Что пошло не так? Что ожидалось?') : (en?'Describe your idea…':'Опиши свою идею…')}
+        style={{width:'100%',boxSizing:'border-box',resize:'none',borderRadius:14,padding:'12px 14px',
+          fontFamily:'"Manrope",sans-serif',fontSize:14,lineHeight:1.45,color:th.ink,
+          background:th.effDark?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.04)',border:`1px solid ${th.glassBorder}`,outline:'none',marginBottom:10}}/>
+
+      {kind==='bug' && (
+        <div style={{marginBottom:12}}>
+          {shot ? (
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <img src={shot} alt="" style={{width:54,height:54,objectFit:'cover',borderRadius:10,border:`1px solid ${th.glassBorder}`}}/>
+              <span style={{flex:1,fontFamily:'"Manrope",sans-serif',fontSize:12.5,color:th.inkSoft}}>{en?'Screenshot attached':'Скриншот прикреплён'}</span>
+              <button onClick={()=>setShot(null)} style={{border:`1px solid ${th.glassBorder}`,background:'transparent',color:th.muted,borderRadius:999,width:30,height:30,cursor:'pointer',fontSize:15}}>✕</button>
+            </div>
+          ) : (
+            <label style={{display:'inline-flex',alignItems:'center',gap:8,padding:'9px 14px',borderRadius:12,cursor:'pointer',
+              border:`1px dashed ${th.glassBorder}`,color:th.inkSoft,fontFamily:'"Manrope",sans-serif',fontSize:12.5,fontWeight:600}}>
+              <AstroGlyph name="spark" size={14} color={th.glyphClr}/>
+              {en?'Attach screenshot (optional)':'Прикрепить скриншот (по желанию)'}
+              <input type="file" accept="image/*" onChange={pickImage} style={{display:'none'}}/>
+            </label>
+          )}
+        </div>
+      )}
+
+      {err && <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,color:'#dc4b2a',marginBottom:10}}>{err}</div>}
+
+      <button onClick={submit} disabled={sending} style={{width:'100%',height:50,borderRadius:999,border:'none',cursor:sending?'default':'pointer',
+        background:sending?th.glassBorder:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,
+        boxShadow:sending?'none':`0 8px 26px ${th.accentGlow}`}}>
+        {sending ? (en?'Sending…':'Отправляем…') : (en?'Send':'Отправить')}
+      </button>
+    </React.Fragment>
+  );
+}
+
 // ════════════════════════════════════════════════════════════
 // SUB SCREEN
 // ════════════════════════════════════════════════════════════
@@ -599,7 +723,7 @@ function ProfRow({ th, label, value, last, action }) {
 // ════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ════════════════════════════════════════════════════════════
-function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey }) {
+function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback }) {
   const [editing, setEditing] = useState(false);
   const [draft,   setDraft]   = useState(userName);
   const s          = STR[lang];
@@ -766,6 +890,23 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
         <ProfRow th={th} label="Telegram ID" value={(window.AstroAPI && window.AstroAPI.tgUserId()) || USER.tgId} last/>
       </ProfSection>
 
+      {/* ── ПОДДЕРЖКА / ОБРАТНАЯ СВЯЗЬ ────────────── */}
+      <ProfSection th={th} label={en ? 'Support' : 'Поддержка'}>
+        <button onClick={onFeedback} style={{
+          width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 0',
+          background:'transparent',border:'none',cursor:'pointer',textAlign:'left',
+        }}>
+          <div style={{width:38,height:38,borderRadius:11,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}22`,border:`1px solid ${th.accent}44`}}>
+            <AstroGlyph name="chat" size={19} color={th.glyphClr} sw={1.6}/>
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{en?'Feedback & support':'Обратная связь'}</div>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35}}>{en?'Suggest an idea or report a bug':'Предложить идею или сообщить о баге'}</div>
+          </div>
+          <AstroGlyph name="arrow-right" size={16} color={th.glyphClr} sw={1.8}/>
+        </button>
+      </ProfSection>
+
       {/* ── LEGAL DOCUMENTS ──────────────────────── */}
       <ProfSection th={th} label={s.documents}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 0',opacity:0.42}}>
@@ -859,6 +1000,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [helpItem, setHelpItem] = useState(null); // объяснение услуги (bottom-sheet)
   const [dayReveal, setDayReveal] = useState(false); // оверлей «Карта дня»
   const [yesNo, setYesNo] = useState(false); // оверлей «Да / Нет»
+  const [feedbackOpen, setFeedbackOpen] = useState(false); // шторка обратной связи
   const [onb, setOnb] = useState('loading'); // 'loading' | 'needed' | 'done'
   const [otherBirth, setOtherBirth] = useState(null); // натал для другого человека (НЕ сохраняется в БД)
   const [editingOther, setEditingOther] = useState(false);
@@ -1058,7 +1200,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   let mainContent;
 
   if (activeTab === 'profile') {
-    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key}/>;
+    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)}/>;
   } else if (screen === 'home') {
     mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={()=>setDayReveal(true)} onYesNo={()=>setYesNo(true)}/>;
   } else if (screen === 'natal') {
@@ -1179,6 +1321,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
 
         {/* ── Оверлей «Да / Нет» ── */}
         {yesNo && <TarotYesNoReveal th={th} lang={lang} onClose={()=>setYesNo(false)}/>}
+
+        {/* ── Шторка обратной связи ── */}
+        {feedbackOpen && <FeedbackSheet th={th} lang={lang} onClose={()=>setFeedbackOpen(false)}/>}
 
         {/* ── Онбординг: проверка профиля / форма приветствия ── */}
         {onb === 'loading' && (

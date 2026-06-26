@@ -276,6 +276,20 @@ const AstroAPI = {
     } catch (e) { return { ok:false, error:String(e) }; }
   },
 
+  /** Отправляет обратную связь (идея/баг) с опциональным скриншотом. */
+  async sendFeedback({ kind, message, screenshot }) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return { ok: false, error: 'not_configured' };
+    try {
+      const res = await apiFetch(`/api/users/${id}/feedback`, {
+        method: 'POST',
+        body: JSON.stringify({ kind, message, screenshot: screenshot || null }),
+      });
+      if (res.ok) return { ok: true };
+      return { ok: false, error: 'HTTP ' + res.status };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  },
+
   /** ВРЕМЕННОЕ: удаляет профиль на бэкенде (для повторного теста онбординга). */
   async resetSelf() {
     const id = tgUserId();
