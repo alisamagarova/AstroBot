@@ -300,3 +300,9 @@ const AstroAPI = {
 };
 
 window.AstroAPI = AstroAPI;
+
+// Админ ли текущий пользователь (для скрытых разделов). Список — в index.html.
+window.isAstroAdmin = function () {
+  const id = tgUserId();
+  return !!id && (window.ASTRO_ADMIN_IDS || []).map(String).includes(String(id));
+};

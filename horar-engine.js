@@ -29,7 +29,6 @@
     // Работа: основной квезит — 10 дом (работа/должность/работодатель);
     // дополнительно 6 дом (условия труда) и 2 дом (заработок).
     { id: 'work',     house: 10, secondary: [6, 2], ru: 'Работа / карьера',          en: 'Work / career' },
-    { id: 'health',   house: 6,                  ru: 'Здоровье / болезнь',           en: 'Health / illness' },
     { id: 'travel',   house: 9,                  ru: 'Дальняя поездка / учёба / суд',en: 'Travel / study / law' },
     { id: 'home',     house: 4,                  ru: 'Дом / недвижимость / семья',   en: 'Home / property / family' },
     { id: 'children', house: 5,                  ru: 'Дети / беременность / роман',  en: 'Children / pregnancy / romance' },

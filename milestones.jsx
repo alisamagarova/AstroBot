@@ -164,8 +164,8 @@ function MilestonesIntakeScreen({ th, lang, birth, userName, onEditBirth, onChoo
         </div>
       )}
 
-      {/* topic picker grouped by category */}
-      {M.CATEGORIES.map((cat) => {
+      {/* topic picker grouped by category. «Тело и здоровье» — только админам (не медицина). */}
+      {M.CATEGORIES.filter((cat) => cat.id !== 'body' || (window.isAstroAdmin && window.isAstroAdmin())).map((cat) => {
         const themes = M.THEMES.filter((t) => t.cat === cat.id);
         return (
           <div key={cat.id} style={{ marginBottom: 18 }}>

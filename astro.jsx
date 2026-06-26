@@ -264,9 +264,10 @@ function Header({ th, lang, screen, title, onBack, activeTab }) {
 
   return (
     <div style={{position:'sticky',top:0,zIndex:30,paddingTop:STATUS_PAD,
-      background:th.effDark?'rgba(16,11,34,0.82)':'rgba(248,244,255,0.85)',
-      backdropFilter:'blur(14px)',WebkitBackdropFilter:'blur(14px)',
-      borderBottom:`1px solid ${th.glassBorder}55`}}>
+      background:th.effDark
+        ? 'linear-gradient(180deg, rgba(12,8,26,0.9) 0%, rgba(12,8,26,0.55) 58%, rgba(12,8,26,0) 100%)'
+        : 'linear-gradient(180deg, rgba(248,244,255,0.92) 0%, rgba(248,244,255,0.55) 58%, rgba(248,244,255,0) 100%)',
+      backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)'}}>
       <div style={{height:50,display:'flex',alignItems:'center',gap:10,padding:'0 16px'}}>
         {isProfile ? (
           <React.Fragment>

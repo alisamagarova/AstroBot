@@ -352,7 +352,7 @@ function TarotDayReveal({ th, lang, onClose }) {
   return (
     <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '0 24px', overflow: 'hidden',
-      background: th.effDark ? 'radial-gradient(120% 80% at 50% 22%, rgba(60,40,110,0.6), rgba(8,6,18,0.93))' : 'radial-gradient(120% 80% at 50% 22%, rgba(150,120,210,0.45), rgba(20,14,40,0.9))',
+      background: 'radial-gradient(125% 85% at 50% 20%, rgba(48,30,92,0.92), rgba(7,5,18,0.97))',
       backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
       <style>{`
         @keyframes tdr_drop { 0%{ transform:translateY(-135%) rotate(-16deg) scale(.78); opacity:0; } 60%{ opacity:1; } 100%{ transform:translateY(0) rotate(0) scale(1); opacity:1; } }
@@ -513,7 +513,7 @@ function TarotYesNoReveal({ th, lang, onClose }) {
   return (
     <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', padding: '0 24px', overflow: 'hidden',
-      background: th.effDark ? 'radial-gradient(120% 80% at 50% 22%, rgba(60,40,110,0.6), rgba(8,6,18,0.93))' : 'radial-gradient(120% 80% at 50% 22%, rgba(150,120,210,0.45), rgba(20,14,40,0.9))',
+      background: 'radial-gradient(125% 85% at 50% 20%, rgba(48,30,92,0.92), rgba(7,5,18,0.97))',
       backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)' }}>
       <style>{`
         @keyframes yn_drop { 0%{ transform:translateY(-135%) rotate(-16deg) scale(.78); opacity:0; } 60%{ opacity:1; } 100%{ transform:translateY(0) rotate(0) scale(1); opacity:1; } }
@@ -538,7 +538,7 @@ function TarotYesNoReveal({ th, lang, onClose }) {
             placeholder={en ? 'e.g. Should I text them first?' : 'Например: стоит ли написать первой?'}
             style={{ width: '100%', boxSizing: 'border-box', resize: 'none', borderRadius: 14, padding: '12px 14px',
               fontFamily: '"Manrope",sans-serif', fontSize: 14, lineHeight: 1.4, color: '#fff',
-              background: 'rgba(255,255,255,0.1)', border: `1px solid ${err ? '#fca5a5' : th.glassBorder}`, outline: 'none', marginBottom: err ? 6 : 14 }}/>
+              background: 'rgba(255,255,255,0.14)', border: `1px solid ${err ? '#fca5a5' : 'rgba(255,255,255,0.32)'}`, outline: 'none', marginBottom: err ? 6 : 14 }}/>
           {err && <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12, color: '#fca5a5', marginBottom: 12, lineHeight: 1.4 }}>{err}</div>}
           <button onClick={draw} style={{ width: '100%', padding: '14px', borderRadius: 16, border: 'none', cursor: 'pointer',
             fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 15, color: '#fff',
