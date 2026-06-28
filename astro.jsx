@@ -892,8 +892,20 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
         </div>
       </div>
 
-      {/* ── НАСТРОЙКИ: язык · Telegram ID · данные · уведомления · обратная связь ── */}
+      {/* ── ЕДИНАЯ КАРТОЧКА: данные · уведомления · обратная связь · язык · Telegram ID ── */}
       <ProfSection th={th}>
+        <ProfNavRow th={th} icon="calendar"
+          title={s.birthData}
+          subtitle={birthSummary || (en?'Tap to fill in':'Нажми, чтобы заполнить')}
+          onClick={onEditBirth}/>
+        <ProfNavRow th={th} icon="bell"
+          title={en?'Notifications':'Уведомления'}
+          subtitle={en?'Solar year, monthly aspects':'Солярный год, аспекты месяца'}
+          onClick={()=>setView('notif')}/>
+        <ProfNavRow th={th} icon="chat"
+          title={en?'Feedback & support':'Обратная связь'}
+          subtitle={en?'Suggest an idea or report a bug':'Предложить идею или сообщить о баге'}
+          onClick={onFeedback}/>
         <ProfRow th={th} label={s.language} action={
           <div style={{display:'flex',borderRadius:8,overflow:'hidden',border:`1px solid ${th.glassBorder}`}}>
             {['RU','EN'].map((code, i) => {
@@ -911,19 +923,7 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
             })}
           </div>
         }/>
-        <ProfRow th={th} label="Telegram ID" value={(window.AstroAPI && window.AstroAPI.tgUserId()) || USER.tgId}/>
-        <ProfNavRow th={th} icon="calendar"
-          title={s.birthData}
-          subtitle={birthSummary || (en?'Tap to fill in':'Нажми, чтобы заполнить')}
-          onClick={onEditBirth}/>
-        <ProfNavRow th={th} icon="bell"
-          title={en?'Notifications':'Уведомления'}
-          subtitle={en?'Solar year, monthly aspects':'Солярный год, аспекты месяца'}
-          onClick={()=>setView('notif')}/>
-        <ProfNavRow th={th} icon="chat"
-          title={en?'Feedback & support':'Обратная связь'}
-          subtitle={en?'Suggest an idea or report a bug':'Предложить идею или сообщить о баге'}
-          onClick={onFeedback} last/>
+        <ProfRow th={th} label="Telegram ID" value={(window.AstroAPI && window.AstroAPI.tgUserId()) || USER.tgId} last/>
       </ProfSection>
 
       {/* ── LEGAL DOCUMENTS ──────────────────────── */}
