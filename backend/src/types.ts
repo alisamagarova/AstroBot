@@ -24,6 +24,7 @@ export interface DbUser {
   is_blocked:           boolean;
   onboarding_step:      OnboardingStep | null;
   onboarding_completed: boolean;
+  balance:              number;
   created_at:           Date;
   updated_at:           Date;
 }

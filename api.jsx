@@ -290,6 +290,18 @@ const AstroAPI = {
     } catch (e) { return { ok: false, error: String(e) }; }
   },
 
+  /** Баланс игровой валюты (кристаллов). Возвращает число или null при сбое. */
+  async getBalance() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/balance`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return typeof data.balance === 'number' ? data.balance : null;
+    } catch (e) { return null; }
+  },
+
   /** ВРЕМЕННОЕ: удаляет профиль на бэкенде (для повторного теста онбординга). */
   async resetSelf() {
     const id = tgUserId();

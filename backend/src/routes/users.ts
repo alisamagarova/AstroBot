@@ -6,6 +6,7 @@ import {
   setOnboardingStep,
   setLang,
   setBlocked,
+  getBalance,
 } from '../db/queries/users.js';
 import { saveConsent, getConsentsByUser } from '../db/queries/consents.js';
 import { requireOwner } from '../plugins/auth.js';
@@ -62,6 +63,16 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     const user = await getUserByTgId(tgId);
     if (!user) return reply.status(404).send({ error: 'User not found' });
     return { user };
+  });
+
+  /** GET /users/:tgId/balance
+   *  Возвращает баланс игровой валюты (кристаллов).
+   */
+  fastify.get<{ Params: { tgId: string } }>('/users/:tgId/balance', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    const balance = await getBalance(tgId);
+    return { balance };
   });
 
   /** PATCH /users/:tgId/onboarding-step

@@ -36,6 +36,29 @@ function ZodiacGlyph({ sign='leo', size=18, color='currentColor', style }) {
   return <span style={{ fontFamily:'var(--ds-serif)', fontSize:size, lineHeight:1, color, ...style }}>{ZODIAC[sign]||ZODIAC.leo}</span>;
 }
 
+// ── Игровая валюта «Кристаллы» 🔮 ──────────────────────────────
+const CURRENCY = { icon:'🔮', ru:'Кристаллы', en:'Crystals' };
+// Цена каждой возможности в кристаллах. null = пока бесплатно (ценник зададим позже).
+// Когда определимся со стоимостью — проставить числа, и можно включать списание.
+const FEATURE_PRICES = {
+  natal: null, synastry: null, solar: null, milestones: null,
+  pinpoint: null, aspects: null, tarot: null, yesno: null, dayCard: null,
+};
+// Бейдж баланса (иконка + число). compact — для угла главного экрана.
+function BalanceChip({ th, balance, onClick, compact }) {
+  return (
+    <button onClick={onClick} style={{
+      display:'inline-flex',alignItems:'center',gap:6,height:compact?26:28,padding:compact?'0 9px':'0 11px',
+      borderRadius:999,background:th.chip,border:`1px solid ${th.glassBorder}`,
+      backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',cursor:onClick?'pointer':'default',
+      fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:compact?12:12.5,color:th.ink,
+    }}>
+      <span style={{fontSize:compact?13:14,lineHeight:1}}>{CURRENCY.icon}</span>
+      <span>{balance==null?'…':balance}</span>
+    </button>
+  );
+}
+
 function StarField({ tone='rgba(255,255,255,0.88)', density=42 }) {
   let seed=11; const rnd=()=>{seed=(seed*9301+49297)%233280; return seed/233280;};
   const dots=[];
@@ -381,7 +404,7 @@ function BottomNav({ th, lang, activeTab, onTab }) {
 // ════════════════════════════════════════════════════════════
 // MAIN SCREEN
 // ════════════════════════════════════════════════════════════
-function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYesNo }) {
+function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYesNo, balance, onBalance }) {
   const signLine  = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
 
   // Маленькая круглая кнопка «?» — открывает объяснение услуги (оверлей рисует AstroPhone)
@@ -404,6 +427,10 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYe
             чтобы луна/солнце остались на прежнем месте, а текст и плашки поднялись. */}
         <div style={{position:'absolute',top:(IS_TG?38:-10),right:-4,opacity:0.92,filter:'saturate(110%)'}}>
           <CelestialOrb kind={th.orb} size={118}/>
+        </div>
+        {/* Баланс кристаллов — над луной/солнцем */}
+        <div style={{position:'absolute',top:(IS_TG?6:-12),right:-2,zIndex:4}}>
+          <BalanceChip th={th} balance={balance} onClick={onBalance} compact/>
         </div>
         <div style={{
           display:'inline-flex',alignItems:'center',height:28,padding:'0 11px',
@@ -603,7 +630,9 @@ function FeedbackSheet({ th, lang, onClose }) {
         <div style={{fontSize:40,marginBottom:10}}>✦</div>
         <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:21,color:th.ink,marginBottom:8}}>{en?'Thank you!':'Спасибо!'}</div>
         <p style={{fontFamily:'"Manrope",sans-serif',fontSize:13.5,lineHeight:1.55,color:th.inkSoft,margin:'0 auto 22px',maxWidth:300,textWrap:'pretty'}}>
-          {en ? "We've got your message and will try to look into it within 72 hours." : 'Получили твоё сообщение — постараемся разобраться в течение 72 часов.'}
+          {kind === 'bug'
+            ? (en ? "We've got your report and will try to look into it within 72 hours." : 'Получили твоё сообщение — постараемся разобраться в течение 72 часов.')
+            : (en ? "We've got your idea — thank you! We'll consider it for future updates." : 'Получили твою идею — спасибо! Обязательно рассмотрим её для будущих обновлений.')}
         </p>
         <button onClick={onClose} style={{width:'100%',height:50,borderRadius:999,border:'none',cursor:'pointer',background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,boxShadow:`0 8px 26px ${th.accentGlow}`}}>{en?'Close':'Закрыть'}</button>
       </div>
@@ -746,7 +775,7 @@ function ProfNavRow({ th, icon, title, subtitle, onClick, last }) {
 // ════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ════════════════════════════════════════════════════════════
-function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback }) {
+function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback, balance }) {
   const [editing, setEditing] = useState(false);
   const [view,    setView]    = useState('main'); // 'main' | 'notif' — провал в настройки уведомлений
   const [draft,   setDraft]   = useState(userName);
@@ -892,6 +921,26 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
         </div>
       </div>
 
+      {/* ── ЛИЧНЫЙ СЧЁТ (игровая валюта) ───────────── */}
+      <div style={{marginBottom:18}}>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:10,letterSpacing:1.8,textTransform:'uppercase',color:th.muted,marginBottom:8,paddingLeft:4}}>{en?'Wallet':'Личный счёт'}</div>
+        <div style={{
+          display:'flex',alignItems:'center',gap:14,padding:'16px 18px',borderRadius:18,
+          background:`linear-gradient(135deg, ${th.accent}26, ${th.accent}0d)`,border:`1px solid ${th.accent}3a`,
+          backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)',
+        }}>
+          <div style={{fontSize:30,lineHeight:1,flexShrink:0,filter:'drop-shadow(0 2px 8px rgba(123,97,255,0.45))'}}>{CURRENCY.icon}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:'flex',alignItems:'baseline',gap:7}}>
+              <span style={{fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:26,color:th.ink,lineHeight:1}}>{balance==null?'…':balance}</span>
+              <span style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13,color:th.inkSoft}}>{en?CURRENCY.en:CURRENCY.ru}</span>
+            </div>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,marginTop:3}}>{en?'Spend them on the bot\'s features':'Тратятся на возможности бота'}</div>
+          </div>
+          <span style={{fontFamily:'"Manrope",sans-serif',fontSize:9.5,letterSpacing:1,color:th.muted,border:`1px solid ${th.muted}44`,borderRadius:5,padding:'3px 8px',textTransform:'uppercase',flexShrink:0}}>{en?'Top-up soon':'Пополнение скоро'}</span>
+        </div>
+      </div>
+
       {/* ── ЕДИНАЯ КАРТОЧКА: данные · уведомления · обратная связь · язык · Telegram ID ── */}
       <ProfSection th={th}>
         <ProfNavRow th={th} icon="calendar"
@@ -1005,6 +1054,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [anim,      setAnim]      = useState('');
   const [activeTab, setActiveTab] = useState('home');
   const [userName,  setUserName]  = useState(USER.name);
+  const [balance,   setBalance]   = useState(null); // баланс кристаллов (null = ещё не загружен)
   const [birth,     setBirth]     = useState(loadBirth);
   const [partners,  setPartners]  = useState(loadPartners);
   const [selPartnerIdx, setSelPartnerIdx] = useState(null); // index of selected partner
@@ -1060,6 +1110,14 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     return () => { cancelled = true; };
   }, []);
 
+  // ── Баланс кристаллов: подтягиваем с сервера ──
+  const refreshBalance = React.useCallback(() => {
+    const api = window.AstroAPI;
+    if (!api || !api.isConfigured() || !api.inTelegram()) return;
+    api.getBalance().then((b) => { if (typeof b === 'number') setBalance(b); });
+  }, []);
+  useEffect(() => { refreshBalance(); }, [refreshBalance]);
+
   const finishOnboarding = async (b) => {
     setBirth(b);
     if (b.name) setUserName(b.name);
@@ -1071,6 +1129,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     if (api && api.isConfigured() && api.inTelegram()) {
       try { await api.completeOnboarding(b); }
       catch (e) { console.error('onboarding save failed:', e); }
+      refreshBalance(); // новый пользователь получает стартовые кристаллы
     }
   };
 
@@ -1219,9 +1278,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   let mainContent;
 
   if (activeTab === 'profile') {
-    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)}/>;
+    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance}/>;
   } else if (screen === 'home') {
-    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={()=>setDayReveal(true)} onYesNo={()=>setYesNo(true)}/>;
+    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={()=>setDayReveal(true)} onYesNo={()=>setYesNo(true)} balance={balance} onBalance={()=>handleTabChange('profile')}/>;
   } else if (screen === 'natal') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>go('natal_other')}/>;
@@ -1353,6 +1412,19 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
         {onb === 'needed' && (
           <div className="astro-in-f" style={{position:'absolute',inset:0,zIndex:90,overflow:'hidden'}}>
             <Sky th={th}/>
+            {/* Выбор языка интерфейса — поверх онбординга, справа сверху */}
+            <div style={{position:'absolute',top:IS_TG?14:16,right:16,zIndex:3,display:'flex',borderRadius:9,overflow:'hidden',border:`1px solid ${th.glassBorder}`,background:th.chip,backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)'}}>
+              {['RU','EN'].map((code,i)=>{
+                const active = (lang==='ru'?'RU':'EN') === code;
+                return (
+                  <button key={code} onClick={()=>onChangeLang(code)} style={{
+                    padding:'5px 13px',border:'none',borderLeft:i>0?`1px solid ${th.glassBorder}`:'none',
+                    background:active?`${th.accent}33`:'transparent',color:active?th.ink:th.muted,
+                    fontFamily:'"Manrope",sans-serif',fontWeight:active?700:500,fontSize:12,cursor:'pointer',transition:'background .15s',
+                  }}>{code}</button>
+                );
+              })}
+            </div>
             <div style={{position:'relative',zIndex:1,height:'100%'}}>
               <BirthDataEditor th={th} lang={lang}
                 initial={{ name:'', day:null, month:1, year:2000, timeMode:null, hour:null, minute:null, approx:null, city:null, residence:null }}

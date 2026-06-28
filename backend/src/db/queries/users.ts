@@ -79,6 +79,25 @@ export async function setLang(tgId: string, lang: LangCode): Promise<void> {
   );
 }
 
+/** Текущий баланс игровой валюты (кристаллов). */
+export async function getBalance(tgId: string): Promise<number> {
+  const { rows } = await pool.query<{ balance: number }>(
+    'SELECT balance FROM users WHERE tg_id = $1',
+    [tgId],
+  );
+  return rows[0]?.balance ?? 0;
+}
+
+/** Изменяет баланс на delta (может быть отрицательным — списание). Возвращает новый баланс. */
+export async function addBalance(tgId: string, delta: number): Promise<number> {
+  const { rows } = await pool.query<{ balance: number }>(
+    `UPDATE users SET balance = balance + $2, updated_at = now()
+     WHERE tg_id = $1 RETURNING balance`,
+    [tgId, delta],
+  );
+  return rows[0]?.balance ?? 0;
+}
+
 /** Все незаблокировавшие бота пользователи — для массовых рассылок. */
 export async function allActiveUsers(): Promise<{ id: string; tg_id: string; lang: string }[]> {
   const { rows } = await pool.query<{ id: string; tg_id: string; lang: string }>(
