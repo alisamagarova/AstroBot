@@ -24,6 +24,8 @@ function AstroGlyph({ name, size = 24, color = 'currentColor', sw = 1.6, style }
     case 'user':       return (<svg {...c}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>);
     case 'edit':       return (<svg {...c}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"/></svg>);
     case 'doc':        return (<svg {...c}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>);
+    case 'bell':       return (<svg {...c}><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5Z"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg>);
+    case 'calendar':   return (<svg {...c}><rect x="3.5" y="4.5" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/></svg>);
     default: return null;
   }
 }
@@ -721,11 +723,32 @@ function ProfRow({ th, label, value, last, action }) {
   );
 }
 
+// Компактная строка-навигация (иконка · заголовок · подпись · шеврон).
+function ProfNavRow({ th, icon, title, subtitle, onClick, last }) {
+  return (
+    <button onClick={onClick} style={{
+      width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 0',
+      background:'transparent',border:'none',borderBottom:last?'none':`1px solid ${th.glassBorder}`,
+      cursor:'pointer',textAlign:'left',
+    }}>
+      <div style={{width:38,height:38,borderRadius:11,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}22`,border:`1px solid ${th.accent}44`}}>
+        <AstroGlyph name={icon} size={18} color={th.glyphClr} sw={1.6}/>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{title}</div>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{subtitle}</div>
+      </div>
+      <AstroGlyph name="arrow-right" size={16} color={th.glyphClr} sw={1.8}/>
+    </button>
+  );
+}
+
 // ════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ════════════════════════════════════════════════════════════
 function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback }) {
   const [editing, setEditing] = useState(false);
+  const [view,    setView]    = useState('main'); // 'main' | 'notif' — провал в настройки уведомлений
   const [draft,   setDraft]   = useState(userName);
   const s          = STR[lang];
   const activeLang = lang === 'ru' ? 'RU' : 'EN';
@@ -755,6 +778,74 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   const cancelEdit = () => { setDraft(userName); setEditing(false); };
 
   useEffect(() => { setDraft(userName); }, [userName]);
+
+  // Содержимое настроек уведомлений (переключатели) — общий блок для детального экрана.
+  const notifContent = (
+    <React.Fragment>
+      {[
+        { key:'notify_solar',   t: en?'New solar year':'Новый солярный год',  d: en?'A week before your birthday — your year-ahead chart is ready':'За неделю до дня рождения — соляр на год вперёд уже ждёт' },
+        { key:'notify_aspects', t: en?'Monthly aspects':'Аспекты месяца',      d: en?'At the start of a new month — see what the sky brought':'В начале нового месяца — что приготовило небо' },
+      ].map((row, i, arr) => (
+        <div key={row.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom: i<arr.length-1?`1px solid ${th.glassBorder}`:'none'}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{row.t}</div>
+            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,textWrap:'pretty'}}>{row.d}</div>
+          </div>
+          <button onClick={()=>toggleNotify(row.key)} style={{
+            width:46,height:27,borderRadius:999,flexShrink:0,cursor:'pointer',border:'none',padding:0,position:'relative',
+            background: notify[row.key] ? th.accent : (th.effDark?'rgba(255,255,255,0.16)':'rgba(0,0,0,0.16)'),
+            transition:'background .18s',
+          }}>
+            <span style={{position:'absolute',top:3,left: notify[row.key]?22:3,width:21,height:21,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
+          </button>
+        </div>
+      ))}
+
+      {/* Переключатель «обо всём» */}
+      <div style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderTop:`1px solid ${th.glassBorder}`}}>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{en?'Notify about everything':'Уведомлять обо всём'}</div>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,textWrap:'pretty'}}>{en?'Including solar years and months you\'ve already viewed':'Включая уже просмотренные годы и месяцы'}</div>
+        </div>
+        <button onClick={()=>toggleNotify('notify_viewed')} style={{
+          width:46,height:27,borderRadius:999,flexShrink:0,cursor:'pointer',border:'none',padding:0,position:'relative',
+          background: notify.notify_viewed ? th.accent : (th.effDark?'rgba(255,255,255,0.16)':'rgba(0,0,0,0.16)'),
+          transition:'background .18s',
+        }}>
+          <span style={{position:'absolute',top:3,left: notify.notify_viewed?22:3,width:21,height:21,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
+        </button>
+      </div>
+
+      {/* Пояснение — под переключателем «обо всём» */}
+      <div style={{display:'flex',gap:9,alignItems:'flex-start',padding:'2px 0 4px'}}>
+        <span style={{flexShrink:0,fontSize:13,color:th.glyphClr,lineHeight:1.4,marginTop:1}}>✦</span>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
+          {en
+            ? 'By default, if you\'ve already opened a solar year or a month\'s aspects, we won\'t notify you about them. Turn this on to get reminders anyway.'
+            : 'По умолчанию, если ты уже открывал(а) солярный год или аспекты месяца — об этом не напомним. Включи это, чтобы получать уведомления в любом случае.'}
+        </div>
+      </div>
+    </React.Fragment>
+  );
+
+  // ── Детальный экран настроек уведомлений (провал из строки) ──
+  if (view === 'notif') {
+    return (
+      <div className="astro-in-f" style={{padding:'8px 18px 24px',position:'relative',zIndex:1}}>
+        <button onClick={()=>setView('main')} style={{
+          display:'flex',alignItems:'center',gap:8,margin:'8px 0 18px',padding:'8px 4px',
+          background:'transparent',border:'none',cursor:'pointer',color:th.ink,
+        }}>
+          <AstroGlyph name="back" size={18} color={th.ink} sw={1.9}/>
+          <span style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:20,color:th.ink}}>{en?'Notifications':'Уведомления'}</span>
+        </button>
+        <ProfSection th={th}>{notifContent}</ProfSection>
+      </div>
+    );
+  }
+
+  // Короткая сводка данных рождения для строки.
+  const birthSummary = [fmtBirthDate(birth), fmtBirthCity(birth, lang)].filter(Boolean).join(' · ');
 
   return (
     <div style={{padding:'8px 18px 24px',position:'relative',zIndex:1}}>
@@ -801,72 +892,20 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
         </div>
       </div>
 
-      {/* ── BIRTH DATA — tap to edit ───────────────── */}
-      <div style={{marginBottom:18}}>
-        <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:10,letterSpacing:1.8,textTransform:'uppercase',color:th.muted,marginBottom:8,paddingLeft:4}}>{s.birthData}</div>
-        <button onClick={onEditBirth} style={{
-          width:'100%',textAlign:'left',cursor:'pointer',background:th.glass,border:`1px solid ${th.glassBorder}`,
-          borderRadius:18,padding:'2px 16px 0',backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)',color:th.ink,
-        }}>
-          <ProfRow th={th} label={s.birthDate} value={fmtBirthDate(birth)}/>
-          <ProfRow th={th} label={s.birthTime} value={fmtBirthTime(birth, lang)}/>
-          <ProfRow th={th} label={s.birthCity} value={fmtBirthCity(birth, lang)}/>
-          <ProfRow th={th} label={s.residenceCity} value={birth.residence ? (lang==='en'?birth.residence.en:birth.residence.ru) : s.sameAsBirth}/>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px 0'}}>
-            <span style={{display:'flex',alignItems:'center',gap:8,fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:12.5,color:th.glyphClr}}>
-              <AstroGlyph name="edit" size={14} color={th.glyphClr} sw={1.7}/>
-              {lang==='en'?'Edit data':'Редактировать данные'}
-            </span>
-            <AstroGlyph name="arrow-right" size={16} color={th.glyphClr} sw={1.8}/>
-          </div>
-        </button>
-      </div>
-
-      {/* ── NOTIFICATIONS ────────────────────────── */}
-      <ProfSection th={th} label={en ? 'Notifications' : 'Уведомления'}>
-        {[
-          { key:'notify_solar',   t: en?'New solar year':'Новый солярный год',  d: en?'A week before your birthday — your year-ahead chart is ready':'За неделю до дня рождения — соляр на год вперёд уже ждёт' },
-          { key:'notify_aspects', t: en?'Monthly aspects':'Аспекты месяца',      d: en?'At the start of a new month — see what the sky brought':'В начале нового месяца — что приготовило небо' },
-        ].map((row, i, arr) => (
-          <div key={row.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom: i<arr.length-1?`1px solid ${th.glassBorder}`:'none'}}>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{row.t}</div>
-              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,textWrap:'pretty'}}>{row.d}</div>
-            </div>
-            <button onClick={()=>toggleNotify(row.key)} style={{
-              width:46,height:27,borderRadius:999,flexShrink:0,cursor:'pointer',border:'none',padding:0,position:'relative',
-              background: notify[row.key] ? th.accent : (th.effDark?'rgba(255,255,255,0.16)':'rgba(0,0,0,0.16)'),
-              transition:'background .18s',
-            }}>
-              <span style={{position:'absolute',top:3,left: notify[row.key]?22:3,width:21,height:21,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
-            </button>
-          </div>
-        ))}
-
-        {/* Переключатель «обо всём» */}
-        <div style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderTop:`1px solid ${th.glassBorder}`}}>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{en?'Notify about everything':'Уведомлять обо всём'}</div>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35,textWrap:'pretty'}}>{en?'Including solar years and months you\'ve already viewed':'Включая уже просмотренные годы и месяцы'}</div>
-          </div>
-          <button onClick={()=>toggleNotify('notify_viewed')} style={{
-            width:46,height:27,borderRadius:999,flexShrink:0,cursor:'pointer',border:'none',padding:0,position:'relative',
-            background: notify.notify_viewed ? th.accent : (th.effDark?'rgba(255,255,255,0.16)':'rgba(0,0,0,0.16)'),
-            transition:'background .18s',
-          }}>
-            <span style={{position:'absolute',top:3,left: notify.notify_viewed?22:3,width:21,height:21,borderRadius:'50%',background:'#fff',transition:'left .18s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/>
-          </button>
-        </div>
-
-        {/* Пояснение — под переключателем «обо всём» */}
-        <div style={{display:'flex',gap:9,alignItems:'flex-start',padding:'2px 0 4px'}}>
-          <span style={{flexShrink:0,fontSize:13,color:th.glyphClr,lineHeight:1.4,marginTop:1}}>✦</span>
-          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
-            {en
-              ? 'By default, if you\'ve already opened a solar year or a month\'s aspects, we won\'t notify you about them. Turn this on to get reminders anyway.'
-              : 'По умолчанию, если ты уже открывал(а) солярный год или аспекты месяца — об этом не напомним. Включи это, чтобы получать уведомления в любом случае.'}
-          </div>
-        </div>
+      {/* ── BIRTH · NOTIFICATIONS · FEEDBACK (компактные строки) ── */}
+      <ProfSection th={th}>
+        <ProfNavRow th={th} icon="calendar"
+          title={s.birthData}
+          subtitle={birthSummary || (en?'Tap to fill in':'Нажми, чтобы заполнить')}
+          onClick={onEditBirth}/>
+        <ProfNavRow th={th} icon="bell"
+          title={en?'Notifications':'Уведомления'}
+          subtitle={en?'Solar year, monthly aspects':'Солярный год, аспекты месяца'}
+          onClick={()=>setView('notif')}/>
+        <ProfNavRow th={th} icon="chat"
+          title={en?'Feedback & support':'Обратная связь'}
+          subtitle={en?'Suggest an idea or report a bug':'Предложить идею или сообщить о баге'}
+          onClick={onFeedback} last/>
       </ProfSection>
 
       {/* ── SETTINGS ─────────────────────────────── */}
@@ -889,23 +928,6 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
           </div>
         }/>
         <ProfRow th={th} label="Telegram ID" value={(window.AstroAPI && window.AstroAPI.tgUserId()) || USER.tgId} last/>
-      </ProfSection>
-
-      {/* ── ПОДДЕРЖКА / ОБРАТНАЯ СВЯЗЬ ────────────── */}
-      <ProfSection th={th} label={en ? 'Support' : 'Поддержка'}>
-        <button onClick={onFeedback} style={{
-          width:'100%',display:'flex',alignItems:'center',gap:12,padding:'13px 0',
-          background:'transparent',border:'none',cursor:'pointer',textAlign:'left',
-        }}>
-          <div style={{width:38,height:38,borderRadius:11,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}22`,border:`1px solid ${th.accent}44`}}>
-            <AstroGlyph name="chat" size={19} color={th.glyphClr} sw={1.6}/>
-          </div>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:2}}>{en?'Feedback & support':'Обратная связь'}</div>
-            <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,lineHeight:1.35}}>{en?'Suggest an idea or report a bug':'Предложить идею или сообщить о баге'}</div>
-          </div>
-          <AstroGlyph name="arrow-right" size={16} color={th.glyphClr} sw={1.8}/>
-        </button>
       </ProfSection>
 
       {/* ── LEGAL DOCUMENTS ──────────────────────── */}
