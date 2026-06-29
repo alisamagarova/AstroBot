@@ -562,7 +562,7 @@ function SolarBiWheelSVG({ th, natal, sr, cross, asc, cusps, size = 300, showHou
 // ═══════════════════════════════════════════════════════
 // INTAKE SCREEN — choose solar year + location
 // ═══════════════════════════════════════════════════════
-function SolarIntakeScreen({ th, lang, birth, userName, year, onYear, srCity, onCity, onBuild }) {
+function SolarIntakeScreen({ th, lang, birth, userName, year, onYear, srCity, onCity, onBuild, priceTag }) {
   const en = lang === 'en';
   const [cityOpen, setCityOpen] = useState(false);
   const nowY = new Date().getFullYear();
@@ -677,7 +677,7 @@ function SolarIntakeScreen({ th, lang, birth, userName, year, onYear, srCity, on
         color: srCity ? '#fff' : th.muted, fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 15.5,
         boxShadow: srCity ? `0 8px 26px ${th.accentGlow}` : 'none',
       }}>
-        <SrIco name="sun" size={18} color={srCity ? '#fff' : th.muted} sw={1.8}/>{en ? 'Build solar return' : 'Построить соляр'}
+        <SrIco name="sun" size={18} color={srCity ? '#fff' : th.muted} sw={1.8}/>{en ? 'Build solar return' : 'Построить соляр'}{srCity ? priceTag : null}
       </button>
     </div>
   );

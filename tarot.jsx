@@ -292,7 +292,7 @@ function tarotDaySeen(dayKey, uid) {
 }
 
 // Виджет-баннер на главной: рубашка → по тапу открывает мистический оверлей.
-function TarotDailyCard({ th, lang, onReveal }) {
+function TarotDailyCard({ th, lang, onReveal, price }) {
   const en = lang === 'en';
   const { entry, dayKey, uid } = tarotDayEntry();
   const m = entry.reversed ? entry.card.rev : entry.card.up;
@@ -304,8 +304,13 @@ function TarotDailyCard({ th, lang, onReveal }) {
     <button onClick={() => { const r = onReveal && onReveal(); if (r && r.then) r.then((ok) => { if (ok) setSeen(true); }); else setSeen(true); }} style={{
       display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', cursor: 'pointer',
       background: th.glassStrong, border: `1px solid ${th.glassBorder}`, backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
-      borderRadius: 22, padding: '13px 16px', marginBottom: 22, boxSizing: 'border-box',
+      borderRadius: 22, padding: '13px 16px', marginBottom: 22, boxSizing: 'border-box', position: 'relative',
     }}>
+      {!seen && price != null && (
+        <span style={{ position:'absolute', top:11, right:13, display:'inline-flex', alignItems:'center', gap:3, fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:11, color:th.ink }}>
+          <span style={{ color:gold }}>✦</span>{price}
+        </span>
+      )}
       <div style={{ flexShrink: 0 }}>
         {seen ? <TarotCard entry={entry} th={th} w={48}/> : <CardBack th={th} w={48}/>}
       </div>
@@ -485,7 +490,7 @@ function TarotYesNoButton({ th, lang, onOpen }) {
 window.TarotYesNoButton = TarotYesNoButton;
 
 // Оверлей: вопрос → карта выпадает и переворачивается → вердикт.
-function TarotYesNoReveal({ th, lang, onClose, onPay }) {
+function TarotYesNoReveal({ th, lang, onClose, onPay, price }) {
   const T = window.TAROT;
   const en = lang === 'en';
   const gold = th.gold;
@@ -547,7 +552,7 @@ function TarotYesNoReveal({ th, lang, onClose, onPay }) {
           <button onClick={draw} style={{ width: '100%', padding: '14px', borderRadius: 16, border: 'none', cursor: 'pointer',
             fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 15, color: '#fff',
             background: `linear-gradient(135deg, ${th.accent}, ${gold} 150%)`, boxShadow: '0 8px 24px rgba(40,20,70,0.4)' }}>
-            ✦ {en ? 'Pull a card' : 'Вытянуть карту'}
+            ✦ {en ? 'Pull a card' : 'Вытянуть карту'}{price != null ? (en ? ` · ✦${price}` : ` · ✦${price}`) : ''}
           </button>
         </div>
       )}

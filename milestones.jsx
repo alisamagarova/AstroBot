@@ -122,18 +122,18 @@ function MilestonesIntakeScreen({ th, lang, birth, userName, onEditBirth, onChoo
   const unknown = birth.timeMode === 'unknown';
   const horizon = M.milestonesHorizon ? M.milestonesHorizon() : null;
   const msPrice = (prices && prices.milestones) || 5;
-  // Бейдж стоимости/владения для плитки темы.
+  // Бейдж стоимости/владения в правом верхнем углу плитки темы.
   const themeBadge = (t) => {
-    if (t.id === 'body') return null; // тело и здоровье — без оплаты
+    if (t.cat === 'body') return null; // тело и здоровье — без оплаты звёздами
     const paid = milestonePaidLimit ? milestonePaidLimit(t.id) : null;
     const ownedT = paid != null;
     return (
-      <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 4, fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 11 }}>
-        <span style={{ color: th.gold, fontSize: 11 }}>✦</span>
-        {ownedT
-          ? <span style={{ color: th.gold }}>{en ? 'Owned' : 'Открыто'}</span>
-          : <span style={{ color: th.ink }}>{msPrice}</span>}
-      </div>
+      <span style={{ position: 'absolute', top: 10, right: 10, display: 'inline-flex', alignItems: 'center', gap: 3,
+        padding: '2px 7px', borderRadius: 99, background: th.chip, border: `1px solid ${th.glassBorder}`,
+        fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 10, lineHeight: 1.4, zIndex: 2 }}>
+        <span style={{ color: th.gold, fontSize: 10 }}>✦</span>
+        {ownedT ? <span style={{ color: th.gold }}>{en ? 'Owned' : 'Открыто'}</span> : <span style={{ color: th.ink }}>{msPrice}</span>}
+      </span>
     );
   };
 
@@ -201,7 +201,7 @@ function MilestonesIntakeScreen({ th, lang, birth, userName, onEditBirth, onChoo
                 <button key={t.id} onClick={() => onChoose(t.id)} style={{
                   textAlign: 'left', cursor: 'pointer', background: th.glass, border: `1px solid ${th.glassBorder}`,
                   borderRadius: 16, padding: '13px 13px 12px', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-                  color: th.ink, display: 'flex', flexDirection: 'column', gap: 0, minHeight: 112,
+                  color: th.ink, display: 'flex', flexDirection: 'column', gap: 0, minHeight: 112, position: 'relative',
                 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${th.accent}22`, border: `1px solid ${th.accent}40`, marginBottom: 9 }}>
                     <MsIco name={t.glyph} size={21} color={th.glyphClr} sw={1.5}/>

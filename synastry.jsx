@@ -307,7 +307,7 @@ function PersonCard({ th, lang, color, soft, tag, person, onEdit }) {
 // ═══════════════════════════════════════════════════════
 // INTAKE SCREEN
 // ═══════════════════════════════════════════════════════
-function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx, onSelectPartner, onAddPartner, onEditPartner, onDeletePartner, onEditYou, onBuild }) {
+function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx, onSelectPartner, onAddPartner, onEditPartner, onDeletePartner, onEditYou, onBuild, priceTag }) {
   const en = lang === 'en';
   const pc = personColors(th);
   const partner = selectedPartnerIdx != null && partners[selectedPartnerIdx] ? partners[selectedPartnerIdx] : null;
@@ -420,7 +420,7 @@ function SynastryIntakeScreen({ th, lang, you, partners = [], selectedPartnerIdx
         boxShadow:ready?`0 8px 26px ${th.accentGlow}`:'none',opacity:ready?1:0.7,
       }}>
         <SynIco name="heart" size={17} color={ready?'#fff':th.muted} sw={1.8}/>
-        {en?'Build synastry':'Построить синастрию'}
+        {en?'Build synastry':'Построить синастрию'}{ready ? priceTag : null}
       </button>
     </div>
   );

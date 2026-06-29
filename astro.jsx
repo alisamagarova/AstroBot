@@ -57,6 +57,25 @@ function BalanceChip({ th, balance, onClick, compact }) {
     </button>
   );
 }
+// Угловой ценник-чип для плиток (по умолчанию правый верхний угол).
+function TilePrice({ th, lang, price, owned, corner }) {
+  const en = lang === 'en';
+  const base = { position:'absolute', top:9, right:9, display:'inline-flex', alignItems:'center', gap:3,
+    padding:'2px 7px', borderRadius:99, background:th.chip, border:`1px solid ${th.glassBorder}`,
+    backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)', fontFamily:'"Manrope",sans-serif',
+    fontWeight:700, fontSize:10, lineHeight:1.4, zIndex:2, ...corner };
+  if (owned) return <span style={{ ...base, color:th.gold }}><span style={{fontSize:10}}>✦</span>{en?'Owned':'Открыто'}</span>;
+  return <span style={{ ...base, color:th.ink }}><span style={{fontSize:10,color:th.gold}}>✦</span>{price}</span>;
+}
+// Цена внутри кнопки построения: « · ✦5» либо « · Открыто».
+function btnPrice(th, lang, price, owned) {
+  const en = lang === 'en';
+  return (
+    <span style={{ display:'inline-flex', alignItems:'center', gap:4, marginLeft:8, paddingLeft:10, borderLeft:'1px solid rgba(255,255,255,0.35)', fontWeight:700 }}>
+      <span style={{ color:'#ffe9a8' }}>✦</span>{owned ? (en?'Open':'Открыто') : price}
+    </span>
+  );
+}
 // Маленький ценник «✦ N» для кнопок/карточек.
 function PriceTag({ th, price, owned, lang, style }) {
   const en = lang==='en';
@@ -238,6 +257,8 @@ const POSSIBILITIES = [
   {id:'tarot',     glyph:'tarot',      title:{ru:'Таро',             en:'Tarot'},               kicker:{ru:'РАСКЛАД КАРТ',   en:'CARD SPREAD'},   desc:{ru:'Задай вопрос и получи ответ раскладом из трёх карт', en:'Ask a question and get a three-card answer'},
     help:{ru:'Таро — это расклад из трёх карт на твой вопрос: Прошлое, Настоящее и Будущее. Сформулируй один вопрос, вытяни карты — и увидишь линию времени ответа, а для вопросов «да/нет» — общее склонение. Это не предсказание, а зеркало, помогающее взглянуть на ситуацию под новым углом.', en:'Tarot is a three-card spread for your question: Past, Present and Future. Ask one question, draw the cards and read the timeline of the answer — a mirror, not a prophecy.'}},
 ];
+// Предварительная (ориентировочная) цена услуги в звёздах для плиток главной.
+const HOME_PRICE = { natal:5, synastry:3, solar:3, pinpoint:2, milestones:5, tarot:null };
 
 // ════════════════════════════════════════════════════════════
 // THEME
@@ -417,7 +438,7 @@ function BottomNav({ th, lang, activeTab, onTab }) {
 // ════════════════════════════════════════════════════════════
 // MAIN SCREEN
 // ════════════════════════════════════════════════════════════
-function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYesNo, balance, onBalance }) {
+function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYesNo, balance, onBalance, owns }) {
   const signLine  = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
 
   // Маленькая круглая кнопка «?» — открывает объяснение услуги (оверлей рисует AstroPhone)
@@ -493,11 +514,14 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYe
           <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,lineHeight:1.15,color:th.ink,marginBottom:4}}>{STR[lang].aspectsTitle}</div>
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.35,color:th.inkSoft}}>{STR[lang].aspectsSub}</div>
         </div>
+        <span style={{display:'inline-flex',alignItems:'center',gap:3,flexShrink:0,fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:12,color:th.ink}}>
+          <span style={{color:th.gold}}>✦</span>{PRICES.aspects}
+        </span>
         <AstroGlyph name="arrow-right" size={18} color={th.ink} sw={1.8} style={{flexShrink:0}}/>
       </button>
 
       {/* ── КАРТА ДНЯ (ежедневный виджет) ─────────────── */}
-      <TarotDailyCard th={th} lang={lang} onReveal={onRevealDay}/>
+      <TarotDailyCard th={th} lang={lang} onReveal={onRevealDay} price={PRICES.daily}/>
 
       {/* ── POSSIBILITIES GRID ───────────────────────── */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:11}}>
@@ -526,17 +550,21 @@ function CosmicMain({ th, lang, onOpen, sun, userName, onHelp, onRevealDay, onYe
                 </div>
               )}
               {helpBtn(p, {top:9, right:9})}
+              {!soon && HOME_PRICE[p.id] != null && (
+                <TilePrice th={th} lang={lang} price={HOME_PRICE[p.id]} owned={p.id==='natal' && owns && owns('natal_self')} corner={{top:'auto', bottom:11, right:11}}/>
+              )}
               <div style={{width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`,marginBottom:10,flexShrink:0}}>
                 <AstroGlyph name={p.glyph} size={22} color={th.glyphClr} sw={1.4}/>
               </div>
               <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:9,letterSpacing:1.3,color:th.gold,marginBottom:5}}>{p.kicker[lang]}</div>
               <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:17,lineHeight:1.1,color:th.ink,marginBottom:5}}>{p.title[lang]}</div>
-              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.35,color:th.inkSoft}}>{p.desc[lang]}</div>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.35,color:th.inkSoft,paddingRight:34}}>{p.desc[lang]}</div>
             </GlassCard>
             {/* Плитка «Да/Нет» сразу после натальной карты — стоит рядом с ней */}
             {idx===0 && (
               <GlassCard th={th} onClick={onYesNo}
                 style={{padding:'14px 13px 13px',display:'flex',flexDirection:'column',gap:0,minHeight:130,cursor:'pointer',position:'relative',overflow:'hidden'}}>
+                <TilePrice th={th} lang={lang} price={PRICES.oracle} corner={{top:'auto', bottom:11, right:11}}/>
                 <div style={{width:40,height:40,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',background:`${th.accent}28`,border:`1px solid ${th.accent}44`,marginBottom:10,flexShrink:0}}>
                   <span style={{fontFamily:'var(--ds-serif)',fontSize:21,fontWeight:700,color:th.glyphClr}}>?</span>
                 </div>
@@ -1264,10 +1292,10 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   // Жизненные вехи — особый поток (учёт оплаченного лимита лет + доплата при расширении).
   const openMilestone = (themeId) => {
     const proceed = (limitYear) => { setMilestoneTheme(themeId); setMilestoneLimit(limitYear || null); go('milestones_result'); };
-    if (themeId === 'body') { proceed(null); return; }     // тело и здоровье — без оплаты
+    const theme = window.MILESTONES && window.MILESTONES.THEMES.find((t) => t.id === themeId);
+    if (theme && theme.cat === 'body') { proceed(null); return; } // тело и здоровье — без оплаты звёздами
     const horizon = (window.MILESTONES && window.MILESTONES.milestonesHorizon) ? window.MILESTONES.milestonesHorizon() : null;
     const paid = milestonePaidLimit(themeId);
-    const theme = window.MILESTONES && window.MILESTONES.THEMES.find((t) => t.id === themeId);
     const title = theme ? theme.title[lang] : (lang==='en'?'Milestones':'Жизненные вехи');
     if (paid == null) {
       // Не куплено — берём 5 звёзд, открываем до текущего лимита.
@@ -1463,7 +1491,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   if (activeTab === 'profile') {
     mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance} onTestGrant={async ()=>{ const b = await window.AstroAPI.testGrant(); if (typeof b==='number') setBalance(b); }}/>;
   } else if (screen === 'home') {
-    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={requestDaily} onYesNo={()=>setYesNo(true)} balance={balance} onBalance={()=>handleTabChange('profile')}/>;
+    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={requestDaily} onYesNo={()=>setYesNo(true)} balance={balance} onBalance={()=>handleTabChange('profile')} owns={owns}/>;
   } else if (screen === 'natal') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>go('natal_other')}/>;
@@ -1480,7 +1508,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
           </div>
         </div>
         <button onClick={()=>setEditingOther(true)} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:8,height:50,borderRadius:999,border:'none',cursor:'pointer',background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,boxShadow:`0 8px 26px ${th.accentGlow}`}}>
-          {otherBirth ? (lang==='en'?'Change data':'Изменить данные') : (lang==='en'?'Enter birth data':'Ввести данные')}
+          {otherBirth ? (lang==='en'?'Change data':'Изменить данные') : (lang==='en'?'Enter birth data':'Ввести данные')}{btnPrice(th,lang,PRICES.natalOther,false)}
         </button>
         {otherBirth && (
           <button onClick={()=>go('natal_other_chart')} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:7,height:46,marginTop:10,borderRadius:999,cursor:'pointer',background:'none',border:`1px solid ${th.glassBorder}`,color:th.inkSoft,fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5}}>
@@ -1520,19 +1548,19 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     );
   } else if (screen === 'natal_me') {
     title = lang==='ru' ? 'Данные рождения' : 'Birth data';
-    mainContent = <NatalConfirmScreen th={th} lang={lang} birth={birth} userName={userName} onConfirm={async ()=>{ if (await buyAndProceed({feature:'natal_self', price:PRICES.natal, owned:owns('natal_self'), title: lang==='en'?'Your natal chart':'Натальная карта', note: lang==='en'?'Bought once, yours forever — rebuilding after an edit is free.':'Покупается один раз и навсегда — перестройка после правок бесплатна.'})) go('natal_chart'); }} onEdit={openEdit}/>;
+    mainContent = <NatalConfirmScreen th={th} lang={lang} birth={birth} userName={userName} onConfirm={async ()=>{ if (await buyAndProceed({feature:'natal_self', price:PRICES.natal, owned:owns('natal_self'), title: lang==='en'?'Your natal chart':'Натальная карта', note: lang==='en'?'Bought once, yours forever — rebuilding after an edit is free.':'Покупается один раз и навсегда — перестройка после правок бесплатна.'})) go('natal_chart'); }} onEdit={openEdit} priceTag={btnPrice(th,lang,PRICES.natal,owns('natal_self'))}/>;
   } else if (screen === 'natal_chart') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChartScreen th={th} lang={lang} birth={birth} onExpand={setBigChart}/>;
   } else if (screen === 'synastry') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
-    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partners={partners} selectedPartnerIdx={selPartnerIdx} onSelectPartner={setSelPartnerIdx} onAddPartner={openAddPartner} onEditPartner={openEditPartner} onDeletePartner={deletePartner} onEditYou={openEdit} onBuild={async ()=>{ const pk=synKey(partner); if (await buyAndProceed({feature:'synastry', key:pk, price:PRICES.synastry, owned:owns('synastry',pk), title: lang==='en'?'Synastry':'Синастрия', note: lang==='en'?'Per partner — once paid, this partner stays open.':'За каждого партнёра — оплаченный остаётся открытым.'})) go('synastry_chart'); }}/>;
+    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partners={partners} selectedPartnerIdx={selPartnerIdx} onSelectPartner={setSelPartnerIdx} onAddPartner={openAddPartner} onEditPartner={openEditPartner} onDeletePartner={deletePartner} onEditYou={openEdit} onBuild={async ()=>{ const pk=synKey(partner); if (await buyAndProceed({feature:'synastry', key:pk, price:PRICES.synastry, owned:owns('synastry',pk), title: lang==='en'?'Synastry':'Синастрия', note: lang==='en'?'Per partner — once paid, this partner stays open.':'За каждого партнёра — оплаченный остаётся открытым.'})) go('synastry_chart'); }} priceTag={btnPrice(th,lang,PRICES.synastry, partner ? owns('synastry',synKey(partner)) : false)}/>;
   } else if (screen === 'synastry_chart') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
     mainContent = <SynastryChartScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partner={partner} onExpand={setBigSyn}/>;
   } else if (screen === 'solar') {
     title = lang==='ru' ? 'Соляр' : 'Solar return';
-    mainContent = <SolarIntakeScreen th={th} lang={lang} birth={birth} userName={userName} year={solarYear} onYear={setSolarYear} srCity={solarCity} onCity={setSolarCity} onBuild={async ()=>{ const yk=String(solarYear); if (await buyAndProceed({feature:'solar', key:yk, price:PRICES.solar, owned:owns('solar',yk), title: lang==='en'?`Solar return ${solarYear}`:`Соляр ${solarYear}`, note: lang==='en'?'Per year — paid years stay open.':'За каждый год — оплаченные годы остаются открытыми.'})) go('solar_chart'); }}/>;
+    mainContent = <SolarIntakeScreen th={th} lang={lang} birth={birth} userName={userName} year={solarYear} onYear={setSolarYear} srCity={solarCity} onCity={setSolarCity} onBuild={async ()=>{ const yk=String(solarYear); if (await buyAndProceed({feature:'solar', key:yk, price:PRICES.solar, owned:owns('solar',yk), title: lang==='en'?`Solar return ${solarYear}`:`Соляр ${solarYear}`, note: lang==='en'?'Per year — paid years stay open.':'За каждый год — оплаченные годы остаются открытыми.'})) go('solar_chart'); }} priceTag={btnPrice(th,lang,PRICES.solar, owns('solar',String(solarYear)))}/>;
   } else if (screen === 'solar_chart') {
     title = lang==='ru' ? 'Соляр' : 'Solar return';
     mainContent = <SolarChartScreen th={th} lang={lang} birth={birth} year={solarYear} srCity={solarCity} onExpand={setBigSolar}/>;
@@ -1545,7 +1573,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     mainContent = <MilestonesResultScreen th={th} lang={lang} birth={birth} themeId={milestoneTheme} limitYear={milestoneLimit}/>;
   } else if (screen === 'pinpoint') {
     title = lang==='ru' ? 'Хорар' : 'Horary';
-    mainContent = <HorarScreen th={th} lang={lang} city={residenceCity(birth)} onExpand={setBigChart} onPay={()=>buyAndProceed({feature:'horary', price:PRICES.horary, owned:false, title: lang==='en'?'Horary question':'Хорарный вопрос'})}/>;
+    mainContent = <HorarScreen th={th} lang={lang} city={residenceCity(birth)} onExpand={setBigChart} onPay={()=>buyAndProceed({feature:'horary', price:PRICES.horary, owned:false, title: lang==='en'?'Horary question':'Хорарный вопрос'})} priceTag={btnPrice(th,lang,PRICES.horary,false)}/>;
   } else if (screen === 'aspects') {
     title = lang==='ru' ? 'Аспекты на месяц' : 'Aspects this month';
     mainContent = <AspectsMonthScreen th={th} lang={lang} birth={birth}
@@ -1583,7 +1611,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
         {dayReveal && <TarotDayReveal th={th} lang={lang} onClose={()=>setDayReveal(false)}/>}
 
         {/* ── Оверлей «Да / Нет» ── */}
-        {yesNo && <TarotYesNoReveal th={th} lang={lang} onClose={()=>setYesNo(false)}
+        {yesNo && <TarotYesNoReveal th={th} lang={lang} onClose={()=>setYesNo(false)} price={PRICES.oracle}
           onPay={()=>buyAndProceed({feature:'oracle', price:PRICES.oracle, owned:false, title: lang==='en'?'Yes / No oracle':'Оракул Да / Нет'})}/>}
 
         {/* ── Шлюз оплаты звёздами ── */}

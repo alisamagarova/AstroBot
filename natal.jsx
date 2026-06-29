@@ -584,7 +584,7 @@ function NatalChoiceScreen({ th, lang, onChooseMe, onChooseOther }) {
   );
 }
 
-function NatalConfirmScreen({ th, lang, birth, userName, onConfirm, onEdit }) {
+function NatalConfirmScreen({ th, lang, birth, userName, onConfirm, onEdit, priceTag }) {
   const l = lang === 'en';
   const row = (label, value, accent) => (
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'13px 0',borderBottom:`1px solid ${th.glassBorder}`,gap:8}}>
@@ -617,7 +617,7 @@ function NatalConfirmScreen({ th, lang, birth, userName, onConfirm, onEdit }) {
       )}
 
       <button onClick={onConfirm} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:8,height:50,borderRadius:999,border:'none',cursor:'pointer',background:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:15,boxShadow:`0 8px 26px ${th.accentGlow}`}}>
-        {l?'Build chart':'Построить карту'}
+        {l?'Build chart':'Построить карту'}{priceTag}
         <AstroGlyph name="arrow-right" size={17} color="#fff" sw={1.9}/>
       </button>
       <button onClick={onEdit} style={{display:'flex',width:'100%',justifyContent:'center',alignItems:'center',gap:7,height:44,marginTop:10,borderRadius:999,cursor:'pointer',background:'none',border:`1px solid ${th.glassBorder}`,color:th.inkSoft,fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5}}>

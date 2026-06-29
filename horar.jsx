@@ -30,7 +30,7 @@ function hzUnit(kind, en) {
   return kind === 'days' ? 'дн.' : kind === 'weeks' ? 'нед.' : 'мес.';
 }
 
-function HorarScreen({ th, lang, city, onExpand, onPay }) {
+function HorarScreen({ th, lang, city, onExpand, onPay, priceTag }) {
   const en = lang === 'en';
   const [voc, setVoc] = useStateHz(null);     // null=loading, {voc, ...}
   const [q, setQ] = useStateHz('');
@@ -217,7 +217,7 @@ function HorarScreen({ th, lang, city, onExpand, onPay }) {
             cursor: canAsk ? 'pointer' : 'default', background: canAsk ? th.accent : th.muted, color: '#fff',
             fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 15, boxShadow: canAsk ? `0 8px 26px ${th.accentGlow}` : 'none',
           }}>
-            {en ? 'Ask the chart' : 'Задать вопрос'}
+            {en ? 'Ask the chart' : 'Задать вопрос'}{canAsk ? priceTag : null}
           </button>
         </React.Fragment>
       )}
