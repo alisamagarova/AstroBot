@@ -137,6 +137,20 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     return { url: link };
   });
 
+  /** GET /users/:tgId/stars/bot-balance — баланс бота в Telegram Stars (только админ). */
+  fastify.get<{ Params: { tgId: string } }>('/users/:tgId/stars/bot-balance', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    if (!config.adminIds.includes(String(tgId))) return reply.status(403).send({ error: 'admin only' });
+    try {
+      const bal = await bot.api.getMyStarBalance();
+      return { stars: bal.amount };
+    } catch (e) {
+      request.log.error({ e }, 'getMyStarBalance failed');
+      return reply.status(502).send({ error: 'stars_unavailable' });
+    }
+  });
+
   /** POST /users/:tgId/balance/test-grant — ТЕСТОВОЕ начисление 10 звёзд (только админ). */
   fastify.post<{ Params: { tgId: string } }>('/users/:tgId/balance/test-grant', async (request, reply) => {
     const { tgId } = request.params;

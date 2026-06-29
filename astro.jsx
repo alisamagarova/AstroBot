@@ -1015,6 +1015,16 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   const signLine   = lang==='en' ? `Sun in ${sun.en}` : `Солнце ${sun.prep}`;
   const en         = lang === 'en';
 
+  // Баланс бота в Telegram Stars (только админ)
+  const isAdmin = window.isAstroAdmin && window.isAstroAdmin();
+  const [botStars, setBotStars] = useState(null); // null=не загружен, -1=ошибка
+  const loadBotStars = () => {
+    if (!window.AstroAPI || !window.AstroAPI.getBotStarBalance) return;
+    setBotStars(null);
+    window.AstroAPI.getBotStarBalance().then((v) => setBotStars(typeof v === 'number' ? v : -1));
+  };
+  useEffect(() => { if (isAdmin) loadBotStars(); }, [isAdmin]);
+
   // Настройки уведомлений
   const [notify, setNotify] = useState({ notify_solar:false, notify_aspects:false, notify_viewed:false });
   useEffect(() => {
@@ -1224,6 +1234,24 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
       {/* ── ТЕСТОВЫЕ КНОПКИ — только админу ── */}
       {window.isAstroAdmin && window.isAstroAdmin() && (
         <React.Fragment>
+          {/* Баланс бота в Telegram Stars */}
+          <div style={{
+            marginTop:18,padding:'14px 16px',borderRadius:14,display:'flex',alignItems:'center',gap:12,
+            background:th.effDark?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.03)',border:`1px solid ${th.glassBorder}`,
+          }}>
+            <span style={{fontSize:22,lineHeight:1,flexShrink:0}}>⭐</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13,color:th.ink}}>{en?'Bot earnings':'Заработок бота'}</div>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted}}>
+                {botStars===null ? (en?'Loading…':'Загрузка…') : botStars===-1 ? (en?'Unavailable':'Недоступно') : <React.Fragment>{botStars} {en?'Telegram Stars':'Telegram Stars'}</React.Fragment>}
+              </div>
+            </div>
+            <button onClick={loadBotStars} style={{
+              border:`1px solid ${th.glassBorder}`,background:'transparent',color:th.muted,borderRadius:999,
+              padding:'6px 12px',cursor:'pointer',fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:11.5,flexShrink:0,
+            }}>↻ {en?'Refresh':'Обновить'}</button>
+          </div>
+
           {/* +10 звёзд (тест баланса) */}
           <button onClick={async () => { if (onTestGrant) await onTestGrant(); }} style={{
             width:'100%',marginTop:18,padding:'12px',borderRadius:14,

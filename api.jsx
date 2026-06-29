@@ -341,6 +341,18 @@ const AstroAPI = {
     } catch (e) { return { ok: false, error: String(e) }; }
   },
 
+  /** Баланс бота в Telegram Stars (только админ). Возвращает число или null. */
+  async getBotStarBalance() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/stars/bot-balance`);
+      if (!res.ok) return null;
+      const data = await res.json();
+      return typeof data.stars === 'number' ? data.stars : null;
+    } catch (e) { return null; }
+  },
+
   /** ТЕСТОВОЕ: начислить себе 10 звёзд (только админ). Возвращает {balance} или null. */
   async testGrant() {
     const id = tgUserId();
