@@ -799,8 +799,28 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
           const cityOk = !!b.city;
           const dateOk = !!(b.day && b.month && b.year);
           const timeOk = !!b.timeMode && (b.timeMode !== 'approx' || !!b.approx);
-          const canSubmit = onboarding ? (nameOk && cityOk && dateOk && timeOk && consent) : true;
+          // Ограничение 18+ — только для своего профиля (не партнёр / не чужая карта).
+          const isSelf = !showName;
+          let age = null;
+          if (b.day && b.month && b.year) {
+            const t = new Date();
+            age = t.getFullYear() - b.year;
+            const m = t.getMonth() + 1, d = t.getDate();
+            if (m < b.month || (m === b.month && d < b.day)) age--;
+          }
+          const underage = isSelf && age != null && age < 18;
+          const canSubmit = (onboarding ? (nameOk && cityOk && dateOk && timeOk && consent) : true) && !underage;
           return (
+            <React.Fragment>
+            {underage && (
+              <div style={{display:'flex',gap:8,alignItems:'flex-start',marginBottom:12,padding:'11px 13px',borderRadius:12,background:'rgba(220,75,42,0.12)',border:'1px solid rgba(220,75,42,0.32)'}}>
+                <span style={{flexShrink:0,fontSize:14,lineHeight:1.3}}>🔞</span>
+                <span style={{fontFamily:'"Manrope",sans-serif',fontSize:12,lineHeight:1.45,color:th.ink,textWrap:'pretty'}}>
+                  {en ? 'You must be 18 or older to use the app. Please enter a valid date of birth.'
+                      : 'Приложением могут пользоваться только лица старше 18 лет. Укажи корректную дату рождения.'}
+                </span>
+              </div>
+            )}
             <button disabled={!canSubmit} onClick={() => {
               if (!canSubmit) return;
               // Для своего профиля (не партнёр, не онбординг) — предупреждение при смене даты
@@ -819,6 +839,7 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
               <BeIco name="check" size={18} color={canSubmit ? '#fff' : th.muted} sw={2}/>
               {onboarding ? (en ? 'Continue' : 'Продолжить') : T.save}
             </button>
+            </React.Fragment>
           );
         })()}
       </div>

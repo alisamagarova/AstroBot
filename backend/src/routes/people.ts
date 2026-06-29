@@ -44,10 +44,24 @@ function isRealPastDate(day: number, month: number, year: number): boolean {
   return d.getTime() <= today.getTime();
 }
 
+// Возраст по дате рождения (полных лет на сегодня).
+function ageFrom(day: number, month: number, year: number): number {
+  const t = new Date();
+  let age = t.getFullYear() - year;
+  const m = t.getMonth() + 1, d = t.getDate();
+  if (m < month || (m === month && d < day)) age--;
+  return age;
+}
+// Профиль самого пользователя — только 18+.
+function isAdult(day: number, month: number, year: number): boolean {
+  return ageFrom(day, month, year) >= 18;
+}
+
 const DATE_ERROR = {
   message: 'Дата рождения должна существовать и не может быть в будущем',
   path: ['birth_year'],
 };
+const AGE_ERROR = { error: 'UNDERAGE', message: 'Профиль доступен только пользователям 18 лет и старше.' };
 
 // Самый ранний час каждого примерного периода — для проверки «не из будущего».
 const APPROX_START_HOUR: Record<string, number> = {
@@ -213,6 +227,11 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
         birth_hour?: number; birth_minute?: number; approx_time?: string;
       };
 
+      // Свой профиль — только 18+.
+      if (!isAdult(data.birth_day, data.birth_month, data.birth_year)) {
+        return reply.status(403).send(AGE_ERROR);
+      }
+
       const person = await createPerson({
         owner_id:    user.id,
         is_self:     true,
@@ -268,6 +287,16 @@ const peopleRoutes: FastifyPluginAsync = async (fastify) => {
       const body = UpdatePersonBody.safeParse(request.body);
       if (!body.success) {
         return reply.status(400).send({ error: body.error.flatten() });
+      }
+
+      // Если меняется дата рождения своего профиля — только 18+.
+      {
+        const d = body.data.birth_day ?? person.birth_day;
+        const m = body.data.birth_month ?? person.birth_month;
+        const y = body.data.birth_year ?? person.birth_year;
+        if ((body.data.birth_day != null || body.data.birth_month != null || body.data.birth_year != null) && !isAdult(d, m, y)) {
+          return reply.status(403).send(AGE_ERROR);
+        }
       }
 
       try {
