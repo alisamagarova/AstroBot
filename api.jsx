@@ -302,6 +302,45 @@ const AstroAPI = {
     } catch (e) { return null; }
   },
 
+  /** Список покупок (что уже оплачено). Возвращает массив {feature,item_key,paid_limit} или []. */
+  async getEntitlements() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return [];
+    try {
+      const res = await apiFetch(`/api/users/${id}/entitlements`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data.entitlements) ? data.entitlements : [];
+    } catch (e) { return []; }
+  },
+
+  /** Покупка возможности за звёзды. Возвращает {ok,charged,balance,owned,error?}. */
+  async purchase({ feature, key, limit, extend }) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return { ok: false, error: 'not_configured' };
+    try {
+      const res = await apiFetch(`/api/users/${id}/purchase`, {
+        method: 'POST',
+        body: JSON.stringify({ feature, key: key || '', limit, extend }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return data;
+      return { ok: false, error: data.error || ('HTTP ' + res.status), balance: data.balance };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  },
+
+  /** ТЕСТОВОЕ: начислить себе 10 звёзд (только админ). Возвращает {balance} или null. */
+  async testGrant() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/balance/test-grant`, { method: 'POST' });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return typeof data.balance === 'number' ? data.balance : null;
+    } catch (e) { return null; }
+  },
+
   /** ВРЕМЕННОЕ: удаляет профиль на бэкенде (для повторного теста онбординга). */
   async resetSelf() {
     const id = tgUserId();

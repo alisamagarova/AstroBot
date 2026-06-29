@@ -36,13 +36,12 @@ function ZodiacGlyph({ sign='leo', size=18, color='currentColor', style }) {
   return <span style={{ fontFamily:'var(--ds-serif)', fontSize:size, lineHeight:1, color, ...style }}>{ZODIAC[sign]||ZODIAC.leo}</span>;
 }
 
-// ── Игровая валюта «Кристаллы» 🔮 ──────────────────────────────
-const CURRENCY = { icon:'🔮', ru:'Кристаллы', en:'Crystals' };
-// Цена каждой возможности в кристаллах. null = пока бесплатно (ценник зададим позже).
-// Когда определимся со стоимостью — проставить числа, и можно включать списание.
-const FEATURE_PRICES = {
-  natal: null, synastry: null, solar: null, milestones: null,
-  pinpoint: null, aspects: null, tarot: null, yesno: null, dayCard: null,
+// ── Игровая валюта «Звёзды» ✦ ──────────────────────────────
+const CURRENCY = { icon:'✦', ru:'Звёзды', en:'Stars' };
+// Стоимость возможностей в звёздах (источник истины — сервер, здесь для отображения).
+const PRICES = {
+  natal: 5, natalOther: 5, synastry: 3, solar: 3, milestones: 5,
+  horary: 2, aspects: 2, daily: 1, oracle: 1, milestonesExtend: 2,
 };
 // Бейдж баланса (иконка + число). compact — для угла главного экрана.
 function BalanceChip({ th, balance, onClick, compact }) {
@@ -53,9 +52,23 @@ function BalanceChip({ th, balance, onClick, compact }) {
       backdropFilter:'blur(8px)',WebkitBackdropFilter:'blur(8px)',cursor:onClick?'pointer':'default',
       fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:compact?12:12.5,color:th.ink,
     }}>
-      <span style={{fontSize:compact?13:14,lineHeight:1}}>{CURRENCY.icon}</span>
+      <span style={{fontSize:compact?13:14,lineHeight:1,color:th.gold}}>{CURRENCY.icon}</span>
       <span>{balance==null?'…':balance}</span>
     </button>
+  );
+}
+// Маленький ценник «✦ N» для кнопок/карточек.
+function PriceTag({ th, price, owned, lang, style }) {
+  const en = lang==='en';
+  if (owned) return (
+    <span style={{display:'inline-flex',alignItems:'center',gap:4,fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:11,color:th.gold,...style}}>
+      <span style={{fontSize:11}}>✦</span>{en?'Owned':'Открыто'}
+    </span>
+  );
+  return (
+    <span style={{display:'inline-flex',alignItems:'center',gap:4,fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:11.5,color:th.ink,...style}}>
+      <span style={{fontSize:12,color:th.gold}}>✦</span>{price}
+    </span>
   );
 }
 
@@ -696,6 +709,95 @@ function FeedbackSheet({ th, lang, onClose }) {
   );
 }
 
+// Шлюз оплаты звёздами: подтверждение / нехватка / доплата до нового лимита.
+function PurchaseGate({ th, lang, gate, balance, onBought, onClose }) {
+  const en = lang === 'en';
+  const [busy, setBusy] = useState(false);
+  const [insufficient, setInsufficient] = useState(false);
+  const [err, setErr] = useState('');
+  if (!gate) return null;
+
+  const price = gate.price;
+  const lowBalance = balance != null && balance < price;
+  const star = (n) => (<span style={{whiteSpace:'nowrap'}}><span style={{color:th.gold}}>✦</span> {n}</span>);
+
+  async function pay(opts, after) {
+    setBusy(true); setErr('');
+    const r = await window.AstroAPI.purchase({ feature: gate.feature, key: gate.key, ...(gate.opts || {}), ...(opts || {}) });
+    setBusy(false);
+    if (r && r.ok) { onBought(r); if (after) after(); onClose(); return; }
+    if (r && (r.error === 'insufficient' || lowBalance)) { if (typeof r.balance === 'number') onBought(r); setInsufficient(true); return; }
+    setErr(en ? 'Something went wrong, try again' : 'Что-то пошло не так, попробуй ещё раз');
+  }
+
+  const wrap = (children) => (
+    <div onClick={() => { if (gate.resolve) gate.resolve(false); onClose(); }}
+      style={{ position:'absolute', inset:0, zIndex:97, display:'flex', alignItems:'flex-end', background:'rgba(0,0,0,0.55)', backdropFilter:'blur(6px)', WebkitBackdropFilter:'blur(6px)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width:'100%', background:th.effDark?'#1a1430':'#fff', borderRadius:'24px 24px 0 0', padding:'22px 22px 30px', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
+        <div style={{ width:40, height:4, borderRadius:99, background:th.glassBorder, margin:'0 auto 18px' }}/>
+        {children}
+      </div>
+    </div>
+  );
+
+  const balLine = (
+    <div style={{ fontFamily:'"Manrope",sans-serif', fontSize:12.5, color:th.muted, marginTop:4 }}>
+      {en ? 'Your balance: ' : 'Твой баланс: '}{star(balance == null ? '…' : balance)}
+    </div>
+  );
+
+  // Нехватка звёзд
+  if (insufficient || (lowBalance && gate.kind === 'buy')) {
+    return wrap(
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontSize:34, color:th.gold, marginBottom:8 }}>✦</div>
+        <div style={{ fontFamily:'var(--ds-serif)', fontWeight:600, fontSize:20, color:th.ink, marginBottom:6 }}>{en?'Not enough stars':'Не хватает звёзд'}</div>
+        <p style={{ fontFamily:'"Manrope",sans-serif', fontSize:13, lineHeight:1.5, color:th.inkSoft, margin:'0 auto 16px', maxWidth:300 }}>
+          {en ? <>This costs {star(price)}. You have {star(balance==null?'…':balance)}. Top-up is coming soon.</>
+              : <>Это стоит {star(price)}. У тебя {star(balance==null?'…':balance)}. Пополнение скоро.</>}
+        </p>
+        <button onClick={() => { if (gate.resolve) gate.resolve(false); onClose(); }} style={{ width:'100%', height:48, borderRadius:999, border:'none', cursor:'pointer', background:th.accent, color:'#fff', fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:14.5 }}>{en?'Got it':'Понятно'}</button>
+      </div>
+    );
+  }
+
+  // Доплата до нового лимита (жизненные вехи)
+  if (gate.kind === 'extend') {
+    return wrap(
+      <div>
+        <div style={{ fontFamily:'var(--ds-serif)', fontWeight:600, fontSize:20, color:th.ink, marginBottom:4 }}>{gate.title}</div>
+        <p style={{ fontFamily:'"Manrope",sans-serif', fontSize:13, lineHeight:1.5, color:th.inkSoft, margin:'0 0 16px' }}>
+          {en ? <>The forecast horizon grew to <b>{gate.newLimit}</b>. Top up {star(price)} to unlock up to the new limit, or open up to your paid limit <b>{gate.prevLimit}</b> for free.</>
+              : <>Горизонт прогноза вырос до <b>{gate.newLimit}</b>. Доплати {star(price)}, чтобы открыть до нового лимита, или открой до оплаченного <b>{gate.prevLimit}</b> бесплатно.</>}
+        </p>
+        {balLine}
+        {err && <div style={{ fontFamily:'"Manrope",sans-serif', fontSize:12, color:'#dc4b2a', margin:'10px 0 0' }}>{err}</div>}
+        <button disabled={busy} onClick={() => pay({ extend:true }, gate.onExtend)} style={{ width:'100%', height:48, marginTop:14, borderRadius:999, border:'none', cursor:busy?'default':'pointer', background:th.accent, color:'#fff', fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:14.5, boxShadow:`0 8px 26px ${th.accentGlow}` }}>
+          {busy ? (en?'…':'…') : (en ? <>Top up {star(price)} → {gate.newLimit}</> : <>Доплатить {star(price)} → {gate.newLimit}</>)}
+        </button>
+        <button disabled={busy} onClick={() => { onClose(); if (gate.onKeep) gate.onKeep(); }} style={{ width:'100%', height:46, marginTop:9, borderRadius:999, cursor:'pointer', background:'transparent', border:`1px solid ${th.glassBorder}`, color:th.inkSoft, fontFamily:'"Manrope",sans-serif', fontWeight:600, fontSize:13.5 }}>
+          {en ? `Open up to ${gate.prevLimit} (free)` : `Открыть до ${gate.prevLimit} (бесплатно)`}
+        </button>
+      </div>
+    );
+  }
+
+  // Обычная покупка
+  return wrap(
+    <div>
+      <div style={{ fontFamily:'var(--ds-serif)', fontWeight:600, fontSize:20, color:th.ink, marginBottom:4 }}>{gate.title}</div>
+      {gate.note && <p style={{ fontFamily:'"Manrope",sans-serif', fontSize:12.5, lineHeight:1.5, color:th.inkSoft, margin:'0 0 8px' }}>{gate.note}</p>}
+      <div style={{ fontFamily:'"Manrope",sans-serif', fontSize:14, color:th.ink, marginTop:6 }}>{en?'Price: ':'Стоимость: '}<b>{star(price)}</b></div>
+      {balLine}
+      {err && <div style={{ fontFamily:'"Manrope",sans-serif', fontSize:12, color:'#dc4b2a', margin:'10px 0 0' }}>{err}</div>}
+      <button disabled={busy} onClick={() => pay(null, () => { if (gate.resolve) gate.resolve(true); })} style={{ width:'100%', height:50, marginTop:16, borderRadius:999, border:'none', cursor:busy?'default':'pointer', background:th.accent, color:'#fff', fontFamily:'"Manrope",sans-serif', fontWeight:700, fontSize:15, boxShadow:`0 8px 26px ${th.accentGlow}` }}>
+        {busy ? (en?'Opening…':'Открываем…') : (en ? <>Open for {star(price)}</> : <>Открыть за {star(price)}</>)}
+      </button>
+      <button disabled={busy} onClick={() => { if (gate.resolve) gate.resolve(false); onClose(); }} style={{ width:'100%', height:46, marginTop:9, borderRadius:999, cursor:'pointer', background:'transparent', border:`1px solid ${th.glassBorder}`, color:th.inkSoft, fontFamily:'"Manrope",sans-serif', fontWeight:600, fontSize:13.5 }}>{en?'Cancel':'Отмена'}</button>
+    </div>
+  );
+}
+
 // ════════════════════════════════════════════════════════════
 // SUB SCREEN
 // ════════════════════════════════════════════════════════════
@@ -775,7 +877,7 @@ function ProfNavRow({ th, icon, title, subtitle, onClick, last }) {
 // ════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ════════════════════════════════════════════════════════════
-function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback, balance }) {
+function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback, balance, onTestGrant }) {
   const [editing, setEditing] = useState(false);
   const [view,    setView]    = useState('main'); // 'main' | 'notif' — провал в настройки уведомлений
   const [draft,   setDraft]   = useState(userName);
@@ -929,7 +1031,7 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
           background:`linear-gradient(135deg, ${th.accent}26, ${th.accent}0d)`,border:`1px solid ${th.accent}3a`,
           backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)',
         }}>
-          <div style={{fontSize:30,lineHeight:1,flexShrink:0,filter:'drop-shadow(0 2px 8px rgba(123,97,255,0.45))'}}>{CURRENCY.icon}</div>
+          <div style={{fontSize:30,lineHeight:1,flexShrink:0,color:th.gold,filter:'drop-shadow(0 2px 10px rgba(212,175,90,0.5))'}}>{CURRENCY.icon}</div>
           <div style={{flex:1,minWidth:0}}>
             <div style={{display:'flex',alignItems:'baseline',gap:7}}>
               <span style={{fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:26,color:th.ink,lineHeight:1}}>{balance==null?'…':balance}</span>
@@ -989,34 +1091,48 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
         </div>
       </ProfSection>
 
-      {/* ── ВРЕМЕННО: тест уведомления от бота ── */}
-      <button onClick={async () => {
-        if (!window.AstroAPI) return;
-        const r = await window.AstroAPI.sendTestNotification();
-        const msg = r.ok
-          ? (en ? 'Sent! Check the chat with the bot.' : 'Отправлено! Загляни в чат с ботом.')
-          : (en ? 'Failed: ' : 'Не получилось: ') + (r.error||'');
-        try { window.Telegram.WebApp.showAlert(msg); } catch(e){ alert(msg); }
-      }} style={{
-        width:'100%',marginTop:18,padding:'12px',borderRadius:14,
-        border:`1px solid ${th.accent}66`,background:`${th.accent}18`,color:th.ink,
-        fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,cursor:'pointer',
-      }}>
-        🔔 {en?'Send test notification':'Прислать тестовое уведомление'}
-      </button>
+      {/* ── ТЕСТОВЫЕ КНОПКИ — только админу ── */}
+      {window.isAstroAdmin && window.isAstroAdmin() && (
+        <React.Fragment>
+          {/* +10 звёзд (тест баланса) */}
+          <button onClick={async () => { if (onTestGrant) await onTestGrant(); }} style={{
+            width:'100%',marginTop:18,padding:'12px',borderRadius:14,
+            border:`1px solid ${th.gold}66`,background:`${th.gold}1f`,color:th.ink,
+            fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,cursor:'pointer',
+          }}>
+            ✦ {en?'Add 10 stars (test)':'Начислить 10 звёзд (тест)'}
+          </button>
 
-      {/* ── ВРЕМЕННО: сброс данных для повторного теста онбординга ── */}
-      <button onClick={async () => {
-        try { if (window.AstroAPI) await window.AstroAPI.resetSelf(); } catch(e){}
-        try { localStorage.removeItem('astro_onboarded_v1'); localStorage.removeItem('astro_birth_v2'); } catch(e){}
-        location.reload();
-      }} style={{
-        width:'100%',marginTop:10,padding:'12px',borderRadius:14,
-        border:`1px solid ${th.muted}55`,background:'transparent',color:th.muted,
-        fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,cursor:'pointer',
-      }}>
-        🧪 Сбросить данные (тест онбординга)
-      </button>
+          {/* тест уведомления от бота */}
+          <button onClick={async () => {
+            if (!window.AstroAPI) return;
+            const r = await window.AstroAPI.sendTestNotification();
+            const msg = r.ok
+              ? (en ? 'Sent! Check the chat with the bot.' : 'Отправлено! Загляни в чат с ботом.')
+              : (en ? 'Failed: ' : 'Не получилось: ') + (r.error||'');
+            try { window.Telegram.WebApp.showAlert(msg); } catch(e){ alert(msg); }
+          }} style={{
+            width:'100%',marginTop:10,padding:'12px',borderRadius:14,
+            border:`1px solid ${th.accent}66`,background:`${th.accent}18`,color:th.ink,
+            fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,cursor:'pointer',
+          }}>
+            🔔 {en?'Send test notification':'Прислать тестовое уведомление'}
+          </button>
+
+          {/* сброс данных для повторного теста онбординга */}
+          <button onClick={async () => {
+            try { if (window.AstroAPI) await window.AstroAPI.resetSelf(); } catch(e){}
+            try { localStorage.removeItem('astro_onboarded_v1'); localStorage.removeItem('astro_birth_v2'); } catch(e){}
+            location.reload();
+          }} style={{
+            width:'100%',marginTop:10,padding:'12px',borderRadius:14,
+            border:`1px solid ${th.muted}55`,background:'transparent',color:th.muted,
+            fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:12.5,cursor:'pointer',
+          }}>
+            🧪 Сбросить данные (тест онбординга)
+          </button>
+        </React.Fragment>
+      )}
 
     </div>
   );
@@ -1066,6 +1182,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [solarYear, setSolarYear] = useState(() => Math.max(birth.year + 1, new Date().getFullYear()));
   const [solarCity, setSolarCity] = useState(() => residenceCity(birth));
   const [milestoneTheme, setMilestoneTheme] = useState(null);
+  const [milestoneLimit, setMilestoneLimit] = useState(null); // эффективный лимит лет (для оплаченного до прежнего)
   const [helpItem, setHelpItem] = useState(null); // объяснение услуги (bottom-sheet)
   const [dayReveal, setDayReveal] = useState(false); // оверлей «Карта дня»
   const [yesNo, setYesNo] = useState(false); // оверлей «Да / Нет»
@@ -1117,6 +1234,67 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     api.getBalance().then((b) => { if (typeof b === 'number') setBalance(b); });
   }, []);
   useEffect(() => { refreshBalance(); }, [refreshBalance]);
+
+  // ── Покупки (что уже оплачено) ──
+  const [entitlements, setEntitlements] = useState([]);
+  const refreshEntitlements = React.useCallback(() => {
+    const api = window.AstroAPI;
+    if (!api || !api.isConfigured() || !api.inTelegram()) return;
+    api.getEntitlements().then((es) => { if (Array.isArray(es)) setEntitlements(es); });
+  }, []);
+  useEffect(() => { refreshEntitlements(); }, [refreshEntitlements]);
+  const owns = (feature, key = '') => entitlements.some((e) => e.feature === feature && e.item_key === (key || ''));
+  const milestonePaidLimit = (themeId) => {
+    const e = entitlements.find((x) => x.feature === 'milestones' && x.item_key === themeId);
+    return e ? (e.paid_limit || 0) : null; // null = не куплено
+  };
+  // Стабильный ключ партнёра для синастрии.
+  const synKey = (p) => p && (p.id || `${p.name||''}_${p.day}.${p.month}.${p.year}`);
+
+  // ── Шлюз оплаты ──
+  const [gate, setGate] = useState(null); // дескриптор покупки или null
+  // Возвращает Promise<bool>: true — доступ получен (бесплатно или оплачено), false — отмена/не хватило.
+  const buyAndProceed = (desc) => {
+    if (desc.owned) return Promise.resolve(true);           // уже оплачено
+    if (!window.AstroAPI || !window.AstroAPI.isConfigured() || !window.AstroAPI.inTelegram()) return Promise.resolve(true); // вне TG — не блокируем
+    return new Promise((resolve) => setGate({ kind: 'buy', ...desc, resolve }));
+  };
+  const onGateBought = (r) => { if (r && typeof r.balance === 'number') setBalance(r.balance); refreshEntitlements(); };
+
+  // Жизненные вехи — особый поток (учёт оплаченного лимита лет + доплата при расширении).
+  const openMilestone = (themeId) => {
+    const proceed = (limitYear) => { setMilestoneTheme(themeId); setMilestoneLimit(limitYear || null); go('milestones_result'); };
+    if (themeId === 'body') { proceed(null); return; }     // тело и здоровье — без оплаты
+    const horizon = (window.MILESTONES && window.MILESTONES.milestonesHorizon) ? window.MILESTONES.milestonesHorizon() : null;
+    const paid = milestonePaidLimit(themeId);
+    const theme = window.MILESTONES && window.MILESTONES.THEMES.find((t) => t.id === themeId);
+    const title = theme ? theme.title[lang] : (lang==='en'?'Milestones':'Жизненные вехи');
+    if (paid == null) {
+      // Не куплено — берём 5 звёзд, открываем до текущего лимита.
+      setGate({ kind:'buy', feature:'milestones', key:themeId, price:PRICES.milestones, opts:{limit:horizon},
+        owned:false, title, note: lang==='en'
+          ? `Bought once and unlocked up to the current limit (${horizon}).`
+          : `Покупается один раз и открывается до текущего лимита (${horizon}).`,
+        resolve:(ok)=>{ if(ok) proceed(horizon); } });
+    } else if (horizon == null || paid >= horizon) {
+      proceed(paid || horizon); // полностью открыто
+    } else {
+      // Куплено, но лимит лет вырос — предлагаем доплатить.
+      setGate({ kind:'extend', feature:'milestones', key:themeId, price:PRICES.milestonesExtend,
+        prevLimit:paid, newLimit:horizon, title,
+        onExtend:()=>proceed(horizon), onKeep:()=>proceed(paid) });
+    }
+  };
+
+  // Карта дня — 1 звезда за открытие нового дня (повторно в тот же день бесплатно).
+  const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  const requestDaily = async () => {
+    const k = todayKey();
+    const ok = await buyAndProceed({ feature:'daily', key:k, price:PRICES.daily, owned:owns('daily',k),
+      title: lang==='en'?'Card of the day':'Карта дня', note: lang==='en'?'A fresh card for today.':'Свежая карта на сегодня.' });
+    if (ok) setDayReveal(true);
+    return ok;
+  };
 
   const finishOnboarding = async (b) => {
     setBirth(b);
@@ -1209,8 +1387,13 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   };
   const cancelPartner = () => setEditPartnerIdx(null);
 
-  // ── Натал для другого человека (данные НЕ сохраняем) ──
-  const saveOther = (b) => { setOtherBirth(b); setEditingOther(false); go('natal_other_chart'); };
+  // ── Натал для другого человека (данные НЕ сохраняем; всегда 5 звёзд за построение) ──
+  const saveOther = async (b) => {
+    setOtherBirth(b); setEditingOther(false);
+    if (await buyAndProceed({ feature:'natal_other', price:PRICES.natalOther, owned:false,
+      title: lang==='en'?'Natal chart for another':'Натальная карта другому',
+      note: lang==='en'?'Each chart for another person costs 5.':'Каждая карта для другого человека — 5 звёзд.' })) go('natal_other_chart');
+  };
   const shareNatal = async () => {
     if (sharingPdf) return;
     const en = lang === 'en';
@@ -1278,9 +1461,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   let mainContent;
 
   if (activeTab === 'profile') {
-    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance}/>;
+    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance} onTestGrant={async ()=>{ const b = await window.AstroAPI.testGrant(); if (typeof b==='number') setBalance(b); }}/>;
   } else if (screen === 'home') {
-    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={()=>setDayReveal(true)} onYesNo={()=>setYesNo(true)} balance={balance} onBalance={()=>handleTabChange('profile')}/>;
+    mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={requestDaily} onYesNo={()=>setYesNo(true)} balance={balance} onBalance={()=>handleTabChange('profile')}/>;
   } else if (screen === 'natal') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChoiceScreen th={th} lang={lang} onChooseMe={()=>go('natal_me')} onChooseOther={()=>go('natal_other')}/>;
@@ -1337,35 +1520,37 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     );
   } else if (screen === 'natal_me') {
     title = lang==='ru' ? 'Данные рождения' : 'Birth data';
-    mainContent = <NatalConfirmScreen th={th} lang={lang} birth={birth} userName={userName} onConfirm={()=>go('natal_chart')} onEdit={openEdit}/>;
+    mainContent = <NatalConfirmScreen th={th} lang={lang} birth={birth} userName={userName} onConfirm={async ()=>{ if (await buyAndProceed({feature:'natal_self', price:PRICES.natal, owned:owns('natal_self'), title: lang==='en'?'Your natal chart':'Натальная карта', note: lang==='en'?'Bought once, yours forever — rebuilding after an edit is free.':'Покупается один раз и навсегда — перестройка после правок бесплатна.'})) go('natal_chart'); }} onEdit={openEdit}/>;
   } else if (screen === 'natal_chart') {
     title = lang==='ru' ? 'Натальная карта' : 'Natal chart';
     mainContent = <NatalChartScreen th={th} lang={lang} birth={birth} onExpand={setBigChart}/>;
   } else if (screen === 'synastry') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
-    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partners={partners} selectedPartnerIdx={selPartnerIdx} onSelectPartner={setSelPartnerIdx} onAddPartner={openAddPartner} onEditPartner={openEditPartner} onDeletePartner={deletePartner} onEditYou={openEdit} onBuild={()=>go('synastry_chart')}/>;
+    mainContent = <SynastryIntakeScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partners={partners} selectedPartnerIdx={selPartnerIdx} onSelectPartner={setSelPartnerIdx} onAddPartner={openAddPartner} onEditPartner={openEditPartner} onDeletePartner={deletePartner} onEditYou={openEdit} onBuild={async ()=>{ const pk=synKey(partner); if (await buyAndProceed({feature:'synastry', key:pk, price:PRICES.synastry, owned:owns('synastry',pk), title: lang==='en'?'Synastry':'Синастрия', note: lang==='en'?'Per partner — once paid, this partner stays open.':'За каждого партнёра — оплаченный остаётся открытым.'})) go('synastry_chart'); }}/>;
   } else if (screen === 'synastry_chart') {
     title = lang==='ru' ? 'Синастрия' : 'Synastry';
     mainContent = <SynastryChartScreen th={th} lang={lang} you={{...birth, name:userName, nameEn:USER.nameEn}} partner={partner} onExpand={setBigSyn}/>;
   } else if (screen === 'solar') {
     title = lang==='ru' ? 'Соляр' : 'Solar return';
-    mainContent = <SolarIntakeScreen th={th} lang={lang} birth={birth} userName={userName} year={solarYear} onYear={setSolarYear} srCity={solarCity} onCity={setSolarCity} onBuild={()=>go('solar_chart')}/>;
+    mainContent = <SolarIntakeScreen th={th} lang={lang} birth={birth} userName={userName} year={solarYear} onYear={setSolarYear} srCity={solarCity} onCity={setSolarCity} onBuild={async ()=>{ const yk=String(solarYear); if (await buyAndProceed({feature:'solar', key:yk, price:PRICES.solar, owned:owns('solar',yk), title: lang==='en'?`Solar return ${solarYear}`:`Соляр ${solarYear}`, note: lang==='en'?'Per year — paid years stay open.':'За каждый год — оплаченные годы остаются открытыми.'})) go('solar_chart'); }}/>;
   } else if (screen === 'solar_chart') {
     title = lang==='ru' ? 'Соляр' : 'Solar return';
     mainContent = <SolarChartScreen th={th} lang={lang} birth={birth} year={solarYear} srCity={solarCity} onExpand={setBigSolar}/>;
   } else if (screen === 'milestones') {
     title = lang==='ru' ? 'Жизненные вехи' : 'Life Milestones';
-    mainContent = <MilestonesIntakeScreen th={th} lang={lang} birth={birth} userName={userName} onEditBirth={openEdit} onChoose={(id)=>{ setMilestoneTheme(id); go('milestones_result'); }}/>;
+    mainContent = <MilestonesIntakeScreen th={th} lang={lang} birth={birth} userName={userName} onEditBirth={openEdit} onChoose={openMilestone} owns={owns} milestonePaidLimit={milestonePaidLimit} prices={PRICES}/>;
   } else if (screen === 'milestones_result') {
     const mt = window.MILESTONES && window.MILESTONES.THEMES.find(t=>t.id===milestoneTheme);
     title = mt ? mt.title[lang] : (lang==='ru' ? 'Жизненные вехи' : 'Life Milestones');
-    mainContent = <MilestonesResultScreen th={th} lang={lang} birth={birth} themeId={milestoneTheme}/>;
+    mainContent = <MilestonesResultScreen th={th} lang={lang} birth={birth} themeId={milestoneTheme} limitYear={milestoneLimit}/>;
   } else if (screen === 'pinpoint') {
     title = lang==='ru' ? 'Хорар' : 'Horary';
-    mainContent = <HorarScreen th={th} lang={lang} city={residenceCity(birth)} onExpand={setBigChart}/>;
+    mainContent = <HorarScreen th={th} lang={lang} city={residenceCity(birth)} onExpand={setBigChart} onPay={()=>buyAndProceed({feature:'horary', price:PRICES.horary, owned:false, title: lang==='en'?'Horary question':'Хорарный вопрос'})}/>;
   } else if (screen === 'aspects') {
     title = lang==='ru' ? 'Аспекты на месяц' : 'Aspects this month';
-    mainContent = <AspectsMonthScreen th={th} lang={lang} birth={birth}/>;
+    mainContent = <AspectsMonthScreen th={th} lang={lang} birth={birth}
+      ownsMonth={(y,m)=>owns('aspects', `${y}-${String(m).padStart(2,'0')}`)}
+      buyMonth={(y,m)=>buyAndProceed({feature:'aspects', key:`${y}-${String(m).padStart(2,'0')}`, price:PRICES.aspects, owned:owns('aspects',`${y}-${String(m).padStart(2,'0')}`), title: lang==='en'?'Monthly aspects':'Аспекты месяца', note: lang==='en'?'Per month — once opened, this month stays free.':'За месяц — открытый месяц остаётся бесплатным.'})}/>;
   } else if (screen === 'tarot') {
     title = lang==='ru' ? 'Таро' : 'Tarot';
     mainContent = <TarotScreen th={th} lang={lang}/>;
@@ -1398,7 +1583,11 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
         {dayReveal && <TarotDayReveal th={th} lang={lang} onClose={()=>setDayReveal(false)}/>}
 
         {/* ── Оверлей «Да / Нет» ── */}
-        {yesNo && <TarotYesNoReveal th={th} lang={lang} onClose={()=>setYesNo(false)}/>}
+        {yesNo && <TarotYesNoReveal th={th} lang={lang} onClose={()=>setYesNo(false)}
+          onPay={()=>buyAndProceed({feature:'oracle', price:PRICES.oracle, owned:false, title: lang==='en'?'Yes / No oracle':'Оракул Да / Нет'})}/>}
+
+        {/* ── Шлюз оплаты звёздами ── */}
+        {gate && <PurchaseGate th={th} lang={lang} gate={gate} balance={balance} onBought={onGateBought} onClose={()=>setGate(null)}/>}
 
         {/* ── Шторка обратной связи ── */}
         {feedbackOpen && <FeedbackSheet th={th} lang={lang} onClose={()=>setFeedbackOpen(false)}/>}

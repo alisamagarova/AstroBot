@@ -30,7 +30,7 @@ function hzUnit(kind, en) {
   return kind === 'days' ? 'дн.' : kind === 'weeks' ? 'нед.' : 'мес.';
 }
 
-function HorarScreen({ th, lang, city, onExpand }) {
+function HorarScreen({ th, lang, city, onExpand, onPay }) {
   const en = lang === 'en';
   const [voc, setVoc] = useStateHz(null);     // null=loading, {voc, ...}
   const [q, setQ] = useStateHz('');
@@ -58,14 +58,18 @@ function HorarScreen({ th, lang, city, onExpand }) {
   const topicObj = window.HORAR && window.HORAR.TOPICS.find(t => t.id === topic);
   const canAsk = !!q.trim() && !!topicObj && consent && !cool && voc && !voc.voc && !noCity;
 
-  const doAsk = () => {
-    if (!canAsk) return;
+  const castNow = () => {
     try {
       const r = window.HORAR.ask(city, topicObj);
       setResult({ ...r, question: q.trim(), topicLabel: en ? topicObj.en : topicObj.ru });
       try { localStorage.setItem('astro_horar_last', String(Date.now())); } catch (e) {}
       setCool({ nextMs: Date.now() + HZ_COOLDOWN_MS });
     } catch (e) { setResult({ error: e.message }); }
+  };
+  const doAsk = () => {
+    if (!canAsk) return;
+    if (onPay) { onPay().then((ok) => { if (ok) castNow(); }); } // оплата 2 звезды за вопрос
+    else castNow();
   };
 
   const pad = { padding: '8px 18px 30px', position: 'relative', zIndex: 1 };

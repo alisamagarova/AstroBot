@@ -7,9 +7,12 @@ import {
   setLang,
   setBlocked,
   getBalance,
+  addBalance,
 } from '../db/queries/users.js';
+import { purchaseFeature, listEntitlements } from '../db/queries/entitlements.js';
 import { saveConsent, getConsentsByUser } from '../db/queries/consents.js';
 import { requireOwner } from '../plugins/auth.js';
+import { config } from '../config.js';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -72,6 +75,46 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     const { tgId } = request.params;
     if (!requireOwner(request, reply, tgId)) return;
     const balance = await getBalance(tgId);
+    return { balance };
+  });
+
+  /** GET /users/:tgId/entitlements — что уже оплачено (для отображения «Открыто»). */
+  fastify.get<{ Params: { tgId: string } }>('/users/:tgId/entitlements', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    const entitlements = await listEntitlements(tgId);
+    return { entitlements };
+  });
+
+  /** POST /users/:tgId/purchase — покупка возможности за звёзды (транзакционно). */
+  fastify.post<{ Params: { tgId: string } }>('/users/:tgId/purchase', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    const body = z.object({
+      feature: z.string().min(1),
+      key:     z.string().default(''),
+      limit:   z.number().int().optional(),
+      extend:  z.boolean().optional(),
+    }).safeParse(request.body);
+    if (!body.success) return reply.status(400).send({ error: body.error.flatten() });
+
+    const r = await purchaseFeature(tgId, body.data.feature, body.data.key, {
+      limit: body.data.limit, extend: body.data.extend,
+    });
+    if (!r.ok && (r.error === 'no_user' || r.error === 'bad_feature')) {
+      return reply.status(400).send(r);
+    }
+    return r; // {ok, charged, balance, owned, error?}
+  });
+
+  /** POST /users/:tgId/balance/test-grant — ТЕСТОВОЕ начисление 10 звёзд (только админ). */
+  fastify.post<{ Params: { tgId: string } }>('/users/:tgId/balance/test-grant', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    if (!config.adminIds.includes(String(tgId))) {
+      return reply.status(403).send({ error: 'admin only' });
+    }
+    const balance = await addBalance(tgId, 10);
     return { balance };
   });
 

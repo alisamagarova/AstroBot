@@ -301,7 +301,7 @@ function TarotDailyCard({ th, lang, onReveal }) {
 
   const gold = th.gold;
   return (
-    <button onClick={() => { setSeen(true); onReveal && onReveal(); }} style={{
+    <button onClick={() => { const r = onReveal && onReveal(); if (r && r.then) r.then((ok) => { if (ok) setSeen(true); }); else setSeen(true); }} style={{
       display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left', cursor: 'pointer',
       background: th.glassStrong, border: `1px solid ${th.glassBorder}`, backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
       borderRadius: 22, padding: '13px 16px', marginBottom: 22, boxSizing: 'border-box',
@@ -485,7 +485,7 @@ function TarotYesNoButton({ th, lang, onOpen }) {
 window.TarotYesNoButton = TarotYesNoButton;
 
 // Оверлей: вопрос → карта выпадает и переворачивается → вердикт.
-function TarotYesNoReveal({ th, lang, onClose }) {
+function TarotYesNoReveal({ th, lang, onClose, onPay }) {
   const T = window.TAROT;
   const en = lang === 'en';
   const gold = th.gold;
@@ -495,15 +495,19 @@ function TarotYesNoReveal({ th, lang, onClose }) {
   const [entry, setEntry] = useStateTa(null);
   const [err, setErr] = useStateTa('');
 
+  function revealNow() {
+    const card = T.DECK[Math.floor(Math.random() * T.DECK.length)];
+    setEntry({ card, reversed: Math.random() < 0.5 }); // 50/50 — честная монета
+    setPhase('reveal');
+  }
   function draw() {
     if (!looksLikeQuestion(q)) {
       setErr(en ? "Hmm, that doesn't look like a question. Try to phrase it clearly." : 'Хм, это не похоже на вопрос. Сформулируй яснее.');
       return;
     }
     setErr('');
-    const card = T.DECK[Math.floor(Math.random() * T.DECK.length)];
-    setEntry({ card, reversed: Math.random() < 0.5 }); // 50/50 — честная монета
-    setPhase('reveal');
+    if (onPay) { onPay().then((ok) => { if (ok) revealNow(); }); } // оплата 1 звезда за вопрос
+    else revealNow();
   }
   function again() { setEntry(null); setErr(''); setPhase('ask'); }
 

@@ -549,7 +549,7 @@
   // ═══════════════════════════════════════════════════════════════════════
   // PUBLIC: scan one theme → timeline of windows
   // ═══════════════════════════════════════════════════════════════════════
-  function scanMilestones(birth, themeId) {
+  function scanMilestones(birth, themeId, limitYear) {
     const theme = THEMES.find((t) => t.id === themeId);
     if (!theme) throw new Error('Unknown theme ' + themeId);
 
@@ -561,7 +561,7 @@
     const targets = resolveTargets(theme, chart, housesOK);
 
     let startY = birth.year + 16;
-    let endY = milestonesHorizon();
+    let endY = limitYear || milestonesHorizon();
     if (endY - startY > 60) startY = endY - 60;
     if (startY >= endY) startY = endY - 20;
     const startMs = Date.UTC(startY, birth.month - 1, birth.day);

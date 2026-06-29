@@ -116,10 +116,26 @@ function MsSection({ th, title, sub, children }) {
 // ═══════════════════════════════════════════════════════
 // INTAKE — method note + birth chip + topic picker
 // ═══════════════════════════════════════════════════════
-function MilestonesIntakeScreen({ th, lang, birth, userName, onEditBirth, onChoose }) {
+function MilestonesIntakeScreen({ th, lang, birth, userName, onEditBirth, onChoose, owns, milestonePaidLimit, prices }) {
   const en = lang === 'en';
   const M = window.MILESTONES;
   const unknown = birth.timeMode === 'unknown';
+  const horizon = M.milestonesHorizon ? M.milestonesHorizon() : null;
+  const msPrice = (prices && prices.milestones) || 5;
+  // Бейдж стоимости/владения для плитки темы.
+  const themeBadge = (t) => {
+    if (t.id === 'body') return null; // тело и здоровье — без оплаты
+    const paid = milestonePaidLimit ? milestonePaidLimit(t.id) : null;
+    const ownedT = paid != null;
+    return (
+      <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', gap: 4, fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 11 }}>
+        <span style={{ color: th.gold, fontSize: 11 }}>✦</span>
+        {ownedT
+          ? <span style={{ color: th.gold }}>{en ? 'Owned' : 'Открыто'}</span>
+          : <span style={{ color: th.ink }}>{msPrice}</span>}
+      </div>
+    );
+  };
 
   return (
     <div style={{ padding: '6px 18px 28px', position: 'relative', zIndex: 1 }}>
@@ -164,6 +180,16 @@ function MilestonesIntakeScreen({ th, lang, birth, userName, onEditBirth, onChoo
         </div>
       )}
 
+      {/* пояснение про разовую покупку темы */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '11px 14px', borderRadius: 14, background: `${th.gold}14`, border: `1px solid ${th.gold}33`, marginBottom: 16 }}>
+        <span style={{ flexShrink: 0, fontSize: 13, color: th.gold, lineHeight: 1.4, marginTop: 1 }}>✦</span>
+        <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 11.5, lineHeight: 1.5, color: th.inkSoft, textWrap: 'pretty' }}>
+          {en
+            ? `Each theme is bought once for ${msPrice} ✦ and opens all its windows up to the current horizon${horizon ? ` (${horizon})` : ''}. When the horizon grows, you can top up to extend it.`
+            : `Каждая тема покупается один раз за ${msPrice} ✦ и открывает все окна до текущего лимита${horizon ? ` (${horizon})` : ''}. Когда лимит вырастет — можно будет доплатить и продлить.`}
+        </div>
+      </div>
+
       {/* topic picker grouped by category. «Тело и здоровье» — только админам (не медицина). */}
       {M.CATEGORIES.filter((cat) => cat.id !== 'body' || (window.isAstroAdmin && window.isAstroAdmin())).map((cat) => {
         const themes = M.THEMES.filter((t) => t.cat === cat.id);
@@ -182,6 +208,7 @@ function MilestonesIntakeScreen({ th, lang, birth, userName, onEditBirth, onChoo
                   </div>
                   <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 15.5, lineHeight: 1.05, color: th.ink, marginBottom: 4 }}>{t.title[lang]}</div>
                   <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 10.5, lineHeight: 1.32, color: th.inkSoft, textWrap: 'pretty' }}>{t.blurb[lang]}</div>
+                  {themeBadge(t)}
                 </button>
               ))}
             </div>
@@ -317,7 +344,7 @@ function MsWindowCard({ th, lang, result, w, refEl, highlight }) {
 // ═══════════════════════════════════════════════════════
 // RESULT SCREEN
 // ═══════════════════════════════════════════════════════
-function MilestonesResultScreen({ th, lang, birth, themeId }) {
+function MilestonesResultScreen({ th, lang, birth, themeId, limitYear }) {
   const en = lang === 'en';
   const M = window.MILESTONES;
   const [result, setResult] = useStateMs(null);
@@ -329,13 +356,13 @@ function MilestonesResultScreen({ th, lang, birth, themeId }) {
     setResult(null); setError(null); setActiveIdx(null);
     const id = setTimeout(() => {
       try {
-        const r = M.scanMilestones(birth, themeId);
+        const r = M.scanMilestones(birth, themeId, limitYear);
         r.birth = birth;
         setResult(r);
       } catch (e) { setError(e.message); }
     }, 40);
     return () => clearTimeout(id);
-  }, [birth, themeId, lang]);
+  }, [birth, themeId, lang, limitYear]);
 
   const theme = M.THEMES.find((t) => t.id === themeId);
 

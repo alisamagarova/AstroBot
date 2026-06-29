@@ -173,7 +173,7 @@ function AsAspectCard({ th, lang, e, compact }) {
 // ═══════════════════════════════════════════════════════
 // MONTH SCREEN
 // ═══════════════════════════════════════════════════════
-function AspectsMonthScreen({ th, lang, birth }) {
+function AspectsMonthScreen({ th, lang, birth, ownsMonth, buyMonth }) {
   const en = lang === 'en';
   const A = window.ASPECTS;
   const now = new Date();
@@ -181,19 +181,23 @@ function AspectsMonthScreen({ th, lang, birth }) {
   const [data, setData] = useStateAs(null);
   const [error, setError] = useStateAs(null);
 
+  // Доступ к месяцу: открыт ли (оплачен). Если шлюза нет (вне TG) — считаем открытым.
+  const monthOwned = ownsMonth ? ownsMonth(ym.y, ym.m) : true;
+
   useEffectAs(() => {
     setData(null); setError(null);
+    if (!monthOwned) return undefined; // месяц не открыт — не считаем, показываем замок
     const id = setTimeout(() => {
       try { setData(A.scanMonthAspects(birth, ym.y, ym.m)); }
       catch (e) { setError(e.message); }
     }, 40);
     return () => clearTimeout(id);
-  }, [birth, ym.y, ym.m, lang]);
+  }, [birth, ym.y, ym.m, lang, monthOwned]);
 
-  // Отмечаем просмотр этого месяца аспектов (для уведомлений).
+  // Отмечаем просмотр открытого месяца аспектов (для уведомлений).
   useEffectAs(() => {
-    if (window.AstroAPI) window.AstroAPI.markAspectViewed(ym.y, ym.m);
-  }, [ym.y, ym.m]);
+    if (monthOwned && window.AstroAPI) window.AstroAPI.markAspectViewed(ym.y, ym.m);
+  }, [ym.y, ym.m, monthOwned]);
 
   const step = (d) => {
     let m = ym.m + d, y = ym.y;
@@ -231,9 +235,27 @@ function AspectsMonthScreen({ th, lang, birth }) {
         </div>
       </div>
 
-      {error && <div style={{ padding: '30px 0', textAlign: 'center', fontFamily: '"Manrope",sans-serif', fontSize: 13, color: th.muted }}>{en ? 'Error: ' : 'Ошибка: '}{error}</div>}
+      {/* Замок: месяц ещё не открыт — предлагаем оплатить */}
+      {!monthOwned && (
+        <div style={{ padding: '30px 6px 10px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <div style={{ fontSize: 32, color: th.gold }}>✦</div>
+          <div style={{ fontFamily: 'var(--ds-serif)', fontWeight: 600, fontSize: 19, color: th.ink }}>{en ? `Open ${monName} ${ym.y}` : `Открыть ${monName} ${ym.y}`}</div>
+          <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 12.5, lineHeight: 1.5, color: th.muted, maxWidth: 300 }}>
+            {en ? 'Once opened, this month stays free forever — you can come back to it any time.' : 'Открытый месяц остаётся бесплатным навсегда — можно возвращаться к нему в любой момент.'}
+          </div>
+          <button onClick={() => buyMonth && buyMonth(ym.y, ym.m)} style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, height: 48, padding: '0 26px', marginTop: 4,
+            borderRadius: 999, border: 'none', cursor: 'pointer', background: th.accent, color: '#fff',
+            fontFamily: '"Manrope",sans-serif', fontWeight: 700, fontSize: 14.5, boxShadow: `0 8px 26px ${th.accentGlow}`,
+          }}>
+            <span style={{ color: '#ffe9a8' }}>✦</span> {en ? 'Open for 2' : 'Открыть за 2'}
+          </button>
+        </div>
+      )}
 
-      {!data && !error && (
+      {monthOwned && error && <div style={{ padding: '30px 0', textAlign: 'center', fontFamily: '"Manrope",sans-serif', fontSize: 13, color: th.muted }}>{en ? 'Error: ' : 'Ошибка: '}{error}</div>}
+
+      {monthOwned && !data && !error && (
         <div style={{ padding: '60px 0', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
           <span style={{ width: 28, height: 28, borderRadius: '50%', border: `2.5px solid ${th.muted}`, borderTopColor: 'transparent', display: 'inline-block', animation: 'astroSpin .7s linear infinite' }}/>
           <div style={{ fontFamily: '"Manrope",sans-serif', fontSize: 13, color: th.muted }}>{en ? 'Reading the sky…' : 'Читаю небо…'}</div>
