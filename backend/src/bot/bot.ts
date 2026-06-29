@@ -12,6 +12,8 @@ import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { upsertUser, setBlocked, allActiveUsers } from '../db/queries/users.js';
 import { getSelfPerson } from '../db/queries/people.js';
+import { findTariff, STAR_PAYLOAD_PREFIX } from '../payments.js';
+import { creditStarsPurchase } from '../db/queries/payments.js';
 
 export const bot = new Bot(config.tg.botToken);
 
@@ -126,6 +128,36 @@ bot.callbackQuery('bc:send', async (ctx) => {
   await ctx.editMessageText('Рассылаю…');
   const r = await broadcastToAll(text);
   await ctx.reply(`Готово ✅\nДоставлено: ${r.ok}\nЗаблокировали бота: ${r.blocked}\nОшибок: ${r.fail}`);
+});
+
+// ─── Оплата виртуальных звёзд через Telegram Stars (XTR) ───────────────────────
+// 1) pre_checkout_query: подтверждаем платёж (нужно ответить в течение 10 c).
+bot.on('pre_checkout_query', async (ctx) => {
+  const payload = ctx.preCheckoutQuery.invoice_payload || '';
+  const tariffId = payload.startsWith(STAR_PAYLOAD_PREFIX) ? payload.slice(STAR_PAYLOAD_PREFIX.length) : '';
+  const t = findTariff(tariffId);
+  if (!t) { await ctx.answerPreCheckoutQuery(false, { error_message: 'Тариф недоступен. Попробуйте ещё раз.' }); return; }
+  await ctx.answerPreCheckoutQuery(true);
+});
+
+// 2) successful_payment: начисляем ✦ — атомарно и идемпотентно (по charge_id).
+//    Зарегистрировано ДО общего обработчика message, иначе сработает заглушка-ответ.
+bot.on('message:successful_payment', async (ctx) => {
+  const sp = ctx.message.successful_payment;
+  const payload = sp.invoice_payload || '';
+  const tariffId = payload.startsWith(STAR_PAYLOAD_PREFIX) ? payload.slice(STAR_PAYLOAD_PREFIX.length) : '';
+  const t = findTariff(tariffId);
+  const tgId = String(ctx.from.id);
+  if (!t) { console.error('successful_payment: unknown tariff', payload); return; }
+  try {
+    const r = await creditStarsPurchase(tgId, t.id, t.vz, t.stars, sp.telegram_payment_charge_id);
+    if (r.credited) {
+      await ctx.reply(`Готово! ✦ Начислено ${t.vz} звёзд. Твой баланс: ${r.balance} ✦`);
+    }
+    // если credited=false — платёж уже был обработан, молча игнорируем (не дублируем)
+  } catch (e) {
+    console.error('creditStarsPurchase failed:', e);
+  }
 });
 
 // Любое сообщение/команда — мягко направляем в приложение.

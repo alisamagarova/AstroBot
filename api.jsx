@@ -329,6 +329,18 @@ const AstroAPI = {
     } catch (e) { return { ok: false, error: String(e) }; }
   },
 
+  /** Создаёт ссылку на инвойс Telegram Stars для тарифа. Возвращает {ok,url}. */
+  async createStarsInvoice(tariff) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return { ok: false, error: 'not_configured' };
+    try {
+      const res = await apiFetch(`/api/users/${id}/stars/invoice`, { method: 'POST', body: JSON.stringify({ tariff }) });
+      if (!res.ok) return { ok: false, error: 'HTTP ' + res.status };
+      const data = await res.json();
+      return { ok: true, url: data.url };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  },
+
   /** ТЕСТОВОЕ: начислить себе 10 звёзд (только админ). Возвращает {balance} или null. */
   async testGrant() {
     const id = tgUserId();

@@ -13,6 +13,8 @@ import { purchaseFeature, listEntitlements } from '../db/queries/entitlements.js
 import { saveConsent, getConsentsByUser } from '../db/queries/consents.js';
 import { requireOwner } from '../plugins/auth.js';
 import { config } from '../config.js';
+import { bot } from '../bot/bot.js';
+import { STAR_TARIFFS, findTariff, STAR_PAYLOAD_PREFIX } from '../payments.js';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -105,6 +107,34 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send(r);
     }
     return r; // {ok, charged, balance, owned, error?}
+  });
+
+  /** GET /users/:tgId/stars/tariffs — список тарифов пополнения. */
+  fastify.get<{ Params: { tgId: string } }>('/users/:tgId/stars/tariffs', async (request, reply) => {
+    if (!requireOwner(request, reply, request.params.tgId)) return;
+    return { tariffs: STAR_TARIFFS };
+  });
+
+  /** POST /users/:tgId/stars/invoice — создаёт ссылку на инвойс Telegram Stars. */
+  fastify.post<{ Params: { tgId: string } }>('/users/:tgId/stars/invoice', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    const body = z.object({ tariff: z.string().min(1) }).safeParse(request.body);
+    if (!body.success) return reply.status(400).send({ error: body.error.flatten() });
+
+    const t = findTariff(body.data.tariff);
+    if (!t) return reply.status(400).send({ error: 'unknown tariff' });
+
+    // Цифровой товар за Telegram Stars: currency XTR, provider_token пустой.
+    const link = await bot.api.createInvoiceLink(
+      `${t.vz} ✦`,
+      `Пополнение баланса: ${t.vz} виртуальных звёзд приложения.`,
+      `${STAR_PAYLOAD_PREFIX}${t.id}`,
+      '',          // provider_token — пусто для XTR
+      'XTR',
+      [{ label: `${t.vz} ✦`, amount: t.stars }],
+    );
+    return { url: link };
   });
 
   /** POST /users/:tgId/balance/test-grant — ТЕСТОВОЕ начисление 10 звёзд (только админ). */

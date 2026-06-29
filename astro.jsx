@@ -43,6 +43,15 @@ const PRICES = {
   natal: 5, natalOther: 5, synastry: 3, solar: 3, milestones: 5,
   horary: 2, aspects: 2, daily: 1, oracle: 1, milestonesExtend: 2,
 };
+// Тарифы пополнения: vz — виртуальные ✦, stars — цена в Telegram Stars (⭐).
+const STAR_TARIFFS = [
+  { id:'s5',   vz:5,   stars:1 },
+  { id:'s10',  vz:10,  stars:100 },
+  { id:'s20',  vz:20,  stars:189 },
+  { id:'s30',  vz:30,  stars:249, hit:true },
+  { id:'s50',  vz:50,  stars:439 },
+  { id:'s100', vz:100, stars:759 },
+];
 // Бейдж баланса (иконка + число). compact — для угла главного экрана.
 function BalanceChip({ th, balance, onClick, compact }) {
   return (
@@ -826,6 +835,97 @@ function PurchaseGate({ th, lang, gate, balance, onBought, onClose }) {
   );
 }
 
+// Пополнение баланса виртуальных звёзд за Telegram Stars (нижняя шторка).
+function TopUpSheet({ th, lang, balance, onClose, onPaid }) {
+  const en = lang === 'en';
+  const [busy, setBusy] = useState('');   // id тарифа в процессе оплаты ('' — нет)
+  const [err, setErr]   = useState('');
+
+  async function buy(t) {
+    if (busy) return;                       // защита от двойного тапа
+    setBusy(t.id); setErr('');
+    const r = await window.AstroAPI.createStarsInvoice(t.id);
+    if (!r || !r.ok || !r.url) { setBusy(''); setErr(en ? "Couldn't open payment, try again" : 'Не удалось открыть оплату, попробуй ещё раз'); return; }
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.openInvoice) {
+      tg.openInvoice(r.url, (status) => {
+        setBusy('');
+        if (status === 'paid') { onPaid && onPaid(); }
+        else if (status === 'failed') { setErr(en ? 'Payment failed' : 'Платёж не прошёл'); }
+        // 'cancelled' / 'pending' — молча
+      });
+    } else {
+      setBusy('');
+      setErr(en ? 'Payments are available only inside Telegram' : 'Оплата доступна только внутри Telegram');
+    }
+  }
+
+  return (
+    <div onClick={onClose} style={{position:'absolute',inset:0,zIndex:96,display:'flex',alignItems:'flex-end',background:'rgba(0,0,0,0.55)',backdropFilter:'blur(6px)',WebkitBackdropFilter:'blur(6px)'}}>
+      <div onClick={(e)=>e.stopPropagation()} style={{width:'100%',maxHeight:'92%',overflowY:'auto',background:th.effDark?'#1a1430':'#fff',borderRadius:'24px 24px 0 0',padding:'22px 20px 30px',boxShadow:'0 -8px 40px rgba(0,0,0,0.3)'}}>
+        <div style={{width:40,height:4,borderRadius:99,background:th.glassBorder,margin:'0 auto 18px'}}/>
+
+        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',gap:8,marginBottom:4}}>
+          <div style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:22,color:th.ink}}>{en?'Top up stars':'Пополнить звёзды'}</div>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12.5,color:th.muted}}>{en?'Balance: ':'Баланс: '}<span style={{color:th.gold}}>✦</span> {balance==null?'…':balance}</div>
+        </div>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12.5,color:th.muted,marginBottom:16,lineHeight:1.4}}>{en?'Buy app stars (✦) with Telegram Stars (⭐).':'Купи звёзды приложения (✦) за Telegram Stars (⭐).'}</div>
+
+        {/* Тарифы */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+          {STAR_TARIFFS.map((t)=>{
+            const active = busy===t.id;
+            return (
+              <button key={t.id} disabled={!!busy} onClick={()=>buy(t)} style={{
+                position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,
+                padding:'16px 10px 13px',borderRadius:16,cursor:busy?'default':'pointer',
+                border:`1.5px solid ${t.hit?th.gold:th.glassBorder}`,
+                background: t.hit ? `${th.gold}1f` : (th.effDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.03)'),
+                opacity: busy && !active ? 0.5 : 1,
+              }}>
+                {t.hit && (
+                  <span style={{position:'absolute',top:-9,left:'50%',transform:'translateX(-50%)',background:th.gold,color:th.effDark?'#1a1230':'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:800,fontSize:8.5,letterSpacing:1,borderRadius:99,padding:'2px 9px',whiteSpace:'nowrap'}}>{en?'BEST':'ХИТ'}</span>
+                )}
+                <div style={{display:'flex',alignItems:'center',gap:5,fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:24,color:th.ink,lineHeight:1}}>
+                  <span style={{color:th.gold,fontSize:20}}>✦</span>{t.vz}
+                </div>
+                <div style={{display:'inline-flex',alignItems:'center',gap:4,marginTop:4,padding:'5px 12px',borderRadius:999,background:t.hit?th.gold:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:13}}>
+                  {active ? '…' : <React.Fragment>⭐ {t.stars}</React.Fragment>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {err && <div style={{fontFamily:'"Manrope",sans-serif',fontSize:12,color:'#dc4b2a',marginTop:12,textAlign:'center'}}>{err}</div>}
+
+        {/* Дисклеймер по звёздам */}
+        <div style={{display:'flex',gap:8,alignItems:'flex-start',marginTop:16,padding:'11px 13px',borderRadius:12,background:th.effDark?'rgba(255,255,255,0.04)':'rgba(0,0,0,0.03)'}}>
+          <span style={{flexShrink:0,fontSize:12,color:th.muted,marginTop:1}}>ⓘ</span>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
+            {en
+              ? 'No refunds: these are bonus chips, not a currency.'
+              : 'Возвраты не предусмотрены: это бонусные фишки, а не валюта.'}
+          </div>
+        </div>
+
+        {/* Рубли — скоро */}
+        <div style={{marginTop:12,padding:'13px 14px',borderRadius:14,border:`1px dashed ${th.glassBorder}`}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:5}}>
+            <span style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:13,color:th.inkSoft}}>{en?'Pay with rubles':'Оплата рублями'}</span>
+            <span style={{fontFamily:'"Manrope",sans-serif',fontSize:9,letterSpacing:1,color:th.muted,border:`1px solid ${th.muted}44`,borderRadius:5,padding:'2px 7px',textTransform:'uppercase'}}>{en?'Soon':'Скоро'}</span>
+          </div>
+          <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
+            {en
+              ? 'Refunds are provided only in case of a technical failure.'
+              : 'Возвраты предусмотрены только при техническом сбое.'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ════════════════════════════════════════════════════════════
 // SUB SCREEN
 // ════════════════════════════════════════════════════════════
@@ -905,7 +1005,7 @@ function ProfNavRow({ th, icon, title, subtitle, onClick, last }) {
 // ════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ════════════════════════════════════════════════════════════
-function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback, balance, onTestGrant }) {
+function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback, balance, onTopUp, onTestGrant }) {
   const [editing, setEditing] = useState(false);
   const [view,    setView]    = useState('main'); // 'main' | 'notif' — провал в настройки уведомлений
   const [draft,   setDraft]   = useState(userName);
@@ -1054,8 +1154,8 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
       {/* ── ЛИЧНЫЙ СЧЁТ (игровая валюта) ───────────── */}
       <div style={{marginBottom:18}}>
         <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:10,letterSpacing:1.8,textTransform:'uppercase',color:th.muted,marginBottom:8,paddingLeft:4}}>{en?'Wallet':'Личный счёт'}</div>
-        <div style={{
-          display:'flex',alignItems:'center',gap:14,padding:'16px 18px',borderRadius:18,
+        <button onClick={onTopUp} style={{
+          width:'100%',textAlign:'left',cursor:'pointer',display:'flex',alignItems:'center',gap:14,padding:'16px 18px',borderRadius:18,
           background:`linear-gradient(135deg, ${th.accent}26, ${th.accent}0d)`,border:`1px solid ${th.accent}3a`,
           backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)',
         }}>
@@ -1067,8 +1167,10 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
             </div>
             <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted,marginTop:3}}>{en?'Spend them on the bot\'s features':'Тратятся на возможности бота'}</div>
           </div>
-          <span style={{fontFamily:'"Manrope",sans-serif',fontSize:9.5,letterSpacing:1,color:th.muted,border:`1px solid ${th.muted}44`,borderRadius:5,padding:'3px 8px',textTransform:'uppercase',flexShrink:0}}>{en?'Top-up soon':'Пополнение скоро'}</span>
-        </div>
+          <span style={{display:'inline-flex',alignItems:'center',gap:5,fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:12.5,color:'#fff',background:th.accent,borderRadius:999,padding:'8px 14px',flexShrink:0,boxShadow:`0 6px 18px ${th.accentGlow}`}}>
+            +{' '}{en?'Top up':'Пополнить'}
+          </span>
+        </button>
       </div>
 
       {/* ── ЕДИНАЯ КАРТОЧКА: данные · уведомления · обратная связь · язык · Telegram ID ── */}
@@ -1215,6 +1317,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [dayReveal, setDayReveal] = useState(false); // оверлей «Карта дня»
   const [yesNo, setYesNo] = useState(false); // оверлей «Да / Нет»
   const [feedbackOpen, setFeedbackOpen] = useState(false); // шторка обратной связи
+  const [topUpOpen, setTopUpOpen] = useState(false); // шторка пополнения звёзд
   const [onb, setOnb] = useState('loading'); // 'loading' | 'needed' | 'done'
   const [otherBirth, setOtherBirth] = useState(null); // натал для другого человека (НЕ сохраняется в БД)
   const [editingOther, setEditingOther] = useState(false);
@@ -1489,7 +1592,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   let mainContent;
 
   if (activeTab === 'profile') {
-    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance} onTestGrant={async ()=>{ const b = await window.AstroAPI.testGrant(); if (typeof b==='number') setBalance(b); }}/>;
+    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance} onTopUp={()=>setTopUpOpen(true)} onTestGrant={async ()=>{ const b = await window.AstroAPI.testGrant(); if (typeof b==='number') setBalance(b); }}/>;
   } else if (screen === 'home') {
     mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={requestDaily} onYesNo={()=>setYesNo(true)} balance={balance} onBalance={()=>handleTabChange('profile')} owns={owns}/>;
   } else if (screen === 'natal') {
@@ -1619,6 +1722,9 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
 
         {/* ── Шторка обратной связи ── */}
         {feedbackOpen && <FeedbackSheet th={th} lang={lang} onClose={()=>setFeedbackOpen(false)}/>}
+
+        {/* ── Шторка пополнения звёзд ── */}
+        {topUpOpen && <TopUpSheet th={th} lang={lang} balance={balance} onClose={()=>setTopUpOpen(false)} onPaid={()=>{ refreshBalance(); }}/>}
 
         {/* ── Онбординг: проверка профиля / форма приветствия ── */}
         {onb === 'loading' && (
