@@ -10,8 +10,8 @@ export interface StarTariff {
 }
 
 export const STAR_TARIFFS: StarTariff[] = [
-  { id: 's5',   vz: 5,   stars: 1 },
-  { id: 's10',  vz: 10,  stars: 100 },
+  { id: 's5',   vz: 5,   stars: 49 },
+  { id: 's10',  vz: 10,  stars: 99 },
   { id: 's20',  vz: 20,  stars: 189 },
   { id: 's30',  vz: 30,  stars: 249, hit: true },
   { id: 's50',  vz: 50,  stars: 439 },
