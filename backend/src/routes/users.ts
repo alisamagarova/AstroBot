@@ -14,7 +14,8 @@ import { saveConsent, getConsentsByUser } from '../db/queries/consents.js';
 import { requireOwner } from '../plugins/auth.js';
 import { config } from '../config.js';
 import { bot } from '../bot/bot.js';
-import { STAR_TARIFFS, findTariff, STAR_PAYLOAD_PREFIX } from '../payments.js';
+import { STAR_TARIFFS, findTariff, STAR_PAYLOAD_PREFIX, RUBLE_TARIFFS, findRubleTariff } from '../payments.js';
+import { createPayment, yooEnabled } from '../yookassa.js';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -148,6 +149,39 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (e) {
       request.log.error({ e }, 'getMyStarBalance failed');
       return reply.status(502).send({ error: 'stars_unavailable' });
+    }
+  });
+
+  /** GET /users/:tgId/ruble/tariffs — рублёвые тарифы (+ доступна ли оплата рублями). */
+  fastify.get<{ Params: { tgId: string } }>('/users/:tgId/ruble/tariffs', async (request, reply) => {
+    if (!requireOwner(request, reply, request.params.tgId)) return;
+    return { enabled: yooEnabled(), tariffs: RUBLE_TARIFFS };
+  });
+
+  /** POST /users/:tgId/ruble/invoice — создаёт платёж ЮKassa, возвращает confirmation_url. */
+  fastify.post<{ Params: { tgId: string } }>('/users/:tgId/ruble/invoice', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    if (!yooEnabled()) return reply.status(503).send({ error: 'ruble_payments_disabled' });
+    const body = z.object({ tariff: z.string().min(1) }).safeParse(request.body);
+    if (!body.success) return reply.status(400).send({ error: body.error.flatten() });
+
+    const t = findRubleTariff(body.data.tariff);
+    if (!t) return reply.status(400).send({ error: 'unknown tariff' });
+
+    try {
+      const payment = await createPayment({
+        amountRub: t.rub,
+        description: `${t.vz} звёзд приложения`,
+        returnUrl: config.miniAppUrl || 'https://t.me',
+        metadata: { tgId, tariff: t.id },   // по ним вебхук начислит ✦
+      });
+      const url = payment.confirmation?.confirmation_url;
+      if (!url) return reply.status(502).send({ error: 'no_confirmation_url' });
+      return { url, paymentId: payment.id };
+    } catch (e) {
+      request.log.error({ e }, 'YooKassa createPayment failed');
+      return reply.status(502).send({ error: 'yookassa_error' });
     }
   });
 

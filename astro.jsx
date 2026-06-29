@@ -840,6 +840,24 @@ function TopUpSheet({ th, lang, balance, onClose, onPaid }) {
   const en = lang === 'en';
   const [busy, setBusy] = useState('');   // id тарифа в процессе оплаты ('' — нет)
   const [err, setErr]   = useState('');
+  const [rub, setRub]   = useState({ enabled: false, tariffs: [] }); // рублёвые тарифы (ЮKassa)
+  useEffect(() => {
+    if (window.AstroAPI && window.AstroAPI.getRubleTariffs) window.AstroAPI.getRubleTariffs().then((r) => { if (r) setRub(r); });
+  }, []);
+
+  async function buyRub(t) {
+    if (busy) return;
+    setBusy('r:' + t.id); setErr('');
+    const r = await window.AstroAPI.createRubleInvoice(t.id);
+    setBusy('');
+    if (!r || !r.ok || !r.url) { setErr(en ? "Couldn't open payment, try again" : 'Не удалось открыть оплату, попробуй ещё раз'); return; }
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.openLink) tg.openLink(r.url);
+    else window.open(r.url, '_blank');
+    // Начисление придёт через вебхук ЮKassa; баланс обновим при следующем открытии.
+  }
+
+  const rubReady = rub && rub.enabled && Array.isArray(rub.tariffs) && rub.tariffs.length > 0;
 
   async function buy(t) {
     if (busy) return;                       // защита от двойного тапа
@@ -909,12 +927,38 @@ function TopUpSheet({ th, lang, balance, onClose, onPaid }) {
           </div>
         </div>
 
-        {/* Рубли — скоро */}
-        <div style={{marginTop:12,padding:'13px 14px',borderRadius:14,border:`1px dashed ${th.glassBorder}`}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:5}}>
+        {/* Оплата рублями (ЮKassa) */}
+        <div style={{marginTop:12,padding:'13px 14px',borderRadius:14,border:`1px ${rubReady?'solid':'dashed'} ${th.glassBorder}`}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,marginBottom:rubReady?10:5}}>
             <span style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:13,color:th.inkSoft}}>{en?'Pay with rubles':'Оплата рублями'}</span>
-            <span style={{fontFamily:'"Manrope",sans-serif',fontSize:9,letterSpacing:1,color:th.muted,border:`1px solid ${th.muted}44`,borderRadius:5,padding:'2px 7px',textTransform:'uppercase'}}>{en?'Soon':'Скоро'}</span>
+            {!rubReady && <span style={{fontFamily:'"Manrope",sans-serif',fontSize:9,letterSpacing:1,color:th.muted,border:`1px solid ${th.muted}44`,borderRadius:5,padding:'2px 7px',textTransform:'uppercase'}}>{en?'Soon':'Скоро'}</span>}
           </div>
+
+          {rubReady && (
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9,marginBottom:10}}>
+              {rub.tariffs.map((t)=>{
+                const active = busy===('r:'+t.id);
+                return (
+                  <button key={t.id} disabled={!!busy} onClick={()=>buyRub(t)} style={{
+                    position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:3,
+                    padding:'13px 8px 11px',borderRadius:14,cursor:busy?'default':'pointer',
+                    border:`1.5px solid ${t.hit?th.gold:th.glassBorder}`,
+                    background:t.hit?`${th.gold}1f`:(th.effDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.03)'),
+                    opacity:busy&&!active?0.5:1,
+                  }}>
+                    {t.hit && <span style={{position:'absolute',top:-9,left:'50%',transform:'translateX(-50%)',background:th.gold,color:th.effDark?'#1a1230':'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:800,fontSize:8.5,letterSpacing:1,borderRadius:99,padding:'2px 9px',whiteSpace:'nowrap'}}>{en?'BEST':'ХИТ'}</span>}
+                    <div style={{display:'flex',alignItems:'center',gap:5,fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:21,color:th.ink,lineHeight:1}}>
+                      <span style={{color:th.gold,fontSize:17}}>✦</span>{t.vz}
+                    </div>
+                    <div style={{marginTop:3,padding:'4px 11px',borderRadius:999,background:t.hit?th.gold:th.accent,color:'#fff',fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:12.5}}>
+                      {active ? '…' : `${t.rub} ₽`}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11,lineHeight:1.5,color:th.muted,textWrap:'pretty'}}>
             {en
               ? 'Refunds are provided only in case of a technical failure.'

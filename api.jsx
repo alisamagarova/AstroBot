@@ -353,6 +353,29 @@ const AstroAPI = {
     } catch (e) { return null; }
   },
 
+  /** Рублёвые тарифы ЮKassa. Возвращает {enabled, tariffs}. */
+  async getRubleTariffs() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return { enabled: false, tariffs: [] };
+    try {
+      const res = await apiFetch(`/api/users/${id}/ruble/tariffs`);
+      if (!res.ok) return { enabled: false, tariffs: [] };
+      return await res.json();
+    } catch (e) { return { enabled: false, tariffs: [] }; }
+  },
+
+  /** Создаёт платёж ЮKassa, возвращает {ok,url} (confirmation_url для openLink). */
+  async createRubleInvoice(tariff) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return { ok: false, error: 'not_configured' };
+    try {
+      const res = await apiFetch(`/api/users/${id}/ruble/invoice`, { method: 'POST', body: JSON.stringify({ tariff }) });
+      if (!res.ok) return { ok: false, error: 'HTTP ' + res.status };
+      const data = await res.json();
+      return { ok: true, url: data.url };
+    } catch (e) { return { ok: false, error: String(e) }; }
+  },
+
   /** ТЕСТОВОЕ: начислить себе 10 звёзд (только админ). Возвращает {balance} или null. */
   async testGrant() {
     const id = tgUserId();

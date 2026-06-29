@@ -17,6 +17,11 @@ export const config = {
     botToken: required('BOT_TOKEN'),
     botSecret: required('BOT_SECRET'),
   },
+  // ЮKassa (оплата рублями). Если ключей нет — рублёвый поток выключен.
+  yookassa: {
+    shopId:    process.env.YOOKASSA_SHOP_ID ?? '',
+    secretKey: process.env.YOOKASSA_SECRET_KEY ?? '',
+  },
   // Telegram ID администраторов (через запятую) — кому можно слать рассылки от бота.
   // Пример: ADMIN_TG_IDS="123456789,987654321". Свой ID можно узнать командой /id.
   adminIds: (process.env.ADMIN_TG_IDS ?? '')

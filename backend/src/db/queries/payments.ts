@@ -58,3 +58,53 @@ export async function creditStarsPurchase(
     client.release();
   }
 }
+
+/**
+ * Начисляет vz за оплату рублями (ЮKassa) — атомарно и идемпотентно по payment_id.
+ * Повторный вебхук payment.succeeded не начислит баланс дважды.
+ */
+export async function creditRublePurchase(
+  tgId: string,
+  tariff: string,
+  vz: number,
+  rub: number,
+  paymentId: string,
+): Promise<CreditResult> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const u = await client.query<{ id: string; balance: number }>(
+      'SELECT id, balance FROM users WHERE tg_id = $1 FOR UPDATE',
+      [tgId],
+    );
+    if (!u.rows[0]) { await client.query('ROLLBACK'); return { credited: false, balance: 0 }; }
+    const userId = u.rows[0].id;
+
+    const ins = await client.query(
+      `INSERT INTO ruble_purchases (user_id, tg_id, payment_id, tariff, vz, rub)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (payment_id) DO NOTHING
+       RETURNING id`,
+      [userId, tgId, paymentId, tariff, vz, rub],
+    );
+
+    if (ins.rows.length === 0) {
+      await client.query('COMMIT');
+      return { credited: false, balance: u.rows[0].balance };
+    }
+
+    const upd = await client.query<{ balance: number }>(
+      'UPDATE users SET balance = balance + $2, updated_at = now() WHERE id = $1 RETURNING balance',
+      [userId, vz],
+    );
+
+    await client.query('COMMIT');
+    return { credited: true, balance: upd.rows[0].balance };
+  } catch (e) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    throw e;
+  } finally {
+    client.release();
+  }
+}
