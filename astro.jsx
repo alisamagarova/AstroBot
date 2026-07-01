@@ -1898,8 +1898,27 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
 
         {/* ── Онбординг: проверка профиля / форма приветствия ── */}
         {onb === 'loading' && (
-          <div style={{position:'absolute',inset:0,zIndex:90,display:'flex',alignItems:'center',justifyContent:'center',background:th.effDark?'#0a0812':'#f6f3ff'}}>
-            <div style={{width:34,height:34,borderRadius:'50%',border:`3px solid ${th.glassBorder}`,borderTopColor:th.accent,animation:'astroSpin .8s linear infinite'}}/>
+          <div className="astro-in-f" style={{position:'absolute',inset:0,zIndex:90,overflow:'hidden'}}>
+            <Sky th={th}/>
+            <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:22}}>
+              <div style={{position:'relative',width:84,height:84,flexShrink:0}}>
+                <div className="astro-loading-ring" style={{position:'absolute',inset:0}}>
+                  {Array.from({length:8}).map((_,i)=>(
+                    <span key={i} style={{
+                      position:'absolute',top:'50%',left:'50%',width:4,height:4,marginTop:-2,marginLeft:-2,
+                      borderRadius:'50%',background:th.gold,opacity:0.22+(i%4)*0.2,
+                      transform:`rotate(${i*45}deg) translateY(-42px)`,
+                    }}/>
+                  ))}
+                </div>
+                <div className="astro-loading-pulse" style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',filter:'drop-shadow(0 0 14px rgba(212,175,90,0.55))'}}>
+                  <AstroGlyph name="spark" size={30} color={th.gold}/>
+                </div>
+              </div>
+              <div className="astro-loading-text" style={{fontFamily:'var(--ds-serif)',fontWeight:600,fontSize:15.5,color:th.ink,textAlign:'center',letterSpacing:0.2}}>
+                {lang==='en' ? 'Reading the stars…' : 'Читаем звёзды…'}
+              </div>
+            </div>
           </div>
         )}
         {onb === 'needed' && (
