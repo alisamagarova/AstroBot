@@ -783,9 +783,13 @@ function BirthDataEditor({ th, lang, initial, onSave, onCancel, showName = false
               {consent && <BeIco name="check" size={13} color="#fff" sw={2.6}/>}
             </div>
             <span style={{fontFamily:'"Manrope",sans-serif', fontSize:12, lineHeight:1.45, color:th.inkSoft, textWrap:'pretty'}}>
-              {en
-                ? 'I have read and accept the Privacy Policy and Terms of Service'
-                : 'Я ознакомлен(а) и согласен(на) с политикой конфиденциальности и пользовательским соглашением'}
+              {(() => {
+                const openLegal = (e) => { e.stopPropagation(); const u = window.ASTRO_LEGAL_URL; if (!u) return; const tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.openLink) tg.openLink(u); else window.open(u, '_blank'); };
+                const link = (txt) => <span onClick={openLegal} style={{ color:th.accent, textDecoration:'underline', cursor:'pointer' }}>{txt}</span>;
+                return en
+                  ? <React.Fragment>I have read and accept the {link('Privacy Policy and Terms of Service')}</React.Fragment>
+                  : <React.Fragment>Я ознакомлен(а) и согласен(на) с {link('политикой конфиденциальности и пользовательским соглашением')}</React.Fragment>;
+              })()}
             </span>
           </button>
         )}

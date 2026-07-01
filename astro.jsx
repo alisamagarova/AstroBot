@@ -1308,16 +1308,16 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
 
       {/* ── LEGAL DOCUMENTS ──────────────────────── */}
       <ProfSection th={th} label={s.documents}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 0',opacity:0.42}}>
+        <button onClick={()=>{ const u=window.ASTRO_LEGAL_URL; if(!u) return; const tg=window.Telegram&&window.Telegram.WebApp; if(tg&&tg.openLink) tg.openLink(u); else window.open(u,'_blank'); }} style={{
+          width:'100%',display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 0',
+          background:'transparent',border:'none',cursor:'pointer',textAlign:'left',
+        }}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
             <AstroGlyph name="doc" size={16} color={th.inkSoft} sw={1.5}/>
-            <span style={{fontFamily:'"Manrope",sans-serif',fontSize:13,color:th.inkSoft}}>{s.legalDocs}</span>
+            <span style={{fontFamily:'"Manrope",sans-serif',fontSize:13,color:th.ink}}>{s.legalDocs}</span>
           </div>
-          <div style={{display:'flex',alignItems:'center',gap:7}}>
-            <span style={{fontFamily:'"Manrope",sans-serif',fontSize:9.5,letterSpacing:1,color:th.muted,border:`1px solid ${th.muted}44`,borderRadius:4,padding:'2px 6px',textTransform:'uppercase'}}>{s.comingSoon}</span>
-            <AstroGlyph name="arrow-right" size={14} color={th.muted} sw={1.8}/>
-          </div>
-        </div>
+          <AstroGlyph name="arrow-right" size={16} color={th.glyphClr} sw={1.8}/>
+        </button>
       </ProfSection>
 
       {/* ── ТЕСТОВЫЕ КНОПКИ — только админу ── */}
