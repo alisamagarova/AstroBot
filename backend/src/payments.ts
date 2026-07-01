@@ -45,3 +45,7 @@ export const RUBLE_TARIFFS: RubleTariff[] = [
 export function findRubleTariff(id: string): RubleTariff | undefined {
   return RUBLE_TARIFFS.find((t) => t.id === id);
 }
+
+// Реферальная программа: пригласивший получает это число ✦, когда приглашённый
+// впервые покупает любой пакет (звёзды или рубли) — один раз за друга.
+export const REFERRAL_REWARD = 5;

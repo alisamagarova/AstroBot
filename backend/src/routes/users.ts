@@ -8,13 +8,15 @@ import {
   setBlocked,
   getBalance,
   addBalance,
+  setReferrer,
+  getReferralStats,
 } from '../db/queries/users.js';
 import { purchaseFeature, listEntitlements } from '../db/queries/entitlements.js';
 import { saveConsent, getConsentsByUser } from '../db/queries/consents.js';
 import { requireOwner } from '../plugins/auth.js';
 import { config } from '../config.js';
 import { bot } from '../bot/bot.js';
-import { STAR_TARIFFS, findTariff, STAR_PAYLOAD_PREFIX, RUBLE_TARIFFS, findRubleTariff } from '../payments.js';
+import { STAR_TARIFFS, findTariff, STAR_PAYLOAD_PREFIX, RUBLE_TARIFFS, findRubleTariff, REFERRAL_REWARD } from '../payments.js';
 import { createPayment, yooEnabled } from '../yookassa.js';
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
@@ -183,6 +185,28 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       request.log.error({ e }, 'YooKassa createPayment failed');
       return reply.status(502).send({ error: 'yookassa_error' });
     }
+  });
+
+  /** GET /users/:tgId/referral — реферальная ссылка + статистика. */
+  fastify.get<{ Params: { tgId: string } }>('/users/:tgId/referral', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    let username = '';
+    try { username = bot.botInfo.username; }
+    catch { try { username = (await bot.api.getMe()).username; } catch { /* ignore */ } }
+    const link = username ? `https://t.me/${username}?startapp=ref_${tgId}` : '';
+    const stats = await getReferralStats(tgId);
+    return { link, invited: stats.invited, earned: stats.rewarded * REFERRAL_REWARD, reward: REFERRAL_REWARD };
+  });
+
+  /** POST /users/:tgId/referral — фиксирует, кто пригласил (ref = tg_id пригласившего). */
+  fastify.post<{ Params: { tgId: string } }>('/users/:tgId/referral', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    const body = z.object({ ref: z.string().regex(/^\d+$/) }).safeParse(request.body);
+    if (!body.success) return reply.status(400).send({ error: body.error.flatten() });
+    const set = await setReferrer(tgId, body.data.ref);
+    return { ok: set };
   });
 
   /** POST /users/:tgId/balance/test-grant — ТЕСТОВОЕ начисление 10 звёзд (только админ). */

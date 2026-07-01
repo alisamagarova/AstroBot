@@ -1,8 +1,32 @@
 import { pool } from '../pool.js';
+import { REFERRAL_REWARD } from '../../payments.js';
+import type { PoolClient } from 'pg';
 
 export interface CreditResult {
   credited: boolean;  // true — начислили сейчас; false — этот платёж уже обработан
   balance: number;    // актуальный баланс после
+  // Если этой покупкой сработала реферальная награда — данные пригласившего (для уведомления).
+  referrer?: { tgId: string; reward: number; balance: number };
+}
+
+/**
+ * Реферальная награда: если у покупателя есть пригласивший и награда ещё не выдана —
+ * начисляем пригласившему REFERRAL_REWARD ✦ и помечаем награду выданной. В той же
+ * транзакции, что и покупка. Возвращает данные пригласившего или undefined.
+ */
+async function rewardReferrerIfEligible(
+  client: PoolClient,
+  buyer: { id: string; referred_by: string | null; referral_rewarded: boolean },
+): Promise<CreditResult['referrer']> {
+  if (!buyer.referred_by || buyer.referral_rewarded) return undefined;
+  const rr = await client.query<{ tg_id: string; balance: number }>(
+    `UPDATE users SET balance = balance + $2, updated_at = now()
+     WHERE tg_id = $1 RETURNING tg_id, balance`,
+    [buyer.referred_by, REFERRAL_REWARD],
+  );
+  if (!rr.rows[0]) return undefined; // пригласившего уже нет — пропускаем
+  await client.query('UPDATE users SET referral_rewarded = true WHERE id = $1', [buyer.id]);
+  return { tgId: rr.rows[0].tg_id, reward: REFERRAL_REWARD, balance: rr.rows[0].balance };
 }
 
 /**
@@ -22,8 +46,8 @@ export async function creditStarsPurchase(
     await client.query('BEGIN');
 
     // Блокируем строку пользователя на время транзакции.
-    const u = await client.query<{ id: string; balance: number }>(
-      'SELECT id, balance FROM users WHERE tg_id = $1 FOR UPDATE',
+    const u = await client.query<{ id: string; balance: number; referred_by: string | null; referral_rewarded: boolean }>(
+      'SELECT id, balance, referred_by, referral_rewarded FROM users WHERE tg_id = $1 FOR UPDATE',
       [tgId],
     );
     if (!u.rows[0]) { await client.query('ROLLBACK'); return { credited: false, balance: 0 }; }
@@ -49,8 +73,10 @@ export async function creditStarsPurchase(
       [userId, vz],
     );
 
+    const referrer = await rewardReferrerIfEligible(client, { id: userId, referred_by: u.rows[0].referred_by, referral_rewarded: u.rows[0].referral_rewarded });
+
     await client.query('COMMIT');
-    return { credited: true, balance: upd.rows[0].balance };
+    return { credited: true, balance: upd.rows[0].balance, referrer };
   } catch (e) {
     try { await client.query('ROLLBACK'); } catch (_) {}
     throw e;
@@ -74,8 +100,8 @@ export async function creditRublePurchase(
   try {
     await client.query('BEGIN');
 
-    const u = await client.query<{ id: string; balance: number }>(
-      'SELECT id, balance FROM users WHERE tg_id = $1 FOR UPDATE',
+    const u = await client.query<{ id: string; balance: number; referred_by: string | null; referral_rewarded: boolean }>(
+      'SELECT id, balance, referred_by, referral_rewarded FROM users WHERE tg_id = $1 FOR UPDATE',
       [tgId],
     );
     if (!u.rows[0]) { await client.query('ROLLBACK'); return { credited: false, balance: 0 }; }
@@ -99,8 +125,10 @@ export async function creditRublePurchase(
       [userId, vz],
     );
 
+    const referrer = await rewardReferrerIfEligible(client, { id: userId, referred_by: u.rows[0].referred_by, referral_rewarded: u.rows[0].referral_rewarded });
+
     await client.query('COMMIT');
-    return { credited: true, balance: upd.rows[0].balance };
+    return { credited: true, balance: upd.rows[0].balance, referrer };
   } catch (e) {
     try { await client.query('ROLLBACK'); } catch (_) {}
     throw e;

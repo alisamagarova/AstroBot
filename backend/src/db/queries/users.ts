@@ -79,6 +79,29 @@ export async function setLang(tgId: string, lang: LangCode): Promise<void> {
   );
 }
 
+/** Записывает, кто пригласил пользователя. Ставится один раз, не на себя, реферер должен существовать. */
+export async function setReferrer(tgId: string, refTgId: string): Promise<boolean> {
+  if (!refTgId || refTgId === tgId) return false;
+  const res = await pool.query(
+    `UPDATE users SET referred_by = $2, updated_at = now()
+     WHERE tg_id = $1 AND referred_by IS NULL
+       AND EXISTS (SELECT 1 FROM users u2 WHERE u2.tg_id = $2)`,
+    [tgId, refTgId],
+  );
+  return (res.rowCount ?? 0) > 0;
+}
+
+/** Статистика рефералов: сколько приглашено и сколько принесли награду. */
+export async function getReferralStats(tgId: string): Promise<{ invited: number; rewarded: number }> {
+  const { rows } = await pool.query<{ invited: number; rewarded: number }>(
+    `SELECT count(*)::int AS invited,
+            count(*) FILTER (WHERE referral_rewarded)::int AS rewarded
+       FROM users WHERE referred_by = $1`,
+    [tgId],
+  );
+  return { invited: rows[0]?.invited ?? 0, rewarded: rows[0]?.rewarded ?? 0 };
+}
+
 /** Текущий баланс игровой валюты (кристаллов). */
 export async function getBalance(tgId: string): Promise<number> {
   const { rows } = await pool.query<{ balance: number }>(

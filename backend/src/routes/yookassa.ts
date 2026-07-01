@@ -31,6 +31,9 @@ const yookassaRoutes: FastifyPluginAsync = async (fastify) => {
       const r = await creditRublePurchase(tgId, t.id, t.vz, t.rub, p.id);
       if (r.credited) {
         try { await bot.api.sendMessage(tgId, `Готово! ✦ Начислено ${t.vz} звёзд. Твой баланс: ${r.balance} ✦`); } catch { /* ignore */ }
+        if (r.referrer) {
+          try { await bot.api.sendMessage(r.referrer.tgId, `🎉 Твой друг совершил покупку — тебе +${r.referrer.reward} ✦! Баланс: ${r.referrer.balance} ✦`); } catch { /* ignore */ }
+        }
       }
       return reply.status(200).send({ ok: true });
     } catch (e) {

@@ -376,6 +376,24 @@ const AstroAPI = {
     } catch (e) { return { ok: false, error: String(e) }; }
   },
 
+  /** Реферальная ссылка + статистика. Возвращает {link,invited,earned,reward} или null. */
+  async getReferral() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/referral`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { return null; }
+  },
+
+  /** Фиксирует, кто пригласил (ref = tg_id пригласившего). Идемпотентно. */
+  async recordReferral(ref) {
+    const id = tgUserId();
+    if (!id || !this.isConfigured() || !ref) return;
+    try { await apiFetch(`/api/users/${id}/referral`, { method: 'POST', body: JSON.stringify({ ref: String(ref) }) }); } catch (e) {}
+  },
+
   /** ТЕСТОВОЕ: начислить себе 10 звёзд (только админ). Возвращает {balance} или null. */
   async testGrant() {
     const id = tgUserId();

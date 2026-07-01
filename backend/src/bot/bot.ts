@@ -153,6 +153,9 @@ bot.on('message:successful_payment', async (ctx) => {
     const r = await creditStarsPurchase(tgId, t.id, t.vz, t.stars, sp.telegram_payment_charge_id);
     if (r.credited) {
       await ctx.reply(`Готово! ✦ Начислено ${t.vz} звёзд. Твой баланс: ${r.balance} ✦`);
+      if (r.referrer) {
+        try { await bot.api.sendMessage(r.referrer.tgId, `🎉 Твой друг совершил покупку — тебе +${r.referrer.reward} ✦! Баланс: ${r.referrer.balance} ✦`); } catch { /* ignore */ }
+      }
     }
     // если credited=false — платёж уже был обработан, молча игнорируем (не дублируем)
   } catch (e) {

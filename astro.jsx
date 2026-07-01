@@ -1069,6 +1069,18 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   };
   useEffect(() => { if (isAdmin) loadBotStars(); }, [isAdmin]);
 
+  // Реферальная программа
+  const [refInfo, setRefInfo] = useState(null); // {link, invited, earned, reward}
+  useEffect(() => { if (window.AstroAPI && window.AstroAPI.getReferral) window.AstroAPI.getReferral().then((r) => { if (r) setRefInfo(r); }); }, []);
+  const shareReferral = () => {
+    if (!refInfo || !refInfo.link) return;
+    const text = en ? 'Your personal astrologer in Telegram ✨' : 'Твой личный астролог в Telegram ✨';
+    const url = 'https://t.me/share/url?url=' + encodeURIComponent(refInfo.link) + '&text=' + encodeURIComponent(text);
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
+    else window.open(url, '_blank');
+  };
+
   // Настройки уведомлений
   const [notify, setNotify] = useState({ notify_solar:false, notify_aspects:false, notify_viewed:false });
   useEffect(() => {
@@ -1225,6 +1237,39 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
             +{' '}{en?'Top up':'Пополнить'}
           </span>
         </button>
+      </div>
+
+      {/* ── ПРИГЛАСИТЬ ДРУГА ───────────────────────── */}
+      <div style={{marginBottom:18}}>
+        <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:10,letterSpacing:1.8,textTransform:'uppercase',color:th.muted,marginBottom:8,paddingLeft:4}}>{en?'Invite a friend':'Пригласить друга'}</div>
+        <div style={{padding:'15px 16px',borderRadius:18,background:th.glass,border:`1px solid ${th.glassBorder}`,backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)'}}>
+          <div style={{display:'flex',alignItems:'flex-start',gap:12,marginBottom:13}}>
+            <div style={{fontSize:24,lineHeight:1,flexShrink:0}}>🎁</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontWeight:600,fontSize:13.5,color:th.ink,marginBottom:3}}>
+                {en ? <>Get <span style={{color:th.gold}}>✦{refInfo?refInfo.reward:5}</span> for each friend</> : <>Получай <span style={{color:th.gold}}>✦{refInfo?refInfo.reward:5}</span> за каждого друга</>}
+              </div>
+              <div style={{fontFamily:'"Manrope",sans-serif',fontSize:11.5,lineHeight:1.45,color:th.muted,textWrap:'pretty'}}>
+                {en ? 'Share your link — when a friend joins and buys any pack, you get the stars.' : 'Поделись ссылкой — когда друг зайдёт по ней и купит любой пакет, тебе начислятся звёзды.'}
+              </div>
+            </div>
+          </div>
+          {refInfo && (refInfo.invited > 0 || refInfo.earned > 0) && (
+            <div style={{display:'flex',gap:16,marginBottom:13,paddingLeft:2}}>
+              <div><span style={{fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:17,color:th.ink}}>{refInfo.invited}</span> <span style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted}}>{en?'invited':'приглашено'}</span></div>
+              <div><span style={{fontFamily:'var(--ds-serif)',fontWeight:700,fontSize:17,color:th.gold}}>✦{refInfo.earned}</span> <span style={{fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted}}>{en?'earned':'заработано'}</span></div>
+            </div>
+          )}
+          <button onClick={shareReferral} disabled={!refInfo || !refInfo.link} style={{
+            width:'100%',height:46,borderRadius:999,border:'none',cursor:(refInfo&&refInfo.link)?'pointer':'default',
+            background:(refInfo&&refInfo.link)?th.accent:(th.effDark?'rgba(255,255,255,0.10)':'rgba(0,0,0,0.08)'),
+            color:(refInfo&&refInfo.link)?'#fff':th.muted,display:'flex',alignItems:'center',justifyContent:'center',gap:8,
+            fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:14,boxShadow:(refInfo&&refInfo.link)?`0 8px 26px ${th.accentGlow}`:'none',
+          }}>
+            <AstroGlyph name="chat" size={16} color={(refInfo&&refInfo.link)?'#fff':th.muted} sw={1.7}/>
+            {en?'Share the link':'Поделиться ссылкой'}
+          </button>
+        </div>
       </div>
 
       {/* ── ЕДИНАЯ КАРТОЧКА: данные · уведомления · обратная связь · язык · Telegram ID ── */}
@@ -1438,6 +1483,22 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   }, []);
   useEffect(() => { refreshBalance(); }, [refreshBalance]);
 
+  // ── Реферал: читаем start_param (ref_<id>) и фиксируем пригласившего ──
+  useEffect(() => {
+    try {
+      const sp = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.start_param;
+      const m = sp && /^ref_(\d+)$/.exec(sp);
+      if (m) {
+        const ref = m[1];
+        const me = window.AstroAPI && window.AstroAPI.tgUserId && window.AstroAPI.tgUserId();
+        if (String(ref) !== String(me)) {
+          try { localStorage.setItem('astro_ref', ref); } catch (e) {}
+          if (window.AstroAPI && window.AstroAPI.recordReferral) window.AstroAPI.recordReferral(ref);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
   // ── Покупки (что уже оплачено) ──
   const [entitlements, setEntitlements] = useState([]);
   const refreshEntitlements = React.useCallback(() => {
@@ -1510,6 +1571,8 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     if (api && api.isConfigured() && api.inTelegram()) {
       try { await api.completeOnboarding(b); }
       catch (e) { console.error('onboarding save failed:', e); }
+      // Реферал: фиксируем пригласившего теперь, когда пользователь точно есть в БД.
+      try { const ref = localStorage.getItem('astro_ref'); if (ref && api.recordReferral) await api.recordReferral(ref); } catch (e) {}
       refreshBalance(); // новый пользователь получает стартовые кристаллы
     }
   };
