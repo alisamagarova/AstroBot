@@ -762,7 +762,10 @@ function PurchaseGate({ th, lang, gate, balance, onBought, onClose }) {
     setBusy(true); setErr('');
     const r = await window.AstroAPI.purchase({ feature: gate.feature, key: gate.key, ...(gate.opts || {}), ...(opts || {}) });
     setBusy(false);
-    if (r && r.ok) { onBought(r); if (after) after(); onClose(); return; }
+    if (r && r.ok) {
+      if (r.charged > 0) { try { window.astroYm('reachGoal', 'purchase', { feature: gate.feature, key: gate.key || '', charged: r.charged }); } catch (e) {} }
+      onBought(r); if (after) after(); onClose(); return;
+    }
     if (r && (r.error === 'insufficient' || lowBalance)) { if (typeof r.balance === 'number') onBought(r); setInsufficient(true); return; }
     setErr(en ? 'Something went wrong, try again' : 'Что-то пошло не так, попробуй ещё раз');
   }
@@ -1601,6 +1604,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     setSolarCity(residenceCity(b));
     try { localStorage.setItem(ONB_KEY, '1'); } catch(e){}
     setOnb('done');
+    try { window.astroYm('reachGoal', 'onboarding_complete'); } catch (e) {}
     // Фоновое сохранение в backend (профиль + согласие)
     const api = window.AstroAPI;
     if (api && api.isConfigured() && api.inTelegram()) {
@@ -1735,19 +1739,23 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
 
   const screen = history[history.length - 1];
 
-  const go   = (id) => { setHistory(h=>[...h,id]); setAnim('astro-in-f'); };
-  const back = ()   => { setHistory(h=>h.length>1?h.slice(0,-1):h); setAnim('astro-in-b'); };
+  const trackScreen = (id) => { try { window.astroYm('hit', '/' + id, { title: id }); } catch (e) {} };
+
+  const go   = (id) => { setHistory(h=>[...h,id]); setAnim('astro-in-f'); trackScreen(id); };
+  const back = ()   => { setHistory(h=>{ const n = h.length>1?h.slice(0,-1):h; trackScreen(n[n.length-1]); return n; }); setAnim('astro-in-b'); };
 
   const handleTabChange = (tab) => {
     if (tab === 'home') {
       setAnim('astro-in-f');
       setActiveTab('home');
       setHistory(['home']);
+      trackScreen('home');
       return;
     }
     if (tab === activeTab) return;
     setAnim('astro-in-f');
     setActiveTab(tab);
+    trackScreen(tab);
   };
 
   useEffect(()=>{
