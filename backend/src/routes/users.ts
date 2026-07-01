@@ -10,6 +10,7 @@ import {
   addBalance,
   setReferrer,
   getReferralStats,
+  getSpendStreakStatus,
 } from '../db/queries/users.js';
 import { purchaseFeature, listEntitlements } from '../db/queries/entitlements.js';
 import { saveConsent, getConsentsByUser } from '../db/queries/consents.js';
@@ -81,6 +82,14 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     if (!requireOwner(request, reply, tgId)) return;
     const balance = await getBalance(tgId);
     return { balance };
+  });
+
+  /** GET /users/:tgId/streak — прогресс серии дней подряд с тратой кристаллов. */
+  fastify.get<{ Params: { tgId: string } }>('/users/:tgId/streak', async (request, reply) => {
+    const { tgId } = request.params;
+    if (!requireOwner(request, reply, tgId)) return;
+    const streak = await getSpendStreakStatus(tgId);
+    return streak;
   });
 
   /** GET /users/:tgId/entitlements — что уже оплачено (для отображения «Открыто»). */

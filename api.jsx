@@ -302,6 +302,17 @@ const AstroAPI = {
     } catch (e) { return null; }
   },
 
+  /** Прогресс серии дней подряд с тратой кристаллов. Возвращает {streakDays,target,reward,spentToday} или null. */
+  async getSpendStreak() {
+    const id = tgUserId();
+    if (!id || !this.isConfigured()) return null;
+    try {
+      const res = await apiFetch(`/api/users/${id}/streak`);
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) { return null; }
+  },
+
   /** Список покупок (что уже оплачено). Возвращает массив {feature,item_key,paid_limit} или []. */
   async getEntitlements() {
     const id = tgUserId();

@@ -121,6 +121,83 @@ export async function addBalance(tgId: string, delta: number): Promise<number> {
   return rows[0]?.balance ?? 0;
 }
 
+export const SPEND_STREAK_TARGET = 7;  // дней подряд с тратой кристаллов
+export const SPEND_STREAK_REWARD = 5;  // приз за серию, ✦
+
+export interface SpendStreakResult {
+  balance: number;
+  streakDays: number;   // текущая серия после учёта (0 сразу после начисления приза)
+  rewarded: boolean;    // приз начислен именно этим вызовом
+}
+
+/**
+ * Отмечает, что сегодня пользователь потратил кристаллы (любая сумма, любая фича).
+ * При SPEND_STREAK_TARGET днях подряд начисляет SPEND_STREAK_REWARD и обнуляет серию.
+ * Повторный вызов в тот же день — идемпотентен (день уже засчитан).
+ * Одно атомарное UPDATE — блокировка строки через FOR UPDATE в CTE.
+ */
+export async function recordDailySpend(tgId: string): Promise<SpendStreakResult> {
+  const { rows } = await pool.query<{ balance: number; streak_days: number; rewarded: boolean }>(
+    `WITH cur AS (
+       SELECT id, balance, spend_streak_days, spend_streak_last_date
+       FROM users WHERE tg_id = $1 FOR UPDATE
+     ),
+     calc AS (
+       SELECT
+         id, balance,
+         CASE
+           WHEN spend_streak_last_date = CURRENT_DATE     THEN spend_streak_days
+           WHEN spend_streak_last_date = CURRENT_DATE - 1 THEN spend_streak_days + 1
+           ELSE 1
+         END AS new_streak,
+         (spend_streak_last_date IS DISTINCT FROM CURRENT_DATE) AS is_new_day
+       FROM cur
+     )
+     UPDATE users u
+     SET
+       spend_streak_days      = CASE WHEN calc.new_streak >= $2 THEN 0 ELSE calc.new_streak END,
+       spend_streak_last_date = CASE WHEN calc.is_new_day THEN CURRENT_DATE ELSE u.spend_streak_last_date END,
+       balance                = CASE WHEN calc.is_new_day AND calc.new_streak >= $2
+                                      THEN u.balance + $3 ELSE u.balance END,
+       updated_at = now()
+     FROM calc
+     WHERE u.id = calc.id
+     RETURNING u.balance,
+       (CASE WHEN calc.new_streak >= $2 THEN 0 ELSE calc.new_streak END) AS streak_days,
+       (calc.is_new_day AND calc.new_streak >= $2) AS rewarded`,
+    [tgId, SPEND_STREAK_TARGET, SPEND_STREAK_REWARD],
+  );
+  const r = rows[0];
+  return r
+    ? { balance: r.balance, streakDays: r.streak_days, rewarded: r.rewarded }
+    : { balance: 0, streakDays: 0, rewarded: false };
+}
+
+export interface SpendStreakStatus {
+  streakDays: number;   // 0..target-1 (проекция на «сейчас»: пропуск дня уже обнуляет отображение)
+  target:     number;
+  reward:     number;
+  spentToday: boolean;
+}
+
+/** Текущий прогресс серии дней с тратой кристаллов — для отображения в профиле. */
+export async function getSpendStreakStatus(tgId: string): Promise<SpendStreakStatus> {
+  const { rows } = await pool.query<{ streak_days: number; spent_today: boolean }>(
+    `SELECT
+       CASE WHEN spend_streak_last_date >= CURRENT_DATE - 1 THEN spend_streak_days ELSE 0 END AS streak_days,
+       (spend_streak_last_date = CURRENT_DATE) AS spent_today
+     FROM users WHERE tg_id = $1`,
+    [tgId],
+  );
+  const r = rows[0];
+  return {
+    streakDays: r?.streak_days ?? 0,
+    spentToday: r?.spent_today ?? false,
+    target: SPEND_STREAK_TARGET,
+    reward: SPEND_STREAK_REWARD,
+  };
+}
+
 /** Все незаблокировавшие бота пользователи — для массовых рассылок. */
 export async function allActiveUsers(): Promise<{ id: string; tg_id: string; lang: string }[]> {
   const { rows } = await pool.query<{ id: string; tg_id: string; lang: string }>(

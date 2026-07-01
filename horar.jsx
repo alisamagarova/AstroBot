@@ -58,18 +58,22 @@ function HorarScreen({ th, lang, city, onExpand, onPay, priceTag }) {
   const topicObj = window.HORAR && window.HORAR.TOPICS.find(t => t.id === topic);
   const canAsk = !!q.trim() && !!topicObj && consent && !cool && voc && !voc.voc && !noCity;
 
-  const castNow = () => {
-    try {
-      const r = window.HORAR.ask(city, topicObj);
+  const doAsk = () => {
+    if (!canAsk) return;
+    // Карта считается сразу (бесплатно, на клиенте) — радикальность известна
+    // ДО оплаты. Платим только за радикальную карту; нерадикальная — бесплатно.
+    let r;
+    try { r = window.HORAR.ask(city, topicObj); }
+    catch (e) { setResult({ error: e.message }); return; }
+
+    const finish = () => {
       setResult({ ...r, question: q.trim(), topicLabel: en ? topicObj.en : topicObj.ru });
       try { localStorage.setItem('astro_horar_last', String(Date.now())); } catch (e) {}
       setCool({ nextMs: Date.now() + HZ_COOLDOWN_MS });
-    } catch (e) { setResult({ error: e.message }); }
-  };
-  const doAsk = () => {
-    if (!canAsk) return;
-    if (onPay) { onPay().then((ok) => { if (ok) castNow(); }); } // оплата 2 звезды за вопрос
-    else castNow();
+    };
+
+    if (r.radical === 'ok' && onPay) onPay().then((ok) => { if (ok) finish(); });
+    else finish();
   };
 
   const pad = { padding: '8px 18px 30px', position: 'relative', zIndex: 1 };
@@ -92,6 +96,7 @@ function HorarScreen({ th, lang, city, onExpand, onPay, priceTag }) {
             'Sit with it, let it ripen. Don\'t ask to test the method or re-ask the same thing.',
             'The moment counts — the chart is built for "now" at your city.',
             'Pick a topic — it sets the house of the question.',
+            'If the chart turns out not radical, no payment is taken.',
           ] : [
             'Хорар отвечает на ОДИН конкретный вопрос картой на момент, когда ты искренне его задаёшь.',
             'Сформулируй один ясный вопрос — да/нет или «случится ли…», «стоит ли…». Не объединяй несколько.',
@@ -99,6 +104,7 @@ function HorarScreen({ th, lang, city, onExpand, onPay, priceTag }) {
             'Подумай, дозрей до вопроса. Не задавай ради проверки и не переспрашивай одно и то же.',
             'Момент важен — карта строится на «сейчас» по твоему городу.',
             'Выбери тему — она задаёт дом вопроса.',
+            'Если карта окажется нерадикальной — оплата не списывается.',
           ]).map((t, i) => <li key={i} style={{ marginBottom: 6, textWrap: 'pretty' }}>{t}</li>)}
         </ul>
       </div>
@@ -312,6 +318,9 @@ function HorarResult({ th, lang, r, onBack, onExpand }) {
             <div style={{ marginTop: 8, color: th.muted }}>
               {en ? 'Tentatively by the significators: ' : 'Ориентировочно по значимым: '}
               <b style={{ color: base.col }}>{en ? base.en : base.ru}</b>
+            </div>
+            <div style={{ marginTop: 8, color: th.muted, fontSize: 11.5 }}>
+              {en ? 'Chart not radical — no payment was taken.' : 'Карта нерадикальна — оплата не была списана.'}
             </div>
           </div>
         ) : r.timing && (

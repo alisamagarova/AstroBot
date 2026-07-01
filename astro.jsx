@@ -1049,7 +1049,7 @@ function ProfNavRow({ th, icon, title, subtitle, onClick, last }) {
 // ════════════════════════════════════════════════════════════
 // PROFILE SCREEN
 // ════════════════════════════════════════════════════════════
-function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback, balance, onTopUp, onTestGrant }) {
+function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, onEditBirth, sunKey, onFeedback, balance, streak, onTopUp, onTestGrant }) {
   const [editing, setEditing] = useState(false);
   const [view,    setView]    = useState('main'); // 'main' | 'notif' — провал в настройки уведомлений
   const [draft,   setDraft]   = useState(userName);
@@ -1238,6 +1238,31 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
             +{' '}{en?'Top up':'Пополнить'}
           </span>
         </button>
+
+        {/* Серия дней подряд с тратой кристаллов */}
+        {streak && (
+          <div style={{marginTop:10,padding:'14px 16px',borderRadius:16,background:th.glass,border:`1px solid ${th.glassBorder}`,backdropFilter:'blur(18px)',WebkitBackdropFilter:'blur(18px)'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+              <span style={{fontSize:18,lineHeight:1,flexShrink:0}}>🔥</span>
+              <div style={{flex:1,minWidth:0,fontFamily:'"Manrope",sans-serif',fontSize:12.5,color:th.inkSoft,lineHeight:1.4,textWrap:'pretty'}}>
+                {en
+                  ? <>Spend any {CURRENCY.icon} <b style={{color:th.ink}}>{streak.target} days in a row</b> — get <b style={{color:th.gold}}>+{streak.reward} ✦</b></>
+                  : <>Трать любые {CURRENCY.icon} <b style={{color:th.ink}}>{streak.target} дней подряд</b> — получи <b style={{color:th.gold}}>+{streak.reward} ✦</b></>}
+              </div>
+              <span style={{flexShrink:0,fontFamily:'"Manrope",sans-serif',fontWeight:700,fontSize:12.5,color:th.ink}}>{streak.streakDays}/{streak.target}</span>
+            </div>
+            <div style={{display:'flex',gap:5}}>
+              {Array.from({length:streak.target}).map((_,i)=>(
+                <div key={i} style={{flex:1,height:6,borderRadius:999,background: i<streak.streakDays ? th.accent : (th.effDark?'rgba(255,255,255,0.12)':'rgba(0,0,0,0.10)')}}/>
+              ))}
+            </div>
+            {streak.spentToday && streak.streakDays < streak.target && (
+              <div style={{marginTop:8,fontFamily:'"Manrope",sans-serif',fontSize:11,color:th.muted}}>
+                {en?'Today counted — come back tomorrow':'Сегодня учтено — приходи завтра'}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── ПРИГЛАСИТЬ ДРУГА ───────────────────────── */}
@@ -1419,6 +1444,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   const [activeTab, setActiveTab] = useState('home');
   const [userName,  setUserName]  = useState(USER.name);
   const [balance,   setBalance]   = useState(null); // баланс кристаллов (null = ещё не загружен)
+  const [streak,    setStreak]    = useState(null); // {streakDays,target,reward,spentToday} серии трат
   const [birth,     setBirth]     = useState(loadBirth);
   const [partners,  setPartners]  = useState(loadPartners);
   const [selPartnerIdx, setSelPartnerIdx] = useState(null); // index of selected partner
@@ -1484,6 +1510,14 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   }, []);
   useEffect(() => { refreshBalance(); }, [refreshBalance]);
 
+  // ── Серия трат: подтягиваем с сервера ──
+  const refreshStreak = React.useCallback(() => {
+    const api = window.AstroAPI;
+    if (!api || !api.isConfigured() || !api.inTelegram() || !api.getSpendStreak) return;
+    api.getSpendStreak().then((s) => { if (s) setStreak(s); });
+  }, []);
+  useEffect(() => { refreshStreak(); }, [refreshStreak]);
+
   // ── Реферал: читаем start_param (ref_<id>) и фиксируем пригласившего ──
   useEffect(() => {
     try {
@@ -1524,7 +1558,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
     if (!window.AstroAPI || !window.AstroAPI.isConfigured() || !window.AstroAPI.inTelegram()) return Promise.resolve(true); // вне TG — не блокируем
     return new Promise((resolve) => setGate({ kind: 'buy', ...desc, resolve }));
   };
-  const onGateBought = (r) => { if (r && typeof r.balance === 'number') setBalance(r.balance); refreshEntitlements(); };
+  const onGateBought = (r) => { if (r && typeof r.balance === 'number') setBalance(r.balance); refreshEntitlements(); refreshStreak(); };
 
   // Жизненные вехи — особый поток (учёт оплаченного лимита лет + доплата при расширении).
   const openMilestone = (themeId) => {
@@ -1728,7 +1762,7 @@ function AstroPhone({ th, lang, onChangeLang, embedded = false }) {
   let mainContent;
 
   if (activeTab === 'profile') {
-    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance} onTopUp={()=>setTopUpOpen(true)} onTestGrant={async ()=>{ const b = await window.AstroAPI.testGrant(); if (typeof b==='number') setBalance(b); }}/>;
+    mainContent = <ProfileScreen th={th} lang={lang} userName={userName} onUpdateName={updateName} onChangeLang={onChangeLang} birth={birth} onEditBirth={openEdit} sunKey={sun.key} onFeedback={()=>setFeedbackOpen(true)} balance={balance} streak={streak} onTopUp={()=>setTopUpOpen(true)} onTestGrant={async ()=>{ const b = await window.AstroAPI.testGrant(); if (typeof b==='number') setBalance(b); }}/>;
   } else if (screen === 'home') {
     mainContent = <CosmicMain th={th} lang={lang} onOpen={go} sun={sun} userName={userName} onHelp={setHelpItem} onRevealDay={requestDaily} onYesNo={()=>setYesNo(true)} balance={balance} onBalance={()=>handleTabChange('profile')} owns={owns}/>;
   } else if (screen === 'natal') {

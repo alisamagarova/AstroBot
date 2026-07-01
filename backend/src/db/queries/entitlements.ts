@@ -1,4 +1,5 @@
 import { pool } from '../pool.js';
+import { recordDailySpend, SPEND_STREAK_REWARD } from './users.js';
 
 // Цены в звёздах (источник истины — здесь, на сервере).
 export const PRICES: Record<string, number> = {
@@ -23,6 +24,7 @@ export interface PurchaseResult {
   balance: number;   // баланс после
   owned: boolean;    // было ли уже оплачено (или стало доступным)
   error?: string;    // 'insufficient' | 'no_user' | 'bad_feature'
+  streakReward?: number; // если этой тратой закрыта серия из 7 дней подряд — сколько ✦ начислено сверху
 }
 
 export interface PurchaseOpts {
@@ -30,8 +32,31 @@ export interface PurchaseOpts {
   extend?: boolean;  // для milestones — доплатить до нового лимита
 }
 
-/** Транзакционная покупка возможности. Идемпотентна для одноразовых прав. */
+/**
+ * Транзакционная покупка возможности. Идемпотентна для одноразовых прав.
+ * Если это реальное списание (charged > 0) — засчитывает день в серию трат
+ * (см. recordDailySpend): на 7-й день подряд начисляет бонус поверх баланса.
+ */
 export async function purchaseFeature(
+  tgId: string,
+  feature: string,
+  itemKey: string,
+  opts: PurchaseOpts = {},
+): Promise<PurchaseResult> {
+  const r = await purchaseFeatureTx(tgId, feature, itemKey, opts);
+  if (r.ok && r.charged > 0) {
+    try {
+      const streak = await recordDailySpend(tgId);
+      r.balance = streak.balance;
+      if (streak.rewarded) r.streakReward = SPEND_STREAK_REWARD;
+    } catch (e) {
+      console.error('recordDailySpend failed', e);
+    }
+  }
+  return r;
+}
+
+async function purchaseFeatureTx(
   tgId: string,
   feature: string,
   itemKey: string,
