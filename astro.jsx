@@ -1082,10 +1082,10 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
   };
 
   // Настройки уведомлений
-  const [notify, setNotify] = useState({ notify_solar:false, notify_aspects:false, notify_viewed:false });
+  const [notify, setNotify] = useState({ notify_solar:false, notify_aspects:false, notify_daily:false, notify_viewed:false });
   useEffect(() => {
     if (window.AstroAPI) {
-      window.AstroAPI.getNotifyPrefs().then(p => { if (p) setNotify({ notify_solar:!!p.notify_solar, notify_aspects:!!p.notify_aspects, notify_viewed:!!p.notify_viewed }); });
+      window.AstroAPI.getNotifyPrefs().then(p => { if (p) setNotify({ notify_solar:!!p.notify_solar, notify_aspects:!!p.notify_aspects, notify_daily:!!p.notify_daily, notify_viewed:!!p.notify_viewed }); });
     }
   }, []);
   const toggleNotify = (key) => {
@@ -1110,6 +1110,7 @@ function ProfileScreen({ th, lang, userName, onUpdateName, onChangeLang, birth, 
       {[
         { key:'notify_solar',   t: en?'New solar year':'Новый солярный год',  d: en?'A week before your birthday — your year-ahead chart is ready':'За неделю до дня рождения — соляр на год вперёд уже ждёт' },
         { key:'notify_aspects', t: en?'Monthly aspects':'Аспекты месяца',      d: en?'At the start of a new month — see what the sky brought':'В начале нового месяца — что приготовило небо' },
+        { key:'notify_daily',   t: en?'New card of the day':'Новая карта дня',  d: en?'A daily reminder that a fresh card is waiting':'Ежедневное напоминание, что тебя ждёт свежая карта' },
       ].map((row, i, arr) => (
         <div key={row.key} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 0',borderBottom: i<arr.length-1?`1px solid ${th.glassBorder}`:'none'}}>
           <div style={{flex:1,minWidth:0}}>

@@ -19,6 +19,8 @@ function openAppKb(): InlineKeyboard | undefined {
 const PrefsBody = z.object({
   notify_solar:   z.boolean().optional(),
   notify_aspects: z.boolean().optional(),
+  notify_daily:   z.boolean().optional(),
+  notify_viewed:  z.boolean().optional(),
 });
 
 const SolarViewBody  = z.object({ year: z.number().int().min(1900).max(2100) });

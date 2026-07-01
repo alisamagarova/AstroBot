@@ -5,12 +5,13 @@ import { pool } from '../pool.js';
 export interface NotifyPrefs {
   notify_solar:   boolean;
   notify_aspects: boolean;
+  notify_daily:   boolean;  // новая карта дня
   notify_viewed:  boolean;  // слать даже о просмотренном
 }
 
 export async function getNotifyPrefs(tgId: string): Promise<NotifyPrefs | null> {
   const { rows } = await pool.query<NotifyPrefs>(
-    'SELECT notify_solar, notify_aspects, notify_viewed FROM users WHERE tg_id = $1',
+    'SELECT notify_solar, notify_aspects, notify_daily, notify_viewed FROM users WHERE tg_id = $1',
     [tgId],
   );
   return rows[0] ?? null;
@@ -21,11 +22,20 @@ export async function setNotifyPrefs(tgId: string, prefs: Partial<NotifyPrefs>):
     `UPDATE users SET
        notify_solar   = COALESCE($2, notify_solar),
        notify_aspects = COALESCE($3, notify_aspects),
-       notify_viewed  = COALESCE($4, notify_viewed),
+       notify_daily   = COALESCE($4, notify_daily),
+       notify_viewed  = COALESCE($5, notify_viewed),
        updated_at     = now()
      WHERE tg_id = $1`,
-    [tgId, prefs.notify_solar ?? null, prefs.notify_aspects ?? null, prefs.notify_viewed ?? null],
+    [tgId, prefs.notify_solar ?? null, prefs.notify_aspects ?? null, prefs.notify_daily ?? null, prefs.notify_viewed ?? null],
   );
+}
+
+/** Активные пользователи, подписанные на «новую карту дня». */
+export async function usersForDailyNotify(): Promise<{ id: string; tg_id: string }[]> {
+  const { rows } = await pool.query<{ id: string; tg_id: string }>(
+    'SELECT id, tg_id FROM users WHERE notify_daily = true AND is_blocked = false',
+  );
+  return rows;
 }
 
 // ─── Отметки просмотров ───────────────────────────────────────────────────────
@@ -65,7 +75,7 @@ export async function hasAspectView(userId: string, year: number, month: number)
 // ─── Журнал отправленных уведомлений (антидубль) ──────────────────────────────
 
 /** Пытается зафиксировать отправку. true = можно слать (ещё не слали), false = уже отправляли. */
-export async function claimNotification(userId: string, kind: 'solar' | 'aspects' | 'milestones', ref: string): Promise<boolean> {
+export async function claimNotification(userId: string, kind: 'solar' | 'aspects' | 'milestones' | 'daily', ref: string): Promise<boolean> {
   const { rows } = await pool.query(
     `INSERT INTO notifications_sent (user_id, kind, ref) VALUES ($1, $2, $3)
      ON CONFLICT (user_id, kind, ref) DO NOTHING
@@ -76,7 +86,7 @@ export async function claimNotification(userId: string, kind: 'solar' | 'aspects
 }
 
 /** Снимает пометку (если отправка не удалась по временной причине — чтобы повторить позже). */
-export async function unclaimNotification(userId: string, kind: 'solar' | 'aspects' | 'milestones', ref: string): Promise<void> {
+export async function unclaimNotification(userId: string, kind: 'solar' | 'aspects' | 'milestones' | 'daily', ref: string): Promise<void> {
   await pool.query(
     'DELETE FROM notifications_sent WHERE user_id = $1 AND kind = $2 AND ref = $3',
     [userId, kind, ref],

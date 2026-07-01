@@ -8,7 +8,7 @@ import { config } from '../config.js';
 import { setBlocked, allActiveUsers } from '../db/queries/users.js';
 import { getSetting, setSetting } from '../db/queries/settings.js';
 import {
-  usersForSolarNotify, usersForAspectNotify,
+  usersForSolarNotify, usersForAspectNotify, usersForDailyNotify,
   hasSolarView, hasAspectView, claimNotification, unclaimNotification,
 } from '../db/queries/notifications.js';
 
@@ -60,7 +60,7 @@ async function send(tgId: string, text: string): Promise<SendResult> {
 }
 
 /** Помечает отправку, шлёт сообщение; при временной ошибке снимает пометку (повтор позже). */
-async function claimAndSend(userId: string, tgId: string, kind: 'solar' | 'aspects' | 'milestones', ref: string, text: string): Promise<void> {
+async function claimAndSend(userId: string, tgId: string, kind: 'solar' | 'aspects' | 'milestones' | 'daily', ref: string, text: string): Promise<void> {
   if (!(await claimNotification(userId, kind, ref))) return; // уже отправляли
   const r = await send(tgId, text);
   if (r === 'fail') await unclaimNotification(userId, kind, ref); // транзиторная ошибка → повторим
@@ -96,6 +96,19 @@ export async function runNotificationCheck(): Promise<void> {
         'Открой «Аспекты на месяц» и посмотри, что он тебе принёс.');
     }
   } catch (e) { console.error('aspect notify check failed', e); }
+
+  // ── Карта дня: раз в сутки для подписанных (антидубль по дате) ──
+  try {
+    const now = new Date();
+    const ref = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const dailyUsers = await usersForDailyNotify();
+    for (const u of dailyUsers) {
+      await claimAndSend(u.id, u.tg_id, 'daily', ref,
+        '🃏 Новая карта дня уже ждёт!\n' +
+        'Открой приложение и узнай, что она подсказывает на сегодня.');
+      await sleep(40); // мягкий троттлинг под лимиты Telegram
+    }
+  } catch (e) { console.error('daily card notify check failed', e); }
 
   // ── Горизонт «Жизненных вех»: при сдвиге — разовая рассылка всем ──
   await runMilestonesHorizonCheck();
